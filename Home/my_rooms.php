@@ -199,54 +199,7 @@ $rooms = $stmt->get_result();
     </style>
 </head>
 <body>
-    <header>
-        <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
-            <div class="container">
-                <a class="navbar-brand" href="#">
-                    <i class="fas fa-home me-2"></i>Phòng trọ sinh viên
-                </a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="collapse navbar-collapse" id="navbarNav">
-                    <ul class="navbar-nav me-auto">
-                        <li class="nav-item">
-                            <a class="nav-link" href="index.php">Trang chủ</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="search.php">Tìm kiếm</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="post.php">Đăng tin</a>
-                        </li>
-                    </ul>
-                    <ul class="navbar-nav ms-auto">
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
-                                <?php
-                                // Lấy thông tin người dùng
-                                $stmt = $conn->prepare("SELECT * FROM users WHERE id = ?");
-                                $stmt->bind_param("i", $user_id);
-                                $stmt->execute();
-                                $result = $stmt->get_result();
-                                $user = $result->fetch_assoc();
-                                
-                                echo '<img src="../' . $user['avatar'] . '" class="avatar-small me-2" alt="Avatar"> ';
-                                echo htmlspecialchars($user['name']);
-                                ?>
-                            </a>
-                            <ul class="dropdown-menu dropdown-menu-end">
-                                <li><a class="dropdown-item" href="../Auth/edit_profile.php"><i class="fas fa-user-edit me-2"></i>Chỉnh sửa hồ sơ</a></li>
-                                <li><a class="dropdown-item active" href="my_rooms.php"><i class="fas fa-list me-2"></i>Phòng trọ của tôi</a></li>
-                                <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item" href="../Auth/logout.php"><i class="fas fa-sign-out-alt me-2"></i>Đăng xuất</a></li>
-                            </ul>
-                        </li>
-                    </ul>
-                </div>
-            </div>
-        </nav>
-    </header>
+    <?php include '../Components/header.php' ?>
 
     <main class="py-5">
         <div class="container">
@@ -422,44 +375,7 @@ $rooms = $stmt->get_result();
         </div>
     </main>
 
-    <footer class="py-4 mt-5">
-        <div class="container">
-            <div class="row">
-                <div class="col-md-4 mb-4 mb-md-0">
-                    <h5>Phòng trọ sinh viên</h5>
-                    <p class="text-muted">Trang web tìm kiếm phòng trọ dành cho sinh viên trường Đại học Vinh.</p>
-                    <div class="social-links">
-                        <a href="#" class="me-2"><i class="fab fa-facebook-f"></i></a>
-                        <a href="#" class="me-2"><i class="fab fa-twitter"></i></a>
-                        <a href="#" class="me-2"><i class="fab fa-instagram"></i></a>
-                    </div>
-                </div>
-                <div class="col-md-4 mb-4 mb-md-0">
-                    <h5>Liên kết</h5>
-                    <ul class="list-unstyled">
-                        <li><a href="index.php"><i class="fas fa-angle-right me-2"></i>Trang chủ</a></li>
-                        <li><a href="search.php"><i class="fas fa-angle-right me-2"></i>Tìm phòng trọ</a></li>
-                        <li><a href="post.php"><i class="fas fa-angle-right me-2"></i>Đăng tin</a></li>
-                        <li><a href="#"><i class="fas fa-angle-right me-2"></i>Liên hệ</a></li>
-                    </ul>
-                </div>
-                <div class="col-md-4">
-                    <h5>Liên hệ với chúng tôi</h5>
-                    <ul class="list-unstyled contact-info">
-                        <li><i class="fas fa-map-marker-alt me-2"></i>182 Lê Duẩn, TP. Vinh, Nghệ An</li>
-                        <li><i class="fas fa-phone me-2"></i>0123 456 789</li>
-                        <li><i class="fas fa-envelope me-2"></i>info@phongtrodhvinh.com</li>
-                    </ul>
-                </div>
-            </div>
-            <hr>
-            <div class="row">
-                <div class="col">
-                    <p class="text-center mb-0">&copy; <?php echo date('Y'); ?> Phòng trọ sinh viên. All rights reserved.</p>
-                </div>
-            </div>
-        </div>
-    </footer>
+    <?php include '../Components/footer.php' ?>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>

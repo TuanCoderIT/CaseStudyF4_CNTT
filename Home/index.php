@@ -61,103 +61,9 @@ $nearest_rooms = $stmt_nearest->get_result();
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.css">
 </head>
 <body class="home-body">
-    <header>
-        <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
-            <div class="container">
-                <a class="navbar-brand" href="#">
-                    <i class="fas fa-home me-2"></i>Phòng trọ sinh viên
-                </a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="collapse navbar-collapse" id="navbarNav">
-                    <ul class="navbar-nav me-auto">
-                        <li class="nav-item">
-                            <a class="nav-link active" href="index.php">Trang chủ</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="search.php">Tìm kiếm</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="post.php">Đăng tin</a>
-                        </li>
-                    </ul>
-                    <ul class="navbar-nav ms-auto">
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
-                                <?php
-                                // Lấy thông tin người dùng
-                                $user_id = $_SESSION['user_id'];
-                                $stmt = $conn->prepare("SELECT * FROM users WHERE id = ?");
-                                $stmt->bind_param("i", $user_id);
-                                $stmt->execute();
-                                $result = $stmt->get_result();
-                                $user = $result->fetch_assoc();
-                                
-                                echo '<img src="../' . $user['avatar'] . '" class="avatar-small me-2" alt="Avatar"> ';
-                                echo htmlspecialchars($user['name']);
-                                ?>
-                            </a>
-                            <ul class="dropdown-menu dropdown-menu-end">
-                                <li><a class="dropdown-item" href="../Auth/edit_profile.php"><i class="fas fa-user-edit me-2"></i>Chỉnh sửa hồ sơ</a></li>
-                                <li><a class="dropdown-item" href="my_rooms.php"><i class="fas fa-list me-2"></i>Phòng trọ của tôi</a></li>
-                                <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item" href="../Auth/logout.php"><i class="fas fa-sign-out-alt me-2"></i>Đăng xuất</a></li>
-                            </ul>
-                        </li>
-                    </ul>
-                </div>
-            </div>
-        </nav>
-    </header>
-
+    <?php include '../Components/header.php' ?>
     <!-- Banner tìm kiếm -->
-    <section class="search-banner">
-        <div class="container">
-            <div class="row">
-                <div class="col-lg-10 mx-auto">
-                    <div class="search-container">
-                        <h1 class="text-center mb-4">Tìm phòng trọ phù hợp với bạn</h1>
-                        <form action="search.php" method="GET" class="search-form">
-                            <div class="row g-3">
-                                <div class="col-md-4">
-                                    <div class="input-group">
-                                        <span class="input-group-text"><i class="fas fa-map-marker-alt"></i></span>
-                                        <select name="district" class="form-select">
-                                            <option value="">Chọn khu vực</option>
-                                            <option value="1">Quận Hồng Bàng</option>
-                                            <option value="2">Quận Lê Chân</option>
-                                            <option value="3">Quận Ngô Quyền</option>
-                                            <option value="4">Quận Kiến An</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div class="col-md-4">
-                                    <div class="input-group">
-                                        <span class="input-group-text"><i class="fas fa-dollar-sign"></i></span>
-                                        <select name="price" class="form-select">
-                                            <option value="">Chọn khoảng giá</option>
-                                            <option value="0-1000000">Dưới 1 triệu</option>
-                                            <option value="1000000-2000000">1 - 2 triệu</option>
-                                            <option value="2000000-3000000">2 - 3 triệu</option>
-                                            <option value="3000000-5000000">3 - 5 triệu</option>
-                                            <option value="5000000-999999999">Trên 5 triệu</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div class="col-md-4">
-                                    <button type="submit" class="btn btn-primary w-100">
-                                        <i class="fas fa-search me-2"></i>Tìm kiếm
-                                    </button>
-                                </div>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
+    <?php include '../Components/search.php' ?>
     <!-- Phần nội dung chính -->
     <main class="py-5">
         <div class="container">
@@ -322,45 +228,7 @@ $nearest_rooms = $stmt_nearest->get_result();
         </div>
     </main>
 
-    <footer class="py-4 mt-5">
-        <div class="container">
-            <div class="row">
-                <div class="col-md-4 mb-4 mb-md-0">
-                    <h5>Phòng trọ sinh viên</h5>
-                    <p class="text-muted">Trang web tìm kiếm phòng trọ dành cho sinh viên trường Đại học Vinh.</p>
-                    <div class="social-links">
-                        <a href="#" class="me-2"><i class="fab fa-facebook-f"></i></a>
-                        <a href="#" class="me-2"><i class="fab fa-twitter"></i></a>
-                        <a href="#" class="me-2"><i class="fab fa-instagram"></i></a>
-                    </div>
-                </div>
-                <div class="col-md-4 mb-4 mb-md-0">
-                    <h5>Liên kết</h5>
-                    <ul class="list-unstyled">
-                        <li><a href="#"><i class="fas fa-angle-right me-2"></i>Trang chủ</a></li>
-                        <li><a href="#"><i class="fas fa-angle-right me-2"></i>Tìm phòng trọ</a></li>
-                        <li><a href="#"><i class="fas fa-angle-right me-2"></i>Đăng tin</a></li>
-                        <li><a href="#"><i class="fas fa-angle-right me-2"></i>Liên hệ</a></li>
-                    </ul>
-                </div>
-                <div class="col-md-4">
-                    <h5>Liên hệ với chúng tôi</h5>
-                    <ul class="list-unstyled contact-info">
-                        <li><i class="fas fa-map-marker-alt me-2"></i>182 Lê Duẩn, TP. Vinh, Nghệ An</li>
-                        <li><i class="fas fa-phone me-2"></i>0123 456 789</li>
-                        <li><i class="fas fa-envelope me-2"></i>info@phongtrodhvinh.com</li>
-                    </ul>
-                </div>
-            </div>
-            <hr>
-            <div class="row">
-                <div class="col">
-                    <p class="text-center mb-0">&copy; <?php echo date('Y'); ?> Phòng trọ sinh viên. All rights reserved.</p>
-                </div>
-            </div>
-        </div>
-    </footer>
-
+    <?php include '../Components/footer.php' ?>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.js"></script>
     <script src="../Assets/main.js"></script>
