@@ -46,7 +46,7 @@ session_start();
                 <?php
                 if (isset($_SESSION['login_attempt']) && $_SESSION['login_attempt'] >= 3) {
                     echo '<div class="mb-3 captcha-container">
-                            <div class="g-recaptcha" data-sitekey="SITE_KEY_CUA_BAN"></div>
+                            <div class="g-recaptcha" data-sitekey="6LdqYD0rAAAAAL-dXI36p_k0Vn_RRq3KTOFiQrIi"></div>
                           </div>';
                     echo '<script src="https://www.google.com/recaptcha/api.js" async defer></script>';
                 }

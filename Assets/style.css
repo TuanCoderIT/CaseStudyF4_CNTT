@@ -325,3 +325,359 @@ label {
     color: #6c757d;
     z-index: 10;
 }
+
+/* Styles cho trang danh sách và tìm kiếm phòng trọ */
+.home-body {
+    background: linear-gradient(135deg, #f5f7fa, #c3cfe2);
+    font-family: 'Lexend', sans-serif;
+    padding-top: 60px;
+    min-height: 100vh;
+}
+
+.search-body {
+    background: linear-gradient(135deg, #f5f7fa, #c3cfe2);
+    font-family: 'Lexend', sans-serif;
+    padding-top: 70px;
+    min-height: 100vh;
+}
+
+.navbar {
+    background: rgba(25, 55, 109, 0.9);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.navbar-brand {
+    font-weight: 700;
+    color: #fff;
+}
+
+.navbar .nav-link {
+    color: #f0f0f0;
+    font-weight: 500;
+    margin: 0 5px;
+    transition: all 0.3s;
+}
+
+.navbar .nav-link:hover, .navbar .nav-link.active {
+    color: var(--accent-color);
+}
+
+.avatar-small {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid var(--accent-color);
+}
+
+/* Banner tìm kiếm */
+.search-banner {
+    background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('../images/banner.jpg');
+    background-size: cover;
+    background-position: center;
+    padding: 100px 0 70px;
+    margin-bottom: 30px;
+    color: white;
+    border-radius: 0 0 50px 50px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+}
+
+.search-container {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(5px);
+    border-radius: 20px;
+    padding: 30px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.search-container h1 {
+    font-weight: 700;
+    margin-bottom: 30px;
+    font-size: 2.5rem;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.search-form .form-select,
+.search-form .form-control,
+.search-form .btn {
+    height: 50px;
+    border-radius: 10px;
+    font-size: 1rem;
+}
+
+.search-form .input-group-text {
+    border-radius: 10px 0 0 10px;
+    background-color: #fff;
+    border-right: 0;
+}
+
+.search-form .form-select {
+    border-left: 0;
+    padding-left: 5px;
+}
+
+.search-form .btn-primary {
+    font-weight: 600;
+    font-size: 1rem;
+}
+
+/* Card phòng trọ */
+.section-title {
+    font-weight: 700;
+    font-size: 1.8rem;
+    position: relative;
+    padding-bottom: 10px;
+}
+
+.section-title:after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 50px;
+    height: 3px;
+    background: var(--primary-color);
+    border-radius: 3px;
+}
+
+.room-card {
+    border: none;
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s ease;
+}
+
+.room-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+}
+
+.room-image {
+    position: relative;
+    height: 200px;
+    overflow: hidden;
+}
+
+.room-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s;
+}
+
+.room-card:hover .room-image img {
+    transform: scale(1.05);
+}
+
+.price-tag {
+    position: absolute;
+    bottom: 15px;
+    left: 15px;
+    background: var(--primary-color);
+    color: white;
+    padding: 5px 10px;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.view-count {
+    position: absolute;
+    top: 15px;
+    left: 15px;
+    background: rgba(0, 0, 0, 0.6);
+    color: white;
+    padding: 5px 10px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+}
+
+.new-tag {
+    position: absolute;
+    top: 15px;
+    left: 15px;
+    background: var(--accent-color);
+    color: white;
+    padding: 5px 10px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+}
+
+.distance-tag {
+    position: absolute;
+    top: 15px;
+    left: 15px;
+    background: rgba(25, 135, 84, 0.8);
+    color: white;
+    padding: 5px 10px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+}
+
+.card-title {
+    font-weight: 700;
+    font-size: 1.2rem;
+}
+
+.card-title a {
+    color: var(--dark-color);
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+.card-title a:hover {
+    color: var(--primary-color);
+}
+
+.address {
+    color: #6c757d;
+    font-size: 0.9rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.room-info {
+    display: flex;
+    justify-content: space-between;
+    color: #6c757d;
+    font-size: 0.9rem;
+}
+
+.room-utilities-preview {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+}
+
+.utility-tag {
+    background: #f0f2f5;
+    color: #555;
+    padding: 3px 10px;
+    border-radius: 15px;
+    font-size: 0.8rem;
+}
+
+/* Trang tìm kiếm */
+.filter-container {
+    background: white;
+    border-radius: 15px;
+    padding: 20px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+    margin-bottom: 20px;
+    position: sticky;
+    top: 80px;
+}
+
+.filter-title {
+    font-weight: 700;
+    font-size: 1.3rem;
+    margin-bottom: 20px;
+    color: var(--dark-color);
+    border-bottom: 2px solid #f0f2f5;
+    padding-bottom: 10px;
+}
+
+.filter-subtitle {
+    font-weight: 600;
+    font-size: 1.1rem;
+    margin-bottom: 15px;
+    color: var(--dark-color);
+}
+
+.filter-section {
+    margin-bottom: 25px;
+}
+
+.utilities-filter {
+    max-height: 200px;
+    overflow-y: auto;
+    padding-right: 10px;
+}
+
+.utilities-filter.show-all {
+    max-height: none;
+}
+
+.search-results {
+    background: white;
+    border-radius: 15px;
+    padding: 25px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+}
+
+.search-summary {
+    border-bottom: 1px solid #eee;
+    padding-bottom: 15px;
+    margin-bottom: 20px;
+}
+
+.search-summary h2 {
+    font-weight: 700;
+    font-size: 1.8rem;
+}
+
+/* Footer */
+footer {
+    background: var(--dark-color);
+    color: white;
+}
+
+footer h5 {
+    font-weight: 700;
+    margin-bottom: 20px;
+    position: relative;
+    padding-bottom: 10px;
+}
+
+footer h5:after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 40px;
+    height: 2px;
+    background: var(--accent-color);
+}
+
+footer a {
+    color: #f0f0f0;
+    text-decoration: none;
+    transition: all 0.3s;
+    margin-bottom: 10px;
+    display: inline-block;
+}
+
+footer a:hover {
+    color: var(--accent-color);
+    transform: translateX(5px);
+}
+
+.social-links a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.1);
+    transition: all 0.3s;
+}
+
+.social-links a:hover {
+    background: var(--accent-color);
+    transform: translateY(-3px);
+}
+
+.contact-info li {
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+}
+
+.contact-info li i {
+    margin-right: 10px;
+    width: 20px;
+}

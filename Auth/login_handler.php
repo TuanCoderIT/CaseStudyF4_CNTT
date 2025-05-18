@@ -21,7 +21,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         // Kiểm tra xem có cần kiểm tra CAPTCHA không
         if (isset($_SESSION['login_attempt']) && $_SESSION['login_attempt'] >= 3) {
             // Xác minh CAPTCHA
-            $recaptcha_secret = "RECAPTCHA_SECRET_KEY"; // Thay thế bằng secret key của bạn
+            $recaptcha_secret = "6LdqYD0rAAAAAF-8kaMHyGC8gS9UYhrsUvBptUfh"; // Thay thế bằng secret key của bạn
             $response = $_POST["g-recaptcha-response"];
             
             $verify_response = file_get_contents('https://www.google.com/recaptcha/api/siteverify?secret=' . $recaptcha_secret . '&response=' . $response);
@@ -53,7 +53,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     unset($_SESSION['login_attempt']);
                     
                     // Chuyển hướng đến trang chính sau khi đăng nhập thành công
-                    header("Location: ../index.php");
+                    header("Location: ../Home/index.php");
                     exit();
                 } else {
                     $error_message = "Mật khẩu không chính xác.";

@@ -256,7 +256,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 
                 <div class="d-grid gap-2">
                     <button type="submit" class="btn btn-primary btn-update">Cập nhật thông tin</button>
-                    <a href="../index.php" class="btn btn-outline-secondary">Quay lại trang chủ</a>
+                    <a href="../Home/index.php" class="btn btn-outline-secondary">Quay lại trang chủ</a>
                 </div>
             </form>
         </div>
