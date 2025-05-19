@@ -11,6 +11,11 @@ if (!isset($_SESSION['user_id'])) {
 // Kết nối đến CSDL
 require_once('../config/db.php');
 
+// Khởi tạo mảng favorite_rooms nếu chưa tồn tại trong session
+if (!isset($_SESSION['favorite_rooms'])) {
+    $_SESSION['favorite_rooms'] = array();
+}
+
 // Kiểm tra id phòng trọ trong URL
 if (!isset($_GET['id']) || empty($_GET['id'])) {
     header('Location: index.php');
@@ -18,6 +23,35 @@ if (!isset($_GET['id']) || empty($_GET['id'])) {
 }
 
 $room_id = $_GET['id'];
+
+// Xử lý thêm/xóa khỏi danh sách yêu thích
+$favorite_message = '';
+$message_type = '';
+
+if (isset($_GET['action'])) {
+    if ($_GET['action'] === 'favorite') {
+        // Thêm vào danh sách yêu thích nếu chưa có
+        if (!in_array($room_id, $_SESSION['favorite_rooms'])) {
+            $_SESSION['favorite_rooms'][] = $room_id;
+            $favorite_message = 'Đã thêm phòng trọ vào danh sách yêu thích!';
+            $message_type = 'success';
+        }
+    } elseif ($_GET['action'] === 'unfavorite') {
+        // Xóa khỏi danh sách yêu thích
+        if (($key = array_search($room_id, $_SESSION['favorite_rooms'])) !== false) {
+            unset($_SESSION['favorite_rooms'][$key]);
+            // Sắp xếp lại mảng
+            $_SESSION['favorite_rooms'] = array_values($_SESSION['favorite_rooms']);
+            $favorite_message = 'Đã xóa phòng trọ khỏi danh sách yêu thích!';
+            $message_type = 'warning';
+        }
+    }
+    
+    // Chuyển hướng để loại bỏ tham số action khỏi URL
+    header("Location: room_detail.php?id=$room_id" . 
+           (!empty($favorite_message) ? "&message=" . urlencode($favorite_message) . "&type=" . $message_type : ""));
+    exit;
+}
 
 // Truy vấn thông tin phòng trọ
 $stmt = $conn->prepare("
@@ -41,10 +75,21 @@ if ($result->num_rows == 0) {
 
 $room = $result->fetch_assoc();
 
-// Tăng lượt xem
-$stmt_update_view = $conn->prepare("UPDATE motel SET count_view = count_view + 1 WHERE id = ?");
-$stmt_update_view->bind_param("i", $room_id);
-$stmt_update_view->execute();
+// Tăng lượt xem - cải tiến để đếm chính xác hơn
+// Khởi tạo mảng viewed_rooms nếu chưa tồn tại trong session
+if (!isset($_SESSION['viewed_rooms'])) {
+    $_SESSION['viewed_rooms'] = array();
+}
+
+// Chỉ tăng lượt xem nếu người dùng chưa xem phòng này trong phiên làm việc hiện tại
+if (!in_array($room_id, $_SESSION['viewed_rooms'])) {
+    $stmt_update_view = $conn->prepare("UPDATE motel SET count_view = count_view + 1 WHERE id = ?");
+    $stmt_update_view->bind_param("i", $room_id);
+    $stmt_update_view->execute();
+
+    // Thêm ID phòng vào danh sách đã xem
+    $_SESSION['viewed_rooms'][] = $room_id;
+}
 
 // Lấy phòng trọ tương tự (cùng khu vực hoặc cùng khoảng giá)
 $stmt_similar = $conn->prepare("
@@ -93,10 +138,21 @@ $formatted_price = number_format($room['price']) . ' đ/tháng';
     <link rel="stylesheet" href="../Assets/style.css">
     <!-- Link tới thư viện Swiper cho slider -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.css">
+    <!-- Link tới thư viện Animate.css cho các hiệu ứng -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
 </head>
 
-<body class="room-detail-body">
-    <?php include '../Components/header.php' ?>
+<body class="room-detail-body">    <?php include '../Components/header.php' ?>
+    
+    <?php if (isset($_GET['message'])): ?>
+        <div class="container mt-4">
+            <div class="alert alert-<?php echo isset($_GET['type']) ? htmlspecialchars($_GET['type']) : 'info'; ?> alert-dismissible fade show animate__animated animate__fadeIn" role="alert">
+                <i class="fas <?php echo ($_GET['type'] == 'success') ? 'fa-check-circle' : 'fa-exclamation-circle'; ?> me-2"></i>
+                <?php echo htmlspecialchars($_GET['message']); ?>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        </div>
+    <?php endif; ?>
 
     <section class="room-detail-section">
         <div class="container">
@@ -119,7 +175,12 @@ $formatted_price = number_format($room['price']) . ' đ/tháng';
                     <!-- Thông tin chính -->
                     <div class="room-main-info">
                         <h1 class="room-title"><?php echo $room['title']; ?></h1>
-                        <p class="room-price"><?php echo $formatted_price; ?></p>
+                        <p class="room-price">
+                            <?php echo $formatted_price; ?>
+                            <span class="view-count-badge ms-3">
+                                <i class="fas fa-eye me-1"></i><?php echo number_format($room['count_view']); ?> lượt xem
+                            </span>
+                        </p>
                         <p class="room-address">
                             <i class="fas fa-map-marker-alt me-2"></i>
                             <?php echo $room['address']; ?>
@@ -236,11 +297,19 @@ $formatted_price = number_format($room['price']) . ' đ/tháng';
                                     <span><i class="fas fa-phone-alt me-2 text-muted"></i>Số điện thoại</span>
                                     <span class="fw-bold"><?php echo $room['phone']; ?></span>
                                 </li>
-                            </ul>
-                            <div class="mt-3">
-                                <a href="javascript:void(0)" class="btn btn-outline-primary btn-sm w-100" onclick="shareRoom()">
-                                    <i class="fas fa-share-alt me-2"></i>Chia sẻ phòng trọ
+                            </ul>                            <div class="mt-3 d-flex gap-2">
+                                <a href="javascript:void(0)" class="btn btn-outline-primary btn-sm flex-grow-1" onclick="shareRoom()">
+                                    <i class="fas fa-share-alt me-2"></i>Chia sẻ
                                 </a>
+                                <?php if (in_array($room_id, $_SESSION['favorite_rooms'])): ?>
+                                    <a href="room_detail.php?id=<?php echo $room_id; ?>&action=unfavorite" class="btn btn-danger btn-sm flex-grow-1 favorite-btn">
+                                        <i class="fas fa-heart me-2 animate__animated animate__heartBeat"></i>Bỏ thích
+                                    </a>
+                                <?php else: ?>
+                                    <a href="room_detail.php?id=<?php echo $room_id; ?>&action=favorite" class="btn btn-outline-danger btn-sm flex-grow-1 favorite-btn">
+                                        <i class="far fa-heart me-2"></i>Yêu thích
+                                    </a>
+                                <?php endif; ?>
                             </div>
                         </div>
                     </div>
@@ -379,6 +448,45 @@ $formatted_price = number_format($room['price']) . ' đ/tháng';
                 }
             }
         }
+
+        // Khởi tạo hiệu ứng cho nút yêu thích
+        document.addEventListener('DOMContentLoaded', function() {
+            // Hiệu ứng nút yêu thích với hiệu ứng nâng cao
+            const favoriteBtn = document.querySelector('.favorite-btn');
+            if (favoriteBtn) {
+                favoriteBtn.addEventListener('click', function(e) {
+                    // Hiệu ứng nhấn nút
+                    this.classList.add('btn-pulse');
+                    
+                    // Thêm hiệu ứng cho icon
+                    const icon = this.querySelector('i');
+                    if (icon.classList.contains('far')) { // Nếu đang thêm vào yêu thích
+                        icon.classList.add('animate__animated', 'animate__heartBeat');
+                    } else { // Nếu đang xóa khỏi yêu thích
+                        icon.classList.add('animate__animated', 'animate__fadeOut');
+                    }
+                });
+            }
+        });
+    </script>
+    <!-- Script để xử lý animation cho số lượt xem -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Kiểm tra xem đây có phải là lượt xem mới hay không
+            <?php if (
+                isset($_SESSION['viewed_rooms']) &&
+                in_array($room_id, $_SESSION['viewed_rooms']) &&
+                count($_SESSION['viewed_rooms']) <= 1
+            ): ?>
+                // Hiệu ứng cho view count nếu là lượt xem đầu tiên
+                const viewCountBadge = document.querySelector('.view-count-badge');
+                if (viewCountBadge) {
+                    setTimeout(function() {
+                        viewCountBadge.classList.add('animate__animated', 'animate__heartBeat');
+                    }, 500);
+                }
+            <?php endif; ?>
+        });
     </script>
 </body>
 

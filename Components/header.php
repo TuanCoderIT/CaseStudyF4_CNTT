@@ -19,6 +19,16 @@
                     <li class="nav-item">
                         <a class="text-white nav-link" href="post.php">Đăng tin</a>
                     </li>
+                    <li class="nav-item">
+                        <a class="text-white nav-link" href="my_rooms.php">
+                            <i class="fas fa-heart me-1 text-danger"></i>Yêu thích
+                            <?php if (isset($_SESSION['favorite_rooms']) && count($_SESSION['favorite_rooms']) > 0): ?>
+                                <span class="badge rounded-pill bg-danger favorite-counter animate__animated <?php echo isset($_GET['action']) && in_array($_GET['action'], ['favorite', 'unfavorite']) ? 'animate__heartBeat' : ''; ?>">
+                                    <?php echo count($_SESSION['favorite_rooms']); ?>
+                                </span>
+                            <?php endif; ?>
+                        </a>
+                    </li>
                 </ul>
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item dropdown">

@@ -180,6 +180,19 @@ document.addEventListener('DOMContentLoaded', function() {
         initMobileImageZoom();
         initStickyRoomActions();
     }
+
+    // Khởi tạo hiệu ứng nút yêu thích
+    animateFavoriteButton();
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const action = urlParams.get('action');
+    
+    if (action === 'favorite' || action === 'unfavorite') {
+        const favoriteCounters = document.querySelectorAll('.favorite-counter');
+        favoriteCounters.forEach(counter => {
+            counter.classList.add('animate__animated', 'animate__heartBeat');
+        });
+    }
 });
 
 // Handle filter section toggle on mobile/tablet
@@ -341,5 +354,68 @@ function initStickyRoomActions() {
             // Append to body
             document.body.appendChild(stickyActions);
         }
+    }
+}
+
+// Hiệu ứng cho nút yêu thích
+function animateFavoriteButton() {
+    const favoriteButton = document.querySelector('.favorite-btn');
+    if (favoriteButton) {
+        favoriteButton.addEventListener('click', function(e) {
+            const icon = this.querySelector('i');
+            const isAdding = icon.classList.contains('far'); // Kiểm tra nếu đang thêm yêu thích
+            
+            // Hiệu ứng khi nhấn nút
+            this.classList.add('btn-pulse');
+            setTimeout(() => {
+                this.classList.remove('btn-pulse');
+            }, 500);
+            
+            // Hiển thị thông báo nổi tạm thời
+            const toastMessage = isAdding ? 'Đã thêm vào danh sách yêu thích!' : 'Đã xóa khỏi danh sách yêu thích!';
+            const toastClass = isAdding ? 'bg-success' : 'bg-warning text-dark';
+            
+            const toast = document.createElement('div');
+            toast.className = `toast-notification ${toastClass} animate__animated animate__fadeIn`;
+            toast.innerHTML = `<i class="fas ${isAdding ? 'fa-check-circle' : 'fa-exclamation-circle'} me-2"></i>${toastMessage}`;
+            
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.classList.remove('animate__fadeIn');
+                toast.classList.add('animate__fadeOut');
+                setTimeout(() => {
+                    toast.remove();
+                }, 500);
+            }, 2000);
+        });
+    }
+}
+
+// Hiệu ứng cho favorite counter trong header
+function updateFavoriteCounter(count) {
+    const counter = document.querySelector('.favorite-counter');
+    if (counter) {
+        // Lưu giá trị cũ
+        const oldValue = parseInt(counter.textContent);
+        
+        // Cập nhật giá trị mới
+        counter.textContent = count;
+        
+        // Thêm hiệu ứng dựa trên thay đổi
+        if (count > oldValue) {
+            counter.classList.add('animate__animated', 'animate__heartBeat');
+        } else if (count < oldValue) {
+            counter.classList.add('animate__animated', 'animate__fadeOut');
+            setTimeout(() => {
+                counter.classList.remove('animate__fadeOut');
+                counter.classList.add('animate__fadeIn');
+            }, 300);
+        }
+        
+        // Xóa class sau khi animation hoàn tất
+        setTimeout(() => {
+            counter.classList.remove('animate__heartBeat', 'animate__fadeIn');
+        }, 1000);
     }
 }

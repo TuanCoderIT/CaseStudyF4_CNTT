@@ -1697,3 +1697,228 @@ footer {
     font-size: 20px;
   }
 }
+
+/* Styling for view count badge in room detail */
+.view-count-badge {
+  display: inline-flex;
+  align-items: center;
+  background-color: rgba(0, 0, 0, 0.06);
+  color: #666;
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.view-count-badge i {
+  color: #ff6b6b;
+  margin-right: 6px;
+  font-size: 1rem;
+}
+
+.view-count-badge:hover {
+  background-color: rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+/* Styling for favorite badge and favorites page */
+.favorite-badge {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background-color: rgba(255, 255, 255, 0.9);
+  color: #ff6b6b;
+  padding: 5px;
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+  transition: all 0.3s ease;
+}
+
+.favorite-badge:hover {
+  transform: scale(1.1);
+}
+
+.favorite-badge i {
+  font-size: 14px;
+}
+
+.empty-favorites {
+  padding: 60px 20px;
+  background-color: rgba(255, 255, 255, 0.8);
+  border-radius: 15px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+}
+
+.empty-favorites i {
+  filter: drop-shadow(0 5px 15px rgba(220, 53, 69, 0.3));
+}
+
+/* Animation for favorite item removal */
+.favorite-removing {
+  animation: fadeOutRight 0.5s forwards;
+}
+
+@keyframes fadeOutRight {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+}
+
+/* Hiệu ứng và styles cho tính năng yêu thích */
+
+/* Hiệu ứng pulse cho nút yêu thích */
+.btn-pulse {
+  animation: pulse 0.5s;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Hiệu ứng chuyển đổi icon trái tim */
+.favorite-btn i.fa-heart {
+  transition: transform 0.3s ease, color 0.3s ease;
+}
+
+.favorite-btn:hover i.fa-heart {
+  transform: scale(1.2);
+}
+
+/* Badge hiển thị trong danh sách yêu thích */
+.favorite-badge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background-color: rgba(255, 0, 0, 0.7);
+  color: white;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  animation: float 2s infinite ease-in-out;
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+/* Thông báo nổi khi thêm/xóa khỏi yêu thích */
+.toast-notification {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  padding: 10px 20px;
+  border-radius: 4px;
+  color: white;
+  z-index: 9999;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+  min-width: 250px;
+  text-align: center;
+}
+
+/* Style cho trang danh sách yêu thích khi trống */
+.empty-favorites {
+  background-color: rgba(255, 255, 255, 0.9);
+  border-radius: 8px;
+  padding: 30px;
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.05);
+}
+
+.empty-favorites i.fa-heart {
+  opacity: 0.8;
+  animation: pulse 2s infinite;
+}
+
+/* Hiệu ứng bổ sung cho trang yêu thích */
+
+/* Thanh tiêu đề có thêm hiệu ứng gradient */
+.section-title {
+  background: linear-gradient(90deg, #ff5e62, #ff9966);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  display: inline-block;
+  position: relative;
+}
+
+.section-title::after {
+  content: "";
+  position: absolute;
+  bottom: -5px;
+  left: 0;
+  width: 50%;
+  height: 3px;
+  background: linear-gradient(90deg, #ff5e62, #ff9966);
+}
+
+/* Bóng đổ sáng hơn cho card phòng trong danh sách yêu thích */
+.my-rooms-page .room-card {
+  transition: all 0.3s ease;
+  border: none;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+}
+
+.my-rooms-page .room-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+/* Hiệu ứng cho các nút trong card */
+.my-rooms-page .card-footer .btn {
+  transition: all 0.3s;
+}
+
+.my-rooms-page .card-footer .btn:hover {
+  transform: scale(1.1);
+}
+
+/* Hiệu ứng cho đánh dấu yêu thích */
+.favorite-counter {
+  position: relative;
+  z-index: 1;
+}
+
+.favorite-counter::after {
+  content: "";
+  position: absolute;
+  top: -3px;
+  left: -3px;
+  right: -3px;
+  bottom: -3px;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  z-index: -1;
+  transform: scale(0);
+  transition: transform 0.3s;
+}
+
+.favorite-counter:hover::after {
+  transform: scale(1);
+}

@@ -85,7 +85,7 @@ $nearest_rooms = $stmt_nearest->get_result();
                                     <div class="room-image">
                                         <img src="../<?php echo $room['images']; ?>" class="card-img-top" alt="<?php echo $room['title']; ?>">
                                         <span class="price-tag"><?php echo number_format($room['price']); ?> đ/tháng</span>
-                                        <span class="view-count"><i class="fas fa-eye me-1"></i><?php echo $room['count_view']; ?></span>
+                                        <span class="view-count"><i class="fas fa-eye me-1"></i><?php echo number_format($room['count_view']); ?></span>
                                     </div>
                                     <div class="card-body">
                                         <h5 class="card-title">
