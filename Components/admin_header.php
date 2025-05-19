@@ -36,7 +36,7 @@
     ?>
 
     <!-- Admin Custom CSS -->
-    <link rel="stylesheet" href="<?php echo $basePath; ?>../Admin/assets/css/admin.css">
+    <link rel="stylesheet" href="<?php echo $basePath; ?>Admin/assets/css/admin.css">
 
     <!-- jQuery -->
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
@@ -106,7 +106,7 @@
             <hr class="sidebar-divider d-none d-md-block mt-3 mb-2" style="border-color: rgba(255,255,255,0.15)">
 
             <li class="nav-item">
-                <a class="nav-link" href="<?php echo $basePath; ?>../../Home/index.php" target="_blank">
+                <a class="nav-link" href="<?php echo $basePath; ?>Home/index.php" target="_blank">
                     <i class="fas fa-fw fa-external-link-alt"></i>
                     <span>Xem trang chủ</span>
                 </a>

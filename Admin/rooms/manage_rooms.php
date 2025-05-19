@@ -110,7 +110,7 @@ $count_data = mysqli_fetch_assoc($count_result);
 $total_pages = ceil($count_data['count'] / $limit);
 
 $page_title = "Quản lý phòng trọ";
-include_once '../../Components/admin_header.php';
+include_once ('../../Components/admin_header.php');
 ?>
 
 <div class="page-header mb-4">

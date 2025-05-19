@@ -57,16 +57,70 @@ include_once '../../Components/admin_header.php';
 ?>
 
 <div class="container mt-4">
-    <h2 class="mb-4">Duyệt phòng trọ</h2>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Duyệt phòng trọ</h2>
+        <span class="badge bg-warning fs-6">
+            <i class="fas fa-clock me-1"></i> <?php echo mysqli_num_rows($result); ?> phòng chờ duyệt
+        </span>
+    </div>
 
     <?php if (isset($_SESSION['success'])): ?>
-        <div class="alert alert-success">
+        <div class="alert alert-success alert-dismissible fade show">
+            <i class="fas fa-check-circle me-2"></i>
             <?php
             echo $_SESSION['success'];
             unset($_SESSION['success']);
             ?>
+            <button type="button" class="btn-close" data-dismiss="alert" aria-label="Close"></button>
         </div>
     <?php endif; ?>
+
+    <?php if (isset($_SESSION['error'])): ?>
+        <div class="alert alert-danger alert-dismissible fade show">
+            <i class="fas fa-exclamation-circle me-2"></i>
+            <?php
+            echo $_SESSION['error'];
+            unset($_SESSION['error']);
+            ?>
+            <button type="button" class="btn-close" data-dismiss="alert" aria-label="Close"></button>
+        </div>
+    <?php endif; ?>
+
+    <!-- Lọc và tìm kiếm -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="fas fa-search"></i></span>
+                        <input type="text" class="form-control" id="searchPending" placeholder="Tìm kiếm theo tiêu đề, địa chỉ, người đăng...">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <select class="form-control" id="filterPendingCategory">
+                        <option value="">Tất cả loại phòng</option>
+                        <?php
+                        $categories_query = mysqli_query($conn, "SELECT * FROM categories ORDER BY name");
+                        while ($cat = mysqli_fetch_assoc($categories_query)) {
+                            echo '<option value="' . $cat['name'] . '">' . $cat['name'] . '</option>';
+                        }
+                        ?>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <select class="form-control" id="filterPendingDistrict">
+                        <option value="">Tất cả khu vực</option>
+                        <?php
+                        $districts_query = mysqli_query($conn, "SELECT * FROM districts ORDER BY name");
+                        while ($dist = mysqli_fetch_assoc($districts_query)) {
+                            echo '<option value="' . $dist['name'] . '">' . $dist['name'] . '</option>';
+                        }
+                        ?>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <div class="row">
         <?php if (mysqli_num_rows($result) > 0): ?>
@@ -143,5 +197,66 @@ include_once '../../Components/admin_header.php';
         <a href="../index.php" class="btn btn-secondary">Quay lại</a>
     </div>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Lọc và tìm kiếm phòng đang chờ duyệt
+        const searchPending = document.getElementById('searchPending');
+        const filterPendingCategory = document.getElementById('filterPendingCategory');
+        const filterPendingDistrict = document.getElementById('filterPendingDistrict');
+
+        function filterPendingRooms() {
+            const keyword = searchPending.value.toLowerCase();
+            const category = filterPendingCategory.value.toLowerCase();
+            const district = filterPendingDistrict.value.toLowerCase();
+
+            document.querySelectorAll('.col-lg-6.mb-4').forEach(room => {
+                const title = room.querySelector('.card-header h5').textContent.toLowerCase();
+                const address = room.querySelector('p:nth-child(3)').textContent.toLowerCase();
+                const userName = room.querySelector('p:nth-child(6)').textContent.toLowerCase();
+                const roomCategory = room.querySelector('p:nth-child(4)').textContent.toLowerCase();
+                const roomDistrict = room.querySelector('p:nth-child(5)').textContent.toLowerCase();
+
+                // Kiểm tra điều kiện lọc
+                const matchesKeyword = title.includes(keyword) ||
+                    address.includes(keyword) ||
+                    userName.includes(keyword);
+
+                const matchesCategory = category === '' ||
+                    roomCategory.includes(category.toLowerCase());
+
+                const matchesDistrict = district === '' ||
+                    roomDistrict.includes(district.toLowerCase());
+
+                // Hiển thị hoặc ẩn phòng
+                if (matchesKeyword && matchesCategory && matchesDistrict) {
+                    room.style.display = '';
+                } else {
+                    room.style.display = 'none';
+                }
+            });
+        }
+
+        // Gắn sự kiện lắng nghe
+        if (searchPending) {
+            searchPending.addEventListener('input', filterPendingRooms);
+        }
+        if (filterPendingCategory) {
+            filterPendingCategory.addEventListener('change', filterPendingRooms);
+        }
+        if (filterPendingDistrict) {
+            filterPendingDistrict.addEventListener('change', filterPendingRooms);
+        }
+
+        // Hiệu ứng fadeIn cho các phòng
+        document.querySelectorAll('.col-lg-6.mb-4').forEach((el, index) => {
+            el.style.opacity = '0';
+            setTimeout(() => {
+                el.style.transition = 'opacity 0.5s ease-in-out';
+                el.style.opacity = '1';
+            }, index * 100);
+        });
+    });
+</script>
 
 <?php include_once '../../Components/admin_footer.php'; ?>
