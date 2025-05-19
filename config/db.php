@@ -1,9 +1,9 @@
 <?php
 // Thông tin kết nối đến cơ sở dữ liệu
-$host = 'localhost';       // Host CSDL
+$host = 'localhost:3307';       // Host CSDL
 $username = 'root';        // Tên đăng nhập MySQL (mặc định là 'root')
-$password = 'Huynh@2004';            // Mật khẩu MySQL (mặc định là trống cho XAMPP)
-$database = 'case_study';  // Tên CSDL
+$password = '';            // Mật khẩu MySQL (mặc định là trống cho XAMPP)
+$database = 'gtpt';  // Tên CSDL
 
 // Tạo kết nối đến MySQL
 $conn = new mysqli($host, $username, $password, $database);
