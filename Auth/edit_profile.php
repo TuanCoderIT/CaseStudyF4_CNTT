@@ -221,7 +221,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <div class="mb-3">
                     <label><i class="fas fa-user-circle me-2"></i>Họ tên</label>
                     <div class="input-group">
-                        <span class="input-icon"><i class="fas fa-user-circle"></i></span>
                         <input type="text" class="form-control input-with-icon" name="name" 
                                placeholder="Nhập họ và tên" value="<?php echo htmlspecialchars($user['name']); ?>" required>
                     </div>
@@ -230,7 +229,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <div class="mb-3">
                     <label><i class="fas fa-user me-2"></i>Tên đăng nhập</label>
                     <div class="input-group">
-                        <span class="input-icon"><i class="fas fa-user"></i></span>
                         <input type="text" class="form-control input-with-icon" name="username" 
                                placeholder="Nhập tên đăng nhập" value="<?php echo htmlspecialchars($user['username']); ?>" required>
                     </div>
@@ -239,7 +237,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <div class="mb-3">
                     <label><i class="fas fa-envelope me-2"></i>Email</label>
                     <div class="input-group">
-                        <span class="input-icon"><i class="fas fa-envelope"></i></span>
                         <input type="email" class="form-control input-with-icon" name="email" 
                                placeholder="Nhập địa chỉ email" value="<?php echo htmlspecialchars($user['email']); ?>" required>
                     </div>
@@ -248,7 +245,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <div class="mb-4">
                     <label><i class="fas fa-phone me-2"></i>Số điện thoại</label>
                     <div class="input-group">
-                        <span class="input-icon"><i class="fas fa-phone"></i></span>
                         <input type="text" class="form-control input-with-icon" name="phone" 
                                placeholder="Nhập số điện thoại" value="<?php echo htmlspecialchars($user['phone']); ?>" required>
                     </div>
