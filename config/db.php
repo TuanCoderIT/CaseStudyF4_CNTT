@@ -1,9 +1,9 @@
 <?php
 // Thông tin kết nối đến cơ sở dữ liệu
-$host = 'localhost:3307';       // Host CSDL
+$host = 'localhost';       // Host CSDL
 $username = 'root';        // Tên đăng nhập MySQL (mặc định là 'root')
-$password = '';            // Mật khẩu MySQL (mặc định là trống cho XAMPP)
-$database = 'gtpt';  // Tên CSDL
+$password = 'Huynh@2004';            // Mật khẩu MySQL (mặc định là trống cho XAMPP)
+$database = 'case_study';  // Tên CSDL
 
 // Tạo kết nối đến MySQL
 $conn = new mysqli($host, $username, $password, $database);
@@ -15,4 +15,3 @@ if ($conn->connect_error) {
 
 // Thiết lập charset là utf8mb4 để hỗ trợ đầy đủ tiếng Việt và các ký tự đặc biệt
 $conn->set_charset("utf8mb4");
-?>
