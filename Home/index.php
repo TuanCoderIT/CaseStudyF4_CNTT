@@ -18,7 +18,7 @@ $stmt_most_viewed = $conn->prepare("
     LEFT JOIN users u ON m.user_id = u.id 
     WHERE m.approve = 1 
     ORDER BY m.count_view DESC 
-    LIMIT 6
+    LIMIT 4
 ");
 $stmt_most_viewed->execute();
 $most_viewed_rooms = $stmt_most_viewed->get_result();
@@ -30,7 +30,7 @@ $stmt_newest = $conn->prepare("
     LEFT JOIN users u ON m.user_id = u.id 
     WHERE m.approve = 1 
     ORDER BY m.created_at DESC 
-    LIMIT 6
+    LIMIT 4
 ");
 $stmt_newest->execute();
 $newest_rooms = $stmt_newest->get_result();
@@ -42,7 +42,7 @@ $stmt_nearest = $conn->prepare("
     LEFT JOIN users u ON m.user_id = u.id 
     WHERE m.approve = 1 
     ORDER BY CAST(m.latlng AS DECIMAL(10,6)) 
-    LIMIT 6
+    LIMIT 4
 ");
 $stmt_nearest->execute();
 $nearest_rooms = $stmt_nearest->get_result();
@@ -50,6 +50,7 @@ $nearest_rooms = $stmt_nearest->get_result();
 ?>
 <!DOCTYPE html>
 <html lang="vi">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -57,13 +58,16 @@ $nearest_rooms = $stmt_nearest->get_result();
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="../Assets/style.css">
+    <link rel="stylesheet" href="../Assets/four-column-layout.css">
     <!-- Link tới thư viện Swiper cho slider -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.css">
 </head>
+
 <body class="home-body">
     <?php include '../Components/header.php' ?>
+
     <!-- Banner tìm kiếm -->
-    <?php include '../Components/search.php' ?>
+    <?php include '../Components/banner_search.php' ?>
     <!-- Phần nội dung chính -->
     <main class="py-5">
         <div class="container">
@@ -73,12 +77,11 @@ $nearest_rooms = $stmt_nearest->get_result();
                     <h2 class="section-title"><i class="fas fa-fire me-2 text-danger"></i>Phòng trọ xem nhiều nhất</h2>
                     <a href="search.php?sort=view" class="btn btn-outline-primary btn-sm">Xem tất cả</a>
                 </div>
-                
+
                 <div class="row">
-                    <?php if ($most_viewed_rooms->num_rows > 0): ?>
-                        <?php while($room = $most_viewed_rooms->fetch_assoc()): ?>
-                            <div class="col-md-4 mb-4">
-                                <div class="card room-card h-100">
+                    <?php if ($most_viewed_rooms->num_rows > 0): ?> <?php while ($room = $most_viewed_rooms->fetch_assoc()): ?>
+                            <div class="col-md-3 mb-4">
+                                <div class="card room-card four-col h-100">
                                     <div class="room-image">
                                         <img src="../<?php echo $room['images']; ?>" class="card-img-top" alt="<?php echo $room['title']; ?>">
                                         <span class="price-tag"><?php echo number_format($room['price']); ?> đ/tháng</span>
@@ -92,9 +95,9 @@ $nearest_rooms = $stmt_nearest->get_result();
                                         <div class="room-info">
                                             <span><i class="fas fa-expand me-1"></i><?php echo $room['area']; ?> m²</span>
                                             <span><i class="fas fa-bolt me-1"></i>
-                                                <?php 
-                                                    $utilities = explode(',', $room['utilities']);
-                                                    echo count($utilities) . ' tiện ích';
+                                                <?php
+                                                                        $utilities = explode(',', $room['utilities']);
+                                                                        echo count($utilities) . ' tiện ích';
                                                 ?>
                                             </span>
                                         </div>
@@ -103,9 +106,9 @@ $nearest_rooms = $stmt_nearest->get_result();
                                         <small class="text-muted">Đăng bởi: <?php echo $room['owner_name']; ?></small>
                                         <small class="text-muted float-end">
                                             <i class="far fa-clock me-1"></i>
-                                            <?php 
-                                                $date = new DateTime($room['created_at']);
-                                                echo $date->format('d/m/Y'); 
+                                            <?php
+                                                                        $date = new DateTime($room['created_at']);
+                                                                        echo $date->format('d/m/Y');
                                             ?>
                                         </small>
                                     </div>
@@ -126,12 +129,11 @@ $nearest_rooms = $stmt_nearest->get_result();
                     <h2 class="section-title"><i class="fas fa-clock me-2 text-success"></i>Phòng trọ mới đăng tải</h2>
                     <a href="search.php?sort=newest" class="btn btn-outline-primary btn-sm">Xem tất cả</a>
                 </div>
-                
+
                 <div class="row">
-                    <?php if ($newest_rooms->num_rows > 0): ?>
-                        <?php while($room = $newest_rooms->fetch_assoc()): ?>
-                            <div class="col-md-4 mb-4">
-                                <div class="card room-card h-100">
+                    <?php if ($newest_rooms->num_rows > 0): ?> <?php while ($room = $newest_rooms->fetch_assoc()): ?>
+                            <div class="col-md-3 mb-4">
+                                <div class="card room-card four-col h-100">
                                     <div class="room-image">
                                         <img src="../<?php echo $room['images']; ?>" class="card-img-top" alt="<?php echo $room['title']; ?>">
                                         <span class="price-tag"><?php echo number_format($room['price']); ?> đ/tháng</span>
@@ -145,9 +147,9 @@ $nearest_rooms = $stmt_nearest->get_result();
                                         <div class="room-info">
                                             <span><i class="fas fa-expand me-1"></i><?php echo $room['area']; ?> m²</span>
                                             <span><i class="fas fa-bolt me-1"></i>
-                                                <?php 
-                                                    $utilities = explode(',', $room['utilities']);
-                                                    echo count($utilities) . ' tiện ích';
+                                                <?php
+                                                                    $utilities = explode(',', $room['utilities']);
+                                                                    echo count($utilities) . ' tiện ích';
                                                 ?>
                                             </span>
                                         </div>
@@ -156,9 +158,9 @@ $nearest_rooms = $stmt_nearest->get_result();
                                         <small class="text-muted">Đăng bởi: <?php echo $room['owner_name']; ?></small>
                                         <small class="text-muted float-end">
                                             <i class="far fa-clock me-1"></i>
-                                            <?php 
-                                                $date = new DateTime($room['created_at']);
-                                                echo $date->format('d/m/Y'); 
+                                            <?php
+                                                                    $date = new DateTime($room['created_at']);
+                                                                    echo $date->format('d/m/Y');
                                             ?>
                                         </small>
                                     </div>
@@ -179,12 +181,11 @@ $nearest_rooms = $stmt_nearest->get_result();
                     <h2 class="section-title"><i class="fas fa-university me-2 text-primary"></i>Phòng trọ gần trường ĐH Vinh</h2>
                     <a href="search.php?sort=nearest" class="btn btn-outline-primary btn-sm">Xem tất cả</a>
                 </div>
-                
+
                 <div class="row">
-                    <?php if ($nearest_rooms->num_rows > 0): ?>
-                        <?php while($room = $nearest_rooms->fetch_assoc()): ?>
-                            <div class="col-md-4 mb-4">
-                                <div class="card room-card h-100">
+                    <?php if ($nearest_rooms->num_rows > 0): ?> <?php while ($room = $nearest_rooms->fetch_assoc()): ?>
+                            <div class="col-md-3 mb-4">
+                                <div class="card room-card four-col h-100">
                                     <div class="room-image">
                                         <img src="../<?php echo $room['images']; ?>" class="card-img-top" alt="<?php echo $room['title']; ?>">
                                         <span class="price-tag"><?php echo number_format($room['price']); ?> đ/tháng</span>
@@ -198,9 +199,9 @@ $nearest_rooms = $stmt_nearest->get_result();
                                         <div class="room-info">
                                             <span><i class="fas fa-expand me-1"></i><?php echo $room['area']; ?> m²</span>
                                             <span><i class="fas fa-bolt me-1"></i>
-                                                <?php 
-                                                    $utilities = explode(',', $room['utilities']);
-                                                    echo count($utilities) . ' tiện ích';
+                                                <?php
+                                                                    $utilities = explode(',', $room['utilities']);
+                                                                    echo count($utilities) . ' tiện ích';
                                                 ?>
                                             </span>
                                         </div>
@@ -209,9 +210,9 @@ $nearest_rooms = $stmt_nearest->get_result();
                                         <small class="text-muted">Đăng bởi: <?php echo $room['owner_name']; ?></small>
                                         <small class="text-muted float-end">
                                             <i class="far fa-clock me-1"></i>
-                                            <?php 
-                                                $date = new DateTime($room['created_at']);
-                                                echo $date->format('d/m/Y'); 
+                                            <?php
+                                                                    $date = new DateTime($room['created_at']);
+                                                                    echo $date->format('d/m/Y');
                                             ?>
                                         </small>
                                     </div>
@@ -233,4 +234,5 @@ $nearest_rooms = $stmt_nearest->get_result();
     <script src="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.js"></script>
     <script src="../Assets/main.js"></script>
 </body>
+
 </html>

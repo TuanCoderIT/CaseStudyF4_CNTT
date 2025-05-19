@@ -11,322 +11,399 @@ if (!isset($_SESSION['user_id'])) {
 // Kết nối đến CSDL
 require_once('../config/db.php');
 
-// Xử lý tìm kiếm
-$where_clause = "WHERE m.approve = 1";
-$params = [];
-$types = "";
+// Danh sách quận/huyện
+$stmt_districts = $conn->prepare("SELECT * FROM districts ORDER BY name");
+$stmt_districts->execute();
+$districts = $stmt_districts->get_result();
 
-// Tìm kiếm theo địa điểm
-if (isset($_GET['district']) && !empty($_GET['district'])) {
-    $district_id = $_GET['district'];
-    $where_clause .= " AND m.district_id = ?";
-    $params[] = $district_id;
-    $types .= "i";
+// Danh sách danh mục
+$stmt_categories = $conn->prepare("SELECT * FROM categories ORDER BY name");
+$stmt_categories->execute();
+$categories = $stmt_categories->get_result();
+
+// Mặc định sort là newest
+$sort = isset($_GET['sort']) ? $_GET['sort'] : 'newest';
+$sort_sql = "";
+
+// Xử lý tìm kiếm và sắp xếp
+switch ($sort) {
+    case 'view':
+        $sort_sql = "ORDER BY m.count_view DESC";
+        $sort_text = "Phòng trọ xem nhiều nhất";
+        $sort_icon = "fas fa-fire text-danger";
+        break;
+    case 'nearest':
+        $sort_sql = "ORDER BY CAST(m.latlng AS DECIMAL(10,6))";
+        $sort_text = "Phòng trọ gần trường ĐH Vinh";
+        $sort_icon = "fas fa-university text-primary";
+        break;
+    case 'price_asc':
+        $sort_sql = "ORDER BY m.price ASC";
+        $sort_text = "Giá từ thấp đến cao";
+        $sort_icon = "fas fa-sort-amount-down text-success";
+        break;
+    case 'price_desc':
+        $sort_sql = "ORDER BY m.price DESC";
+        $sort_text = "Giá từ cao đến thấp";
+        $sort_icon = "fas fa-sort-amount-up text-warning";
+        break;
+    case 'newest':
+    default:
+        $sort_sql = "ORDER BY m.created_at DESC";
+        $sort_text = "Phòng trọ mới đăng tải";
+        $sort_icon = "fas fa-clock text-success";
+        break;
 }
 
-// Tìm kiếm theo khoảng giá
+// Xây dựng query dựa trên các tham số tìm kiếm
+$where_conditions = ["m.approve = 1"];
+$params = [];
+$param_types = "";
+
+// Lọc theo quận/huyện
+if (isset($_GET['district']) && !empty($_GET['district'])) {
+    $where_conditions[] = "m.district_id = ?";
+    $params[] = $_GET['district'];
+    $param_types .= "i";
+}
+
+// Lọc theo danh mục
+if (isset($_GET['category']) && !empty($_GET['category'])) {
+    $where_conditions[] = "m.category_id = ?";
+    $params[] = $_GET['category'];
+    $param_types .= "i";
+}
+
+// Lọc theo khoảng giá
 if (isset($_GET['price']) && !empty($_GET['price'])) {
     $price_range = explode('-', $_GET['price']);
     if (count($price_range) == 2) {
-        $min_price = $price_range[0];
-        $max_price = $price_range[1];
-        $where_clause .= " AND m.price BETWEEN ? AND ?";
-        $params[] = $min_price;
-        $params[] = $max_price;
-        $types .= "ii";
+        $where_conditions[] = "m.price BETWEEN ? AND ?";
+        $params[] = $price_range[0];
+        $params[] = $price_range[1];
+        $param_types .= "ii";
     }
 }
 
-// Tìm kiếm theo tiện ích
+// Lọc theo tiện ích
 if (isset($_GET['utilities']) && !empty($_GET['utilities'])) {
-    $utilities = $_GET['utilities'];
-    if (is_array($utilities)) {
-        foreach ($utilities as $utility) {
-            $where_clause .= " AND FIND_IN_SET(?, m.utilities)";
-            $params[] = $utility;
-            $types .= "s";
-        }
+    // Xử lý nhiều tiện ích được chọn
+    $utilities = is_array($_GET['utilities']) ? $_GET['utilities'] : [$_GET['utilities']];
+
+    foreach ($utilities as $utility) {
+        $where_conditions[] = "m.utilities LIKE ?";
+        $params[] = "%$utility%";
+        $param_types .= "s";
     }
 }
 
-// Sắp xếp kết quả
-$order_clause = "ORDER BY m.created_at DESC";
-
-if (isset($_GET['sort'])) {
-    switch ($_GET['sort']) {
-        case 'price_asc':
-            $order_clause = "ORDER BY m.price ASC";
-            break;
-        case 'price_desc':
-            $order_clause = "ORDER BY m.price DESC";
-            break;
-        case 'newest':
-            $order_clause = "ORDER BY m.created_at DESC";
-            break;
-        case 'view':
-            $order_clause = "ORDER BY m.count_view DESC";
-            break;
-        case 'nearest':
-            $order_clause = "ORDER BY CAST(m.latlng AS DECIMAL(10,6)) ASC";
-            break;
-        default:
-            $order_clause = "ORDER BY m.created_at DESC";
-    }
+// Lọc theo diện tích
+if (isset($_GET['area_min']) && !empty($_GET['area_min']) && isset($_GET['area_max']) && !empty($_GET['area_max'])) {
+    $where_conditions[] = "m.area BETWEEN ? AND ?";
+    $params[] = $_GET['area_min'];
+    $params[] = $_GET['area_max'];
+    $param_types .= "ii";
 }
 
-// Lấy danh sách các tiện ích để hiển thị bộ lọc
-$stmt_utilities = $conn->prepare("SELECT DISTINCT SUBSTRING_INDEX(SUBSTRING_INDEX(m.utilities, ',', numbers.n), ',', -1) as utility 
-                                FROM motel m 
-                                CROSS JOIN (
-                                    SELECT 1 AS n UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5
-                                    UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9 UNION SELECT 10
-                                ) numbers
-                                WHERE LENGTH(REPLACE(m.utilities, ',', '')) > LENGTH(m.utilities) - n
-                                GROUP BY utility
-                                ORDER BY utility");
-$stmt_utilities->execute();
-$utility_result = $stmt_utilities->get_result();
-$all_utilities = [];
-while ($row = $utility_result->fetch_assoc()) {
-    $all_utilities[] = $row['utility'];
+// Tìm kiếm theo từ khóa (địa chỉ hoặc tiêu đề)
+if (isset($_GET['keyword']) && !empty($_GET['keyword'])) {
+    $where_conditions[] = "(m.title LIKE ? OR m.address LIKE ?)";
+    $params[] = "%{$_GET['keyword']}%";
+    $params[] = "%{$_GET['keyword']}%";
+    $param_types .= "ss";
 }
 
-// Thực thi truy vấn tìm kiếm
-$sql = "SELECT m.*, u.name as owner_name 
-        FROM motel m 
-        LEFT JOIN users u ON m.user_id = u.id 
-        $where_clause 
-        $order_clause";
+$where_clause = implode(" AND ", $where_conditions);
+
+// Chuẩn bị và thực thi truy vấn
+$sql = "
+    SELECT m.*, u.name as owner_name, c.name as category_name, d.name as district_name 
+    FROM motel m 
+    LEFT JOIN users u ON m.user_id = u.id 
+    LEFT JOIN categories c ON m.category_id = c.id
+    LEFT JOIN districts d ON m.district_id = d.id
+    WHERE $where_clause 
+    $sort_sql
+";
 
 $stmt = $conn->prepare($sql);
 if (!empty($params)) {
-    $stmt->bind_param($types, ...$params);
+    $stmt->bind_param($param_types, ...$params);
 }
 $stmt->execute();
 $rooms = $stmt->get_result();
 ?>
+
 <!DOCTYPE html>
 <html lang="vi">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tìm kiếm phòng trọ - Phòng trọ sinh viên</title>
+    <title>Tìm phòng trọ - Phòng trọ sinh viên</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="../Assets/style.css">
-    <!-- Range slider CSS -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/ion-rangeslider/2.3.1/css/ion.rangeSlider.min.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/nouislider@14.7.0/distribute/nouislider.min.css">
 </head>
+
 <body class="search-body">
     <?php include '../Components/header.php' ?>
 
-    <main class="py-5 mt-5">
+    <!-- Banner tìm kiếm -->
+    <?php include '../Components/banner_search.php' ?>
+
+    <!-- Kết quả tìm kiếm -->
+    <section class="py-5 bg-light">
         <div class="container">
+            <!-- Mobile filter toggle button -->
+            <button id="mobile-filter-toggle" class="mobile-filter-toggle d-lg-none">
+                <i class="fas fa-filter"></i>
+            </button>
+
             <div class="row">
-                <!-- Bộ lọc tìm kiếm -->
-                <div class="col-lg-3">
-                    <div class="filter-container">
-                        <h3 class="filter-title">Bộ lọc tìm kiếm</h3>
+                <!-- Sidebar lọc -->
+                <div class="col-lg-3 mb-4">
+                    <div class="filter-sidebar">
+                        <div class="filter-header">
+                            <h4 class="filter-title mb-0"><i class="fas fa-sliders-h"></i> Lọc kết quả</h4>
+                            <button type="button" class="btn-close d-lg-none" aria-label="Close"></button>
+                        </div>
                         <form action="search.php" method="GET" id="filterForm">
-                            <!-- Tìm kiếm theo khoảng giá -->
-                            <div class="filter-section">
-                                <h4 class="filter-subtitle">Khoảng giá</h4>
-                                <div class="price-slider">
-                                    <input type="text" class="js-range-slider" id="price_range" name="price_range" value="" />
-                                    <div class="price-inputs mt-2">
-                                        <div class="row">
-                                            <div class="col-6">
-                                                <input type="text" class="form-control form-control-sm" id="min_price" placeholder="Từ" readonly>
+                            <!-- Khu vực dropdown -->
+                            <div class="filter-section mb-4">
+                                <div class="filter-header">
+                                    <h6 class="filter-title">
+                                        <i class="fas fa-map-marker-alt"></i> Khu vực
+                                        <i class="fas fa-chevron-down ms-auto filter-toggle d-lg-none"></i>
+                                    </h6>
+                                </div>
+                                <div class="filter-content">
+                                    <select name="district" class="form-select" onchange="this.form.submit()">
+                                        <option value="">Tất cả khu vực</option>
+                                        <?php while ($district = $districts->fetch_assoc()): ?>
+                                            <option value="<?php echo $district['id']; ?>" <?php echo (isset($_GET['district']) && $_GET['district'] == $district['id']) ? 'selected' : ''; ?>>
+                                                <?php echo $district['name']; ?>
+                                            </option>
+                                        <?php endwhile; ?>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Loại phòng dropdown -->
+                            <div class="filter-section mb-4">
+                                <div class="filter-header">
+                                    <h6 class="filter-title">
+                                        <i class="fas fa-home"></i> Loại phòng
+                                        <i class="fas fa-chevron-down ms-auto filter-toggle d-lg-none"></i>
+                                    </h6>
+                                </div>
+                                <div class="filter-content">
+                                    <select name="category" class="form-select" onchange="this.form.submit()">
+                                        <option value="">Tất cả loại phòng</option>
+                                        <?php while ($category = $categories->fetch_assoc()): ?>
+                                            <option value="<?php echo $category['id']; ?>" <?php echo (isset($_GET['category']) && $_GET['category'] == $category['id']) ? 'selected' : ''; ?>>
+                                                <?php echo $category['name']; ?>
+                                            </option>
+                                        <?php endwhile; ?>
+                                    </select>
+                                </div>
+
+                                <!-- Khoảng giá -->
+                                <div class="filter-group">
+                                    <h6 class="fw-bold mt-4">Khoảng giá</h6>
+                                    <select name="price" class="form-select" onchange="this.form.submit()">
+                                        <option value="">Tất cả khoảng giá</option>
+                                        <option value="0-1000000" <?php echo (isset($_GET['price']) && $_GET['price'] == '0-1000000') ? 'selected' : ''; ?>>Dưới 1 triệu</option>
+                                        <option value="1000000-2000000" <?php echo (isset($_GET['price']) && $_GET['price'] == '1000000-2000000') ? 'selected' : ''; ?>>1 - 2 triệu</option>
+                                        <option value="2000000-3000000" <?php echo (isset($_GET['price']) && $_GET['price'] == '2000000-3000000') ? 'selected' : ''; ?>>2 - 3 triệu</option>
+                                        <option value="3000000-5000000" <?php echo (isset($_GET['price']) && $_GET['price'] == '3000000-5000000') ? 'selected' : ''; ?>>3 - 5 triệu</option>
+                                        <option value="5000000-999999999" <?php echo (isset($_GET['price']) && $_GET['price'] == '5000000-999999999') ? 'selected' : ''; ?>>Trên 5 triệu</option>
+                                    </select>
+                                </div>
+
+                                <!-- Diện tích -->
+                                <div class="filter-group">
+                                    <h6 class="fw-bold">Diện tích</h6>
+                                    <div class="row g-2">
+                                        <div class="col-6">
+                                            <div class="input-group">
+                                                <input type="number" name="area_min" class="form-control" placeholder="Từ" value="<?php echo isset($_GET['area_min']) ? htmlspecialchars($_GET['area_min']) : ''; ?>">
+                                                <span class="input-group-text">m²</span>
                                             </div>
-                                            <div class="col-6">
-                                                <input type="text" class="form-control form-control-sm" id="max_price" placeholder="Đến" readonly>
+                                        </div>
+                                        <div class="col-6">
+                                            <div class="input-group">
+                                                <input type="number" name="area_max" class="form-control" placeholder="Đến" value="<?php echo isset($_GET['area_max']) ? htmlspecialchars($_GET['area_max']) : ''; ?>">
+                                                <span class="input-group-text">m²</span>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
-                                <input type="hidden" name="price" id="price_hidden">
-                            </div>
 
-                            <!-- Tìm kiếm theo địa điểm -->
-                            <div class="filter-section">
-                                <h4 class="filter-subtitle">Địa điểm</h4>
-                                <select name="district" class="form-select">
-                                    <option value="">Tất cả</option>
-                                    <option value="1" <?php echo isset($_GET['district']) && $_GET['district'] == '1' ? 'selected' : ''; ?>>Quận Hồng Bàng</option>
-                                    <option value="2" <?php echo isset($_GET['district']) && $_GET['district'] == '2' ? 'selected' : ''; ?>>Quận Lê Chân</option>
-                                    <option value="3" <?php echo isset($_GET['district']) && $_GET['district'] == '3' ? 'selected' : ''; ?>>Quận Ngô Quyền</option>
-                                    <option value="4" <?php echo isset($_GET['district']) && $_GET['district'] == '4' ? 'selected' : ''; ?>>Quận Kiến An</option>
-                                </select>
-                            </div>
-
-                            <!-- Tìm kiếm theo tiện ích -->
-                            <div class="filter-section">
-                                <h4 class="filter-subtitle">Tiện ích</h4>
-                                <div class="utilities-filter">
-                                    <?php foreach ($all_utilities as $utility): ?>
-                                        <div class="form-check">
-                                            <input class="form-check-input" type="checkbox" name="utilities[]" 
-                                                   value="<?php echo $utility; ?>" 
-                                                   id="utility_<?php echo $utility; ?>"
-                                                   <?php echo (isset($_GET['utilities']) && in_array($utility, (array)$_GET['utilities'])) ? 'checked' : ''; ?>>
-                                            <label class="form-check-label" for="utility_<?php echo $utility; ?>">
-                                                <?php echo $utility; ?>
-                                            </label>
-                                        </div>
-                                    <?php endforeach; ?>
+                                <!-- Tiện ích -->
+                                <div class="filter-group">
+                                    <h6 class="fw-bold">Tiện ích</h6>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="utilities[]" value="Wifi" id="wifi" <?php echo (isset($_GET['utilities']) && in_array('Wifi', (array)$_GET['utilities'])) ? 'checked' : ''; ?>>
+                                        <label class="form-check-label" for="wifi">
+                                            <i class="fas fa-wifi me-1 text-primary"></i> Wifi
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="utilities[]" value="Máy giặt" id="washer" <?php echo (isset($_GET['utilities']) && in_array('Máy giặt', (array)$_GET['utilities'])) ? 'checked' : ''; ?>>
+                                        <label class="form-check-label" for="washer">
+                                            <i class="fas fa-tshirt me-1 text-warning"></i> Máy giặt
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="utilities[]" value="Gần trường" id="school" <?php echo (isset($_GET['utilities']) && in_array('Gần trường', (array)$_GET['utilities'])) ? 'checked' : ''; ?>>
+                                        <label class="form-check-label" for="school">
+                                            <i class="fas fa-school me-1 text-success"></i> Gần trường
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="utilities[]" value="Điều hòa" id="ac" <?php echo (isset($_GET['utilities']) && in_array('Điều hòa', (array)$_GET['utilities'])) ? 'checked' : ''; ?>>
+                                        <label class="form-check-label" for="ac">
+                                            <i class="fas fa-snowflake me-1 text-info"></i> Điều hòa
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="utilities[]" value="Tủ lạnh" id="fridge" <?php echo (isset($_GET['utilities']) && in_array('Tủ lạnh', (array)$_GET['utilities'])) ? 'checked' : ''; ?>>
+                                        <label class="form-check-label" for="fridge">
+                                            <i class="fas fa-cube me-1 text-danger"></i> Tủ lạnh
+                                        </label>
+                                    </div>
                                 </div>
-                            </div>
 
-                            <!-- Sắp xếp kết quả -->
-                            <div class="filter-section">
-                                <h4 class="filter-subtitle">Sắp xếp theo</h4>
-                                <select name="sort" class="form-select">
-                                    <option value="newest" <?php echo (!isset($_GET['sort']) || $_GET['sort'] == 'newest') ? 'selected' : ''; ?>>Mới nhất</option>
-                                    <option value="price_asc" <?php echo (isset($_GET['sort']) && $_GET['sort'] == 'price_asc') ? 'selected' : ''; ?>>Giá thấp đến cao</option>
-                                    <option value="price_desc" <?php echo (isset($_GET['sort']) && $_GET['sort'] == 'price_desc') ? 'selected' : ''; ?>>Giá cao đến thấp</option>
-                                    <option value="view" <?php echo (isset($_GET['sort']) && $_GET['sort'] == 'view') ? 'selected' : ''; ?>>Lượt xem nhiều nhất</option>
-                                    <option value="nearest" <?php echo (isset($_GET['sort']) && $_GET['sort'] == 'nearest') ? 'selected' : ''; ?>>Gần trường ĐH Vinh</option>
-                                </select>
-                            </div>
+                                <!-- Button áp dụng lọc -->
+                                <div class="d-grid gap-2">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-filter me-2"></i>Áp dụng bộ lọc
+                                    </button>
+                                    <a href="search.php" class="btn btn-outline-secondary">
+                                        <i class="fas fa-sync-alt me-2"></i>Xóa bộ lọc
+                                    </a>
+                                </div>
 
-                            <button type="submit" class="btn btn-primary w-100 mt-3">
-                                <i class="fas fa-filter me-2"></i>Lọc kết quả
-                            </button>
+                                <!-- Hidden field for sort -->
+                                <input type="hidden" name="sort" value="<?php echo $sort; ?>" id="sortField">
                         </form>
                     </div>
                 </div>
-
-                <!-- Kết quả tìm kiếm -->
-                <div class="col-lg-9">
-                    <div class="search-results">
-                        <div class="search-summary">
-                            <h2 class="mb-3">Kết quả tìm kiếm</h2>
-                            <p>Tìm thấy <?php echo $rooms->num_rows; ?> phòng trọ phù hợp</p>
-                        </div>
-
-                        <div class="result-list">
-                            <?php if ($rooms->num_rows > 0): ?>
-                                <div class="row">
-                                    <?php while($room = $rooms->fetch_assoc()): ?>
-                                        <div class="col-md-6 mb-4">
-                                            <div class="card room-card h-100">
-                                                <div class="room-image">
-                                                    <img src="../<?php echo $room['images']; ?>" class="card-img-top" alt="<?php echo $room['title']; ?>">
-                                                    <span class="price-tag"><?php echo number_format($room['price']); ?> đ/tháng</span>
-                                                    <?php if (isset($_GET['sort']) && $_GET['sort'] == 'view'): ?>
-                                                        <span class="view-count"><i class="fas fa-eye me-1"></i><?php echo $room['count_view']; ?></span>
-                                                    <?php elseif (isset($_GET['sort']) && $_GET['sort'] == 'nearest'): ?>
-                                                        <span class="distance-tag"><i class="fas fa-walking me-1"></i><?php echo $room['latlng']; ?> km</span>
-                                                    <?php endif; ?>
-                                                </div>
-                                                <div class="card-body">
-                                                    <h5 class="card-title">
-                                                        <a href="room_detail.php?id=<?php echo $room['id']; ?>"><?php echo $room['title']; ?></a>
-                                                    </h5>
-                                                    <p class="card-text address"><i class="fas fa-map-marker-alt me-2"></i><?php echo $room['address']; ?></p>
-                                                    <div class="room-info">
-                                                        <span><i class="fas fa-expand me-1"></i><?php echo $room['area']; ?> m²</span>
-                                                        <span><i class="fas fa-bolt me-1"></i>
-                                                            <?php 
-                                                                $utilities = explode(',', $room['utilities']);
-                                                                echo count($utilities) . ' tiện ích';
-                                                            ?>
-                                                        </span>
-                                                    </div>
-                                                    <div class="room-utilities-preview mt-2">
-                                                        <?php 
-                                                        $utilities = explode(',', $room['utilities']);
-                                                        $count = 0;
-                                                        foreach ($utilities as $utility):
-                                                            if ($count < 3): 
-                                                                $count++;
-                                                        ?>
-                                                            <span class="utility-tag"><?php echo $utility; ?></span>
-                                                        <?php 
-                                                            endif;
-                                                        endforeach;
-                                                        
-                                                        if (count($utilities) > 3):
-                                                        ?>
-                                                            <span class="utility-tag">+<?php echo count($utilities) - 3; ?></span>
-                                                        <?php endif; ?>
-                                                    </div>
-                                                </div>
-                                                <div class="card-footer">
-                                                    <small class="text-muted">Đăng bởi: <?php echo $room['owner_name']; ?></small>
-                                                    <small class="text-muted float-end">
-                                                        <i class="far fa-clock me-1"></i>
-                                                        <?php 
-                                                            $date = new DateTime($room['created_at']);
-                                                            echo $date->format('d/m/Y'); 
-                                                        ?>
-                                                    </small>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    <?php endwhile; ?>
-                                </div>
-                            <?php else: ?>
-                                <div class="alert alert-info">
-                                    <i class="fas fa-info-circle me-2"></i>Không tìm thấy phòng trọ nào phù hợp với tiêu chí tìm kiếm. Vui lòng thử lại với tiêu chí khác.
-                                </div>
-                            <?php endif; ?>
-                        </div>
+                <!-- Kết quả phòng trọ -->
+            </div>
+            <div class="col-lg-9">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h4 class="mb-0 d-inline-block">
+                            <i class="<?php echo $sort_icon; ?> me-2"></i><?php echo $sort_text; ?>
+                        </h4>
+                        <span class="ms-2 text-muted">(<?php echo $rooms->num_rows; ?> phòng)</span>
+                    </div>
+                    <!-- Dropdown menu sắp xếp -->
+                    <div class="dropdown sort-dropdown">
+                        <button class="btn btn-outline-primary dropdown-toggle" type="button" id="dropdownSort" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-sort-amount-down me-2"></i>Sắp xếp theo
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownSort">
+                            <li>
+                                <h6 class="dropdown-header">Tiêu chí chính:</h6>
+                            </li>
+                            <li><a class="dropdown-item <?php echo $sort == 'view' ? 'active' : ''; ?>" href="javascript:void(0)" onclick="setSort('view')">
+                                    <i class="fas fa-fire text-danger"></i> Phòng trọ xem nhiều nhất
+                                </a></li>
+                            <li><a class="dropdown-item <?php echo $sort == 'newest' ? 'active' : ''; ?>" href="javascript:void(0)" onclick="setSort('newest')">
+                                    <i class="fas fa-clock text-success"></i> Phòng trọ mới được đăng tải
+                                </a></li>
+                            <li><a class="dropdown-item <?php echo $sort == 'nearest' ? 'active' : ''; ?>" href="javascript:void(0)" onclick="setSort('nearest')">
+                                    <i class="fas fa-university text-primary"></i> Phòng trọ gần trường ĐH Vinh
+                                </a></li>
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+                            <li>
+                                <h6 class="dropdown-header">Tiêu chí khác:</h6>
+                            </li>
+                            <li><a class="dropdown-item <?php echo $sort == 'price_asc' ? 'active' : ''; ?>" href="javascript:void(0)" onclick="setSort('price_asc')">
+                                    <i class="fas fa-sort-amount-down text-success"></i> Giá thấp đến cao
+                                </a></li>
+                            <li><a class="dropdown-item <?php echo $sort == 'price_desc' ? 'active' : ''; ?>" href="javascript:void(0)" onclick="setSort('price_desc')">
+                                    <i class="fas fa-sort-amount-up text-warning"></i> Giá cao đến thấp
+                                </a></li>
+                        </ul>
                     </div>
                 </div>
+
+                <?php if ($rooms->num_rows > 0): ?>
+                    <div class="row">
+                        <?php while ($room = $rooms->fetch_assoc()): ?>
+                            <div class="col-md-4 mb-4">
+                                <div class="card room-card four-col h-100">
+                                    <div class="room-image">
+                                        <img src="../<?php echo $room['images']; ?>" class="card-img-top" alt="<?php echo $room['title']; ?>">
+                                        <span class="price-tag"><?php echo number_format($room['price']); ?> đ/tháng</span>
+                                        <span class="view-count"><i class="fas fa-eye me-1"></i><?php echo $room['count_view']; ?></span>
+                                    </div>
+                                    <div class="card-body">
+                                        <h5 class="card-title">
+                                            <a href="room_detail.php?id=<?php echo $room['id']; ?>"><?php echo $room['title']; ?></a>
+                                        </h5>
+                                        <p class="card-text address"><i class="fas fa-map-marker-alt me-2"></i><?php echo $room['address']; ?></p>
+                                        <div class="room-info">
+                                            <span><i class="fas fa-expand me-1"></i><?php echo $room['area']; ?> m²</span>
+                                            <span><i class="fas fa-bolt me-1"></i>
+                                                <?php
+                                                $utilities = explode(',', $room['utilities']);
+                                                echo count($utilities) . ' tiện ích';
+                                                ?>
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="card-footer">
+                                        <small class="text-muted">Đăng bởi: <?php echo $room['owner_name']; ?></small>
+                                        <small class="text-muted float-end">
+                                            <i class="far fa-clock me-1"></i>
+                                            <?php
+                                            $date = new DateTime($room['created_at']);
+                                            echo $date->format('d/m/Y');
+                                            ?>
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                        <?php endwhile; ?>
+                    </div>
+                <?php else: ?>
+                    <div class="alert alert-info text-center py-5">
+                        <i class="fas fa-search-minus fa-3x mb-3"></i>
+                        <h4>Không tìm thấy phòng trọ</h4>
+                        <p>Không tìm thấy phòng trọ nào phù hợp với tiêu chí tìm kiếm của bạn.</p>
+                        <a href="search.php" class="btn btn-primary mt-3">
+                            <i class="fas fa-sync-alt me-2"></i>Xóa bộ lọc và tìm lại
+                        </a>
+                    </div>
+                <?php endif; ?>
             </div>
-        </div>
-    </main>
+    </section>
 
     <?php include '../Components/footer.php' ?>
-
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/ion-rangeslider/2.3.1/js/ion.rangeSlider.min.js"></script>
-    <script src="../Assets/main.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/nouislider@14.7.0/distribute/nouislider.min.js"></script>
     <script>
-        $(document).ready(function() {
-            // Range slider cho khoảng giá
-            var $range = $(".js-range-slider");
-            var $inputFrom = $("#min_price");
-            var $inputTo = $("#max_price");
-            var $hiddenInput = $("#price_hidden");
-            var min = 0;
-            var max = 10000000;
-            
-            $range.ionRangeSlider({
-                skin: "round",
-                type: "double",
-                min: min,
-                max: max,
-                from: <?php echo isset($min_price) ? $min_price : 0; ?>,
-                to: <?php echo isset($max_price) ? $max_price : 10000000; ?>,
-                grid: true,
-                grid_num: 5,
-                prefix: "",
-                postfix: " đ",
-                prettify_separator: ".",
-                onStart: updateInputs,
-                onChange: updateInputs,
-                onFinish: updateInputs
-            });
-            
-            function updateInputs(data) {
-                from = data.from;
-                to = data.to;
-                
-                $inputFrom.val(from.toLocaleString('vi-VN') + ' đ');
-                $inputTo.val(to.toLocaleString('vi-VN') + ' đ');
-                $hiddenInput.val(from + '-' + to);
-            }
-            
-            // Hiển thị thêm tiện ích
-            $('.view-more-utilities').on('click', function(e) {
-                e.preventDefault();
-                $('.utilities-filter').toggleClass('show-all');
-                $(this).text($(this).text() == 'Xem thêm' ? 'Thu gọn' : 'Xem thêm');
+        // Hàm thiết lập sort và submit form
+        function setSort(sortValue) {
+            document.getElementById('sortField').value = sortValue;
+            document.getElementById('filterForm').submit();
+        }
+
+        // Xử lý submit form khi checkbox tiện ích thay đổi
+        document.querySelectorAll('input[type=checkbox]').forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                document.getElementById('filterForm').submit();
             });
         });
     </script>
 </body>
+
 </html>

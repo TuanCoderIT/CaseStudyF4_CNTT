@@ -1,9 +1,10 @@
-<footer class="py-4 mt-5">
+<link rel="stylesheet" href="../Assets/style.css">
+<footer class="py-4 mt-5 bg-black text-white">
     <div class="container">
         <div class="row">
             <div class="col-md-4 mb-4 mb-md-0">
                 <h5>Phòng trọ sinh viên</h5>
-                <p class="text-muted">Trang web tìm kiếm phòng trọ dành cho sinh viên trường Đại học Vinh.</p>
+                <p class="text-white">Trang web tìm kiếm phòng trọ dành cho sinh viên trường Đại học Vinh.</p>
                 <div class="social-links">
                     <a href="#" class="me-2"><i class="fab fa-facebook-f"></i></a>
                     <a href="#" class="me-2"><i class="fab fa-twitter"></i></a>

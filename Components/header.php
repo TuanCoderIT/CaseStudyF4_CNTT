@@ -1,7 +1,8 @@
+<link rel="stylesheet" href="../Assets/style.css">
 <header>
-    <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
-        <div class="container">
-            <a class="navbar-brand" href="#">
+    <nav class="navbar navbar-expand-lg fixed-top">
+        <div class=" container">
+            <a class="navbar-brand text-white me-5" href="../Home/index.php">
                 <i class="fas fa-home me-2"></i>F4 Case Study
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
@@ -10,18 +11,18 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item">
-                        <a class="nav-link active" href="index.php">Trang chủ</a>
+                        <a class="text-white nav-link" href="index.php">Trang chủ</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="search.php">Tìm kiếm</a>
+                        <a class="text-white nav-link" href="search.php">Tìm kiếm</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="post.php">Đăng tin</a>
+                        <a class="text-white nav-link" href="post.php">Đăng tin</a>
                     </li>
                 </ul>
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button"
+                        <a class="nav-link dropdown-toggle text-white" href="#" id="navbarDropdown" role="button"
                             data-bs-toggle="dropdown">
                             <?php
                             // Lấy thông tin người dùng
@@ -32,7 +33,7 @@
                             $result = $stmt->get_result();
                             $user = $result->fetch_assoc();
 
-                            echo '<img src="../' . $user['avatar'] . '" class="avatar-small me-2" alt="Avatar"> ';
+                            echo '<img src="../' . $user['avatar'] . '" class="avatar-header me-2" alt="Avatar"> ';
                             echo htmlspecialchars($user['name']);
                             ?>
                         </a>
