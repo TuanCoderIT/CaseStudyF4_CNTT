@@ -11,6 +11,9 @@ if (!isset($_SESSION['user_id'])) {
 // Kết nối đến CSDL
 require_once('../config/db.php');
 
+// Khởi tạo mảng favorite_rooms từ CSDL
+require_once('../config/favorites.php');
+
 // Danh sách quận/huyện
 $stmt_districts = $conn->prepare("SELECT * FROM districts ORDER BY name");
 $stmt_districts->execute();

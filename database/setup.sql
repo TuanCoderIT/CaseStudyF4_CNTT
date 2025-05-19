@@ -2,8 +2,8 @@
 -- version 5.2.1
 -- https://www.phpmyadmin.net/
 --
--- Máy chủ: 127.0.0.1
--- Thời gian đã tạo: Th5 18, 2025 lúc 04:14 PM
+-- Máy chủ: 127.0.0.1:3307
+-- Thời gian đã tạo: Th5 19, 2025 lúc 11:01 AM
 -- Phiên bản máy phục vụ: 10.4.32-MariaDB
 -- Phiên bản PHP: 8.2.12
 
@@ -87,15 +87,20 @@ CREATE TABLE `motel` (
   `utilities` varchar(255) DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `phone` varchar(255) DEFAULT NULL,
-  `approve` int(11) DEFAULT 0
+  `approve` int(11) DEFAULT 0,
+  `wishlist` int(11) DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Đang đổ dữ liệu cho bảng `motel`
 --
 
-INSERT INTO `motel` (`id`, `title`, `description`, `price`, `area`, `count_view`, `address`, `latlng`, `images`, `user_id`, `category_id`, `district_id`, `utilities`, `created_at`, `phone`, `approve`) VALUES
-(1, 'Phòng trọ giá rẻ gần ĐH Vinh', 'Phòng rộng 25m2, có wifi, máy giặt, khu vực an ninh. Phù hợp sinh viên.', 1200000, 25, 1, 'Số 10, Hà Huy Tập, TP Vinh', NULL, 'uploads/phong1.jpg', 1, NULL, 3, 'Wifi, Máy giặt, Gần trường', '2025-05-16 15:33:23', '0901234567', 1);
+INSERT INTO `motel` (`id`, `title`, `description`, `price`, `area`, `count_view`, `address`, `latlng`, `images`, `user_id`, `category_id`, `district_id`, `utilities`, `created_at`, `phone`, `approve`, `wishlist`) VALUES
+(1, 'Phòng trọ giá rẻ gần ĐH Vinh', 'Phòng rộng 25m2, có wifi, máy giặt, khu vực an ninh. Phù hợp sinh viên.', 1200000, 25, 16, 'Số 10, Hà Huy Tập, TP Vinh', NULL, 'uploads/phong1.jpg', 1, NULL, 3, 'Wifi, Máy giặt, Gần trường', '2025-05-16 15:33:23', '0901234567', 1, 0),
+(2, 'Chung cư mini mới xây', 'Phòng 30m², sạch sẽ, có ban công, máy giặt chung, bảo vệ 24/7.', 1800000, 30, 21, 'Số 12, Quang Trung, TP Vinh', '18.6680, 105.6800', 'uploads/phong2.jpg', 1, 3, 5, 'Máy giặt, Bảo vệ, Ban công', '2025-05-19 06:04:09', '0922222222', 1, 0),
+(3, 'Ký túc xá giá rẻ', 'Phòng ở ghép, sạch sẽ, mỗi người 600k, có wifi và khu nấu ăn riêng.', 600000, 25, 5, 'Số 9, Hưng Dũng, TP Vinh', '18.6610, 105.6700', 'uploads/phong3.jpg', 2, 4, 2, 'Wifi, Nhà bếp, Giá rẻ', '2025-05-19 06:04:09', '0933333333', 1, 0),
+(4, 'Phòng trọ yên tĩnh khu dân cư', 'Phòng riêng biệt, 18m², có gác xép, khu vực yên tĩnh, thích hợp sinh viên nữ.', 1000000, 18, 7, 'Số 22, Bến Thủy, TP Vinh', '18.6690, 105.6600', 'uploads/phong4.jpg', 3, 1, 4, 'Gác xép, Yên tĩnh', '2025-05-19 06:04:09', '0944444444', 1, 0),
+(5, 'Phòng cao cấp full nội thất', 'Phòng đẹp, có máy lạnh, tủ lạnh, giường nệm, diện tích 35m². Bao phí dịch vụ.', 2500000, 35, 33, 'Số 3, TP Vinh', '18.6700, 105.6750', 'uploads/phong5.jpg', 1, 5, 1, 'Máy lạnh, Tủ lạnh, Full nội thất', '2025-05-19 06:04:09', '0955555555', 1, 0);
 
 -- --------------------------------------------------------
 
@@ -131,6 +136,19 @@ INSERT INTO `users` (`id`, `name`, `username`, `email`, `password`, `role`, `pho
 (10, 'Đặng Thị K', 'dangthik', 'thik@example.com', '123456', 2, '0990123456', 'avatar10.jpg'),
 (11, 'Phan Quốc Tuấn', 'tuannopro', 'pqtuan2k4@gmail.com', '$2y$10$guS8PsCFpxZWK4hPw74VOuA7WzTg3mdbuUfmFFZpHk5hckaEb5TOe', NULL, '0987654321', 'images/avatar_1747412009_3868.jpg');
 
+-- --------------------------------------------------------
+
+--
+-- Cấu trúc bảng cho bảng `user_wishlist`
+--
+
+CREATE TABLE `user_wishlist` (
+  `id` int(11) NOT NULL,
+  `user_id` int(10) DEFAULT NULL,
+  `motel_id` int(10) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 --
 -- Chỉ mục cho các bảng đã đổ
 --
@@ -164,6 +182,14 @@ ALTER TABLE `users`
   ADD UNIQUE KEY `email` (`email`);
 
 --
+-- Chỉ mục cho bảng `user_wishlist`
+--
+ALTER TABLE `user_wishlist`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `unique_user_motel` (`user_id`,`motel_id`),
+  ADD KEY `motel_id` (`motel_id`);
+
+--
 -- AUTO_INCREMENT cho các bảng đã đổ
 --
 
@@ -183,13 +209,19 @@ ALTER TABLE `districts`
 -- AUTO_INCREMENT cho bảng `motel`
 --
 ALTER TABLE `motel`
-  MODIFY `id` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT cho bảng `users`
 --
 ALTER TABLE `users`
   MODIFY `id` int(10) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
+
+--
+-- AUTO_INCREMENT cho bảng `user_wishlist`
+--
+ALTER TABLE `user_wishlist`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- Các ràng buộc cho các bảng đã đổ
@@ -201,6 +233,13 @@ ALTER TABLE `users`
 ALTER TABLE `motel`
   ADD CONSTRAINT `fk_motel_category` FOREIGN KEY (`category_id`) REFERENCES `categories` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
   ADD CONSTRAINT `fk_motel_district` FOREIGN KEY (`district_id`) REFERENCES `districts` (`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+--
+-- Các ràng buộc cho bảng `user_wishlist`
+--
+ALTER TABLE `user_wishlist`
+  ADD CONSTRAINT `user_wishlist_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `user_wishlist_ibfk_2` FOREIGN KEY (`motel_id`) REFERENCES `motel` (`id`) ON DELETE CASCADE;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

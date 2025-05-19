@@ -11,10 +11,8 @@ if (!isset($_SESSION['user_id'])) {
 // Kết nối đến CSDL
 require_once('../config/db.php');
 
-// Khởi tạo mảng favorite_rooms nếu chưa tồn tại trong session
-if (!isset($_SESSION['favorite_rooms'])) {
-    $_SESSION['favorite_rooms'] = array();
-}
+// Khởi tạo mảng favorite_rooms từ CSDL
+require_once('../config/favorites.php');
 
 // Kiểm tra id phòng trọ trong URL
 if (!isset($_GET['id']) || empty($_GET['id'])) {
@@ -27,29 +25,69 @@ $room_id = $_GET['id'];
 // Xử lý thêm/xóa khỏi danh sách yêu thích
 $favorite_message = '';
 $message_type = '';
+$user_id = $_SESSION['user_id'];
 
 if (isset($_GET['action'])) {
     if ($_GET['action'] === 'favorite') {
-        // Thêm vào danh sách yêu thích nếu chưa có
-        if (!in_array($room_id, $_SESSION['favorite_rooms'])) {
-            $_SESSION['favorite_rooms'][] = $room_id;
-            $favorite_message = 'Đã thêm phòng trọ vào danh sách yêu thích!';
-            $message_type = 'success';
+        // Kiểm tra xem phòng đã được yêu thích chưa
+        $check_stmt = $conn->prepare("SELECT id FROM user_wishlist WHERE user_id = ? AND motel_id = ?");
+        $check_stmt->bind_param("ii", $user_id, $room_id);
+        $check_stmt->execute();
+        $check_result = $check_stmt->get_result();
+
+        if ($check_result->num_rows == 0) {
+            // Thêm vào danh sách yêu thích trong CSDL
+            $insert_stmt = $conn->prepare("INSERT INTO user_wishlist (user_id, motel_id) VALUES (?, ?)");
+            $insert_stmt->bind_param("ii", $user_id, $room_id);
+
+            if ($insert_stmt->execute()) {
+                // Cập nhật số lượt yêu thích trên phòng
+                $update_motel = $conn->prepare("UPDATE motel SET wishlist = wishlist + 1 WHERE id = ?");
+                $update_motel->bind_param("i", $room_id);
+                $update_motel->execute();
+
+                // Cập nhật lại session
+                if (!in_array($room_id, $_SESSION['favorite_rooms'])) {
+                    $_SESSION['favorite_rooms'][] = $room_id;
+                }
+
+                $favorite_message = 'Đã thêm phòng trọ vào danh sách yêu thích!';
+                $message_type = 'success';
+            } else {
+                $favorite_message = 'Có lỗi xảy ra khi thêm vào yêu thích!';
+                $message_type = 'danger';
+            }
         }
     } elseif ($_GET['action'] === 'unfavorite') {
-        // Xóa khỏi danh sách yêu thích
+        // Xóa khỏi danh sách yêu thích trong CSDL
+        $delete_stmt = $conn->prepare("DELETE FROM user_wishlist WHERE user_id = ? AND motel_id = ?");
+        $delete_stmt->bind_param("ii", $user_id, $room_id);
+        $delete_stmt->execute();
+
+        // Kiểm tra xem record đã bị xóa (tồn tại trong DB) hoặc phòng chỉ có trong session
+        if ($delete_stmt->affected_rows > 0) {
+            // Phòng tồn tại trong DB và đã được xóa thành công
+            // Cập nhật số lượt yêu thích trên phòng
+            $update_motel = $conn->prepare("UPDATE motel SET wishlist = wishlist - 1 WHERE id = ? AND wishlist > 0");
+            $update_motel->bind_param("i", $room_id);
+            $update_motel->execute();
+        }
+
+        // Luôn cập nhật session bất kể phòng có trong DB hay không
         if (($key = array_search($room_id, $_SESSION['favorite_rooms'])) !== false) {
             unset($_SESSION['favorite_rooms'][$key]);
             // Sắp xếp lại mảng
             $_SESSION['favorite_rooms'] = array_values($_SESSION['favorite_rooms']);
-            $favorite_message = 'Đã xóa phòng trọ khỏi danh sách yêu thích!';
-            $message_type = 'warning';
         }
+
+        // Luôn trả về thông báo thành công vì session đã được cập nhật
+        $favorite_message = 'Đã xóa phòng trọ khỏi danh sách yêu thích!';
+        $message_type = 'warning';
     }
-    
+
     // Chuyển hướng để loại bỏ tham số action khỏi URL
-    header("Location: room_detail.php?id=$room_id" . 
-           (!empty($favorite_message) ? "&message=" . urlencode($favorite_message) . "&type=" . $message_type : ""));
+    header("Location: room_detail.php?id=$room_id" .
+        (!empty($favorite_message) ? "&message=" . urlencode($favorite_message) . "&type=" . $message_type : ""));
     exit;
 }
 
@@ -142,8 +180,8 @@ $formatted_price = number_format($room['price']) . ' đ/tháng';
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
 </head>
 
-<body class="room-detail-body">    <?php include '../Components/header.php' ?>
-    
+<body class="room-detail-body"> <?php include '../Components/header.php' ?>
+
     <?php if (isset($_GET['message'])): ?>
         <div class="container mt-4">
             <div class="alert alert-<?php echo isset($_GET['type']) ? htmlspecialchars($_GET['type']) : 'info'; ?> alert-dismissible fade show animate__animated animate__fadeIn" role="alert">
@@ -297,7 +335,8 @@ $formatted_price = number_format($room['price']) . ' đ/tháng';
                                     <span><i class="fas fa-phone-alt me-2 text-muted"></i>Số điện thoại</span>
                                     <span class="fw-bold"><?php echo $room['phone']; ?></span>
                                 </li>
-                            </ul>                            <div class="mt-3 d-flex gap-2">
+                            </ul>
+                            <div class="mt-3 d-flex gap-2">
                                 <a href="javascript:void(0)" class="btn btn-outline-primary btn-sm flex-grow-1" onclick="shareRoom()">
                                     <i class="fas fa-share-alt me-2"></i>Chia sẻ
                                 </a>
@@ -457,7 +496,7 @@ $formatted_price = number_format($room['price']) . ' đ/tháng';
                 favoriteBtn.addEventListener('click', function(e) {
                     // Hiệu ứng nhấn nút
                     this.classList.add('btn-pulse');
-                    
+
                     // Thêm hiệu ứng cho icon
                     const icon = this.querySelector('i');
                     if (icon.classList.contains('far')) { // Nếu đang thêm vào yêu thích
