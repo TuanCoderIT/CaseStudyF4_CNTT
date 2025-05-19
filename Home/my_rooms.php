@@ -11,50 +11,63 @@ if (!isset($_SESSION['user_id'])) {
 // Kết nối đến CSDL
 require_once('../config/db.php');
 
-// Khởi tạo mảng favorite_rooms nếu chưa tồn tại trong session
-if (!isset($_SESSION['favorite_rooms'])) {
-    $_SESSION['favorite_rooms'] = array();
-}
+// Khởi tạo mảng favorite_rooms từ CSDL
+require_once('../config/favorites.php');
 
 // Xử lý xóa phòng khỏi yêu thích
 if (isset($_GET['action']) && $_GET['action'] === 'remove' && isset($_GET['id'])) {
     $room_id = $_GET['id'];
-    if (($key = array_search($room_id, $_SESSION['favorite_rooms'])) !== false) {
-        unset($_SESSION['favorite_rooms'][$key]);
-        // Sắp xếp lại mảng
-        $_SESSION['favorite_rooms'] = array_values($_SESSION['favorite_rooms']);
+    $user_id = $_SESSION['user_id'];
+    $message = "";
+    $message_type = "";
 
-        // Thêm thông báo khi xóa thành công
+    // Xóa khỏi cơ sở dữ liệu
+    $delete_stmt = $conn->prepare("DELETE FROM user_wishlist WHERE user_id = ? AND motel_id = ?");
+    $delete_stmt->bind_param("ii", $user_id, $room_id);
+
+    if ($delete_stmt->execute() && $delete_stmt->affected_rows > 0) {
+        // Cập nhật số lượt yêu thích trên phòng
+        $update_motel = $conn->prepare("UPDATE motel SET wishlist = wishlist - 1 WHERE id = ? AND wishlist > 0");
+        $update_motel->bind_param("i", $room_id);
+        $update_motel->execute();
+
+        // Cập nhật lại session
+        if (($key = array_search($room_id, $_SESSION['favorite_rooms'])) !== false) {
+            unset($_SESSION['favorite_rooms'][$key]);
+            // Sắp xếp lại mảng
+            $_SESSION['favorite_rooms'] = array_values($_SESSION['favorite_rooms']);
+        }
+
         $message = "Đã xóa phòng trọ khỏi danh sách yêu thích!";
         $message_type = "warning";
+    } else {
+        $message = "Có lỗi xảy ra khi xóa phòng khỏi danh sách yêu thích!";
+        $message_type = "danger";
     }
-
+    
     // Redirect về trang danh sách yêu thích
-    header("Location: my_rooms.php" . (isset($message) ? "?message=" . urlencode($message) . "&type=" . $message_type : ""));
+    header("Location: my_rooms.php" . (!empty($message) ? "?message=" . urlencode($message) . "&type=" . $message_type : ""));
     exit;
 }
 
-// Lấy danh sách phòng trọ yêu thích
+// Lấy danh sách phòng trọ yêu thích từ CSDL thông qua bảng user_wishlist
 $favorite_rooms = array();
+$user_id = $_SESSION['user_id'];
 
-if (!empty($_SESSION['favorite_rooms'])) {
-    $placeholders = implode(',', array_fill(0, count($_SESSION['favorite_rooms']), '?'));
-    $types = str_repeat('i', count($_SESSION['favorite_rooms']));
+$sql = "
+    SELECT m.*, u.name as owner_name, c.name as category_name
+    FROM motel m 
+    LEFT JOIN users u ON m.user_id = u.id 
+    LEFT JOIN categories c ON m.category_id = c.id
+    JOIN user_wishlist w ON m.id = w.motel_id
+    WHERE w.user_id = ? AND m.approve = 1
+    ORDER BY w.created_at DESC
+";
 
-    $sql = "
-        SELECT m.*, u.name as owner_name, c.name as category_name
-        FROM motel m 
-        LEFT JOIN users u ON m.user_id = u.id 
-        LEFT JOIN categories c ON m.category_id = c.id
-        WHERE m.id IN ($placeholders)
-        AND m.approve = 1
-    ";
-
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param($types, ...$_SESSION['favorite_rooms']);
-    $stmt->execute();
-    $favorite_rooms = $stmt->get_result();
-}
+$stmt = $conn->prepare($sql);
+$stmt->bind_param("i", $user_id);
+$stmt->execute();
+$favorite_rooms = $stmt->get_result();
 ?>
 
 <!DOCTYPE html>

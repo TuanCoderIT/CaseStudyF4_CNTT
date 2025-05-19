@@ -22,9 +22,24 @@
                     <li class="nav-item">
                         <a class="text-white nav-link" href="my_rooms.php">
                             <i class="fas fa-heart me-1 text-danger"></i>Yêu thích
-                            <?php if (isset($_SESSION['favorite_rooms']) && count($_SESSION['favorite_rooms']) > 0): ?>
+                            <?php
+                            // Đếm số lượng yêu thích từ cơ sở dữ liệu
+                            $favorite_count = 0;
+                            if (isset($_SESSION['user_id'])) {
+                                $user_id = $_SESSION['user_id'];
+                                $count_stmt = $conn->prepare("SELECT COUNT(*) as total FROM user_wishlist WHERE user_id = ?");
+                                $count_stmt->bind_param("i", $user_id);
+                                $count_stmt->execute();
+                                $count_result = $count_stmt->get_result();
+                                if ($count_row = $count_result->fetch_assoc()) {
+                                    $favorite_count = $count_row['total'];
+                                }
+                            }
+
+                            if ($favorite_count > 0):
+                            ?>
                                 <span class="badge rounded-pill bg-danger favorite-counter animate__animated <?php echo isset($_GET['action']) && in_array($_GET['action'], ['favorite', 'unfavorite']) ? 'animate__heartBeat' : ''; ?>">
-                                    <?php echo count($_SESSION['favorite_rooms']); ?>
+                                    <?php echo $favorite_count; ?>
                                 </span>
                             <?php endif; ?>
                         </a>

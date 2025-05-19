@@ -11,6 +11,9 @@ if (!isset($_SESSION['user_id'])) {
 // Kết nối đến CSDL
 require_once('../config/db.php');
 
+// Khởi tạo mảng favorite_rooms từ CSDL
+require_once('../config/favorites.php');
+
 // Lấy danh sách phòng trọ xem nhiều nhất
 $stmt_most_viewed = $conn->prepare("
     SELECT m.*, u.name as owner_name 
