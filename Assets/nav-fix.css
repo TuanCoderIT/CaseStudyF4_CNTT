@@ -1,0 +1,57 @@
+/* CSS để sửa vấn đề méo mó với các nút điều hướng */
+/* Đây là một cách tiếp cận hoàn toàn mới */
+.swiper-nav-button {
+  position: absolute !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  display: block !important;
+  z-index: 10 !important;
+  box-sizing: border-box !important;
+  border-radius: 50% !important;
+}
+
+/* Loại bỏ tất cả các quy tắc có thể gây xung đột */
+.swiper-nav-button::before,
+.swiper-nav-button::after {
+  display: none !important;
+  content: none !important;
+}
+
+/* Đặt căn chỉnh trung tâm rõ ràng cho icon */
+.swiper-nav-button i {
+  width: 100% !important;
+  height: 100% !important;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  margin: 0 !important;
+}
+
+.room-image-swiper .swiper-nav-button {
+  width: 40px !important;
+  height: 40px !important;
+}
+
+.main-next.swiper-nav-button,
+.main-prev.swiper-nav-button {
+  width: 50px !important;
+  height: 50px !important;
+}
+
+.swiper-button-next.swiper-nav-button {
+  right: 10px !important;
+}
+
+.swiper-button-prev.swiper-nav-button {
+  left: 10px !important;
+}
+
+.main-next.swiper-nav-button {
+  right: 20px !important;
+}
+
+.main-prev.swiper-nav-button {
+  left: 20px !important;
+}

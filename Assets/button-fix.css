@@ -1,0 +1,168 @@
+/* Button fix for Swiper navigation */
+/* This CSS file will completely override and fix the navigation buttons */
+
+/* Reset all possibly problematic styles */
+.banner-swiper .swiper-button-next::after,
+.banner-swiper .swiper-button-prev::after,
+.room-image-swiper .swiper-button-next::after,
+.room-image-swiper .swiper-button-prev::after {
+  display: none !important;
+  content: none !important;
+}
+
+/* Set explicit dimensions for all navigation buttons */
+.banner-swiper .swiper-button-next,
+.banner-swiper .swiper-button-prev,
+.room-image-swiper .swiper-button-next,
+.room-image-swiper .swiper-button-prev {
+  width: 40px !important;
+  height: 40px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+
+  /* Ensure proper positioning */
+  position: absolute !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+
+  /* Clean appearance */
+  background: rgba(255, 255, 255, 0.7) !important;
+  border-radius: 50% !important;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2) !important;
+
+  /* Icon alignment */
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  /* Transition */
+  transition: all 0.3s ease !important;
+
+  /* Start with lower opacity */
+  opacity: 0;
+}
+
+/* Main swiper buttons should be larger */
+.banner-swiper > .swiper-button-next,
+.banner-swiper > .swiper-button-prev {
+  width: 50px !important;
+  height: 50px !important;
+  z-index: 20 !important;
+}
+
+/* Explicit positioning for buttons */
+.banner-swiper .swiper-button-next,
+.room-image-swiper .swiper-button-next {
+  right: 10px !important;
+}
+
+.banner-swiper .swiper-button-prev,
+.room-image-swiper .swiper-button-prev {
+  left: 10px !important;
+}
+
+/* Main buttons should be positioned further out */
+.banner-swiper > .swiper-button-next {
+  right: 20px !important;
+}
+
+.banner-swiper > .swiper-button-prev {
+  left: 20px !important;
+}
+
+/* Show buttons on hover */
+.banner-swiper:hover .swiper-button-next,
+.banner-swiper:hover .swiper-button-prev,
+.room-image-swiper:hover .swiper-button-next,
+.room-image-swiper:hover .swiper-button-prev {
+  opacity: 1;
+}
+
+/* Style icon inside buttons */
+.swiper-button-next i,
+.swiper-button-prev i {
+  font-size: 1.2rem !important;
+  color: #333 !important;
+  display: block !important;
+  line-height: normal !important;
+  text-align: center !important;
+  width: auto !important;
+  height: auto !important;
+}
+
+/* Make main button icons bigger */
+.banner-swiper > .swiper-button-next i,
+.banner-swiper > .swiper-button-prev i {
+  font-size: 1.5rem !important;
+}
+
+/* Hover effect */
+.swiper-button-next:hover,
+.swiper-button-prev:hover {
+  background: white !important;
+  transform: translateY(-50%) scale(1.1) !important;
+}
+
+/* Active effect when clicked */
+.swiper-button-next:active,
+.swiper-button-prev:active {
+  transform: translateY(-50%) scale(0.95) !important;
+}
+
+/* Ripple effect when clicked */
+.ripple-effect {
+  position: absolute;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.7);
+  width: 100px;
+  height: 100px;
+  margin-top: -50px;
+  margin-left: -50px;
+  opacity: 0;
+  animation: ripple 0.6s;
+  pointer-events: none;
+}
+
+@keyframes ripple {
+  0% {
+    transform: scale(0);
+    opacity: 0.5;
+  }
+  100% {
+    transform: scale(1.5);
+    opacity: 0;
+  }
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+  .banner-swiper > .swiper-button-next,
+  .banner-swiper > .swiper-button-prev {
+    width: 45px !important;
+    height: 45px !important;
+  }
+}
+
+@media (max-width: 576px) {
+  .banner-swiper > .swiper-button-next,
+  .banner-swiper > .swiper-button-prev {
+    width: 40px !important;
+    height: 40px !important;
+  }
+
+  .room-image-swiper .swiper-button-next,
+  .room-image-swiper .swiper-button-prev {
+    width: 36px !important;
+    height: 36px !important;
+  }
+
+  .swiper-button-next i,
+  .swiper-button-prev i {
+    font-size: 1rem !important;
+  }
+
+  .banner-swiper > .swiper-button-next i,
+  .banner-swiper > .swiper-button-prev i {
+    font-size: 1.3rem !important;
+  }
+}

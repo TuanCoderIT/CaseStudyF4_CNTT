@@ -46,10 +46,10 @@ if (isset($_GET['action'])) {
             $message_type = 'warning';
         }
     }
-    
+
     // Chuyển hướng để loại bỏ tham số action khỏi URL
-    header("Location: room_detail.php?id=$room_id" . 
-           (!empty($favorite_message) ? "&message=" . urlencode($favorite_message) . "&type=" . $message_type : ""));
+    header("Location: room_detail.php?id=$room_id" .
+        (!empty($favorite_message) ? "&message=" . urlencode($favorite_message) . "&type=" . $message_type : ""));
     exit;
 }
 
@@ -142,8 +142,8 @@ $formatted_price = number_format($room['price']) . ' đ/tháng';
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
 </head>
 
-<body class="room-detail-body">    <?php include '../Components/header.php' ?>
-    
+<body class="room-detail-body"> <?php include '../Components/header.php' ?>
+
     <?php if (isset($_GET['message'])): ?>
         <div class="container mt-4">
             <div class="alert alert-<?php echo isset($_GET['type']) ? htmlspecialchars($_GET['type']) : 'info'; ?> alert-dismissible fade show animate__animated animate__fadeIn" role="alert">
@@ -297,7 +297,8 @@ $formatted_price = number_format($room['price']) . ' đ/tháng';
                                     <span><i class="fas fa-phone-alt me-2 text-muted"></i>Số điện thoại</span>
                                     <span class="fw-bold"><?php echo $room['phone']; ?></span>
                                 </li>
-                            </ul>                            <div class="mt-3 d-flex gap-2">
+                            </ul>
+                            <div class="mt-3 d-flex gap-2">
                                 <a href="javascript:void(0)" class="btn btn-outline-primary btn-sm flex-grow-1" onclick="shareRoom()">
                                     <i class="fas fa-share-alt me-2"></i>Chia sẻ
                                 </a>
@@ -457,7 +458,7 @@ $formatted_price = number_format($room['price']) . ' đ/tháng';
                 favoriteBtn.addEventListener('click', function(e) {
                     // Hiệu ứng nhấn nút
                     this.classList.add('btn-pulse');
-                    
+
                     // Thêm hiệu ứng cho icon
                     const icon = this.querySelector('i');
                     if (icon.classList.contains('far')) { // Nếu đang thêm vào yêu thích

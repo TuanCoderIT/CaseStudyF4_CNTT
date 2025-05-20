@@ -1,0 +1,127 @@
+/* Kiểu dáng bổ sung cho các nút điều hướng */
+.custom-nav-button {
+  position: absolute;
+  z-index: 15;
+  cursor: pointer;
+}
+
+/* Hiệu ứng đặc biệt khi hover */
+.custom-nav-button:hover i {
+  animation: buttonPulse 1s infinite;
+}
+
+/* Thiết kế cải thiện cho các icon trong nút */
+.swiper-button-next i,
+.swiper-button-prev i {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: auto;
+  height: auto;
+}
+
+/* Hiệu ứng click */
+.swiper-button-next:active,
+.swiper-button-prev:active {
+  transform: scale(0.95) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2) !important;
+  transition: transform 0.1s ease, box-shadow 0.1s ease !important;
+}
+
+@keyframes buttonPulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Đảm bảo khả năng tương thích trên các trình duyệt */
+/* Hiệu ứng khi cuộn trang */
+.scrolled .main-next,
+.scrolled .main-prev {
+  opacity: 0.7;
+  transform: scale(0.9);
+}
+
+/* Hiệu ứng chống chồng lấp */
+.swiper-button-next.swiper-button-disabled,
+.swiper-button-prev.swiper-button-disabled {
+  opacity: 0 !important;
+}
+
+/* Hiệu ứng focus */
+.swiper-button-next:focus,
+.swiper-button-prev:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.5);
+}
+
+/* Hiệu ứng ripple khi click */
+.swiper-button-next,
+.swiper-button-prev {
+  position: relative;
+  overflow: hidden;
+}
+
+.ripple-effect {
+  position: absolute;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.7);
+  width: 100px;
+  height: 100px;
+  margin-top: -50px;
+  margin-left: -50px;
+  opacity: 0;
+  animation: ripple 0.6s;
+  pointer-events: none;
+}
+
+@keyframes ripple {
+  0% {
+    transform: scale(0);
+    opacity: 0.5;
+  }
+  100% {
+    transform: scale(1.5);
+    opacity: 0;
+  }
+}
+
+/* Đảm bảo khả năng tương thích trên các trình duyệt */
+@supports not (backdrop-filter: blur(3px)) {
+  .swiper-button-next,
+  .swiper-button-prev {
+    background: rgba(0, 0, 0, 0.5);
+  }
+
+  .swiper-button-next:hover,
+  .swiper-button-prev:hover {
+    background: rgba(0, 0, 0, 0.7);
+  }
+
+  .swiper-button-next i,
+  .swiper-button-prev i {
+    color: white;
+    text-shadow: none;
+  }
+
+  .main-next,
+  .main-prev {
+    background: rgba(0, 0, 0, 0.6);
+    border-color: rgba(255, 255, 255, 0.3);
+  }
+
+  .main-next i,
+  .main-prev i {
+    color: white;
+  }
+}

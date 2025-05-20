@@ -413,7 +413,7 @@ label {
 }
 
 .input-with-icon {
-  padding-left: 45px;
+  padding-left: 40px !important;
 }
 
 /* Hiệu ứng cho captcha */
@@ -1058,7 +1058,9 @@ room-features-item div div {
   overflow: hidden;
   position: relative;
 }
-
+.image-banner-container {
+  margin-top: 20px;
+}
 .swiper-slide:before {
   content: "";
   position: absolute;
