@@ -31,14 +31,12 @@ session_start();
                 <div class="mb-4">
                     <label><i class="fas fa-user me-2"></i>Tên đăng nhập hoặc Email</label>
                     <div class="input-group">
-                        <span class="input-icon"><i class="fas fa-user"></i></span>
                         <input type="text" class="form-control input-with-icon" name="username" placeholder="Nhập tên đăng nhập hoặc email" required>
                     </div>
                 </div>
                 <div class="mb-4">
                     <label><i class="fas fa-lock me-2"></i>Mật khẩu</label>
                     <div class="password-container">
-                        <span class="input-icon"><i class="fas fa-lock"></i></span>
                         <input type="password" class="form-control input-with-icon" name="password" id="password" placeholder="Nhập mật khẩu" required>
                         <span class="password-toggle" onclick="togglePassword()"><i class="fas fa-eye"></i></span>
                     </div>                </div>

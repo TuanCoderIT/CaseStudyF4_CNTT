@@ -403,15 +403,6 @@ label {
   position: relative;
 }
 
-.input-icon {
-  position: absolute;
-  top: 50%;
-  left: 15px;
-  transform: translateY(-50%);
-  color: var(--primary-color);
-  z-index: 10;
-}
-
 .input-with-icon {
   padding-left: 45px;
 }
