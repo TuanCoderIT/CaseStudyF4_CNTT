@@ -296,9 +296,14 @@ $most_active = mysqli_fetch_assoc($most_active_result);
 <div class="card shadow-sm">
     <div class="card-header bg-gradient-primary text-white d-flex justify-content-between align-items-center">
         <h5 class="m-0 font-weight-bold"><i class="fas fa-user-friends mr-2"></i>Danh sách người dùng</h5>
-        <span class="badge badge-light badge-pill">
-            <?php echo $count_data['count']; ?> người dùng
-        </span>
+        <div>
+            <a href="add_user.php" class="btn btn-sm btn-light">
+                <i class="fas fa-user-plus mr-1"></i> Thêm người dùng mới
+            </a>
+            <span class="badge badge-light badge-pill ml-2">
+                <?php echo $count_data['count']; ?> người dùng
+            </span>
+        </div>
     </div>
     <div class="card-body">
         <div class="table-responsive">

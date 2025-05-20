@@ -152,8 +152,13 @@
             </a>
         </div>
     </div>
-
     <!-- Main Content -->
     <div class="admin-content">
-        <div class="page-content">
-            <!-- Contents will be here -->
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-lg-12">
+                    <h1 class="page-header">
+                        <?php echo isset($page_title) ? $page_title : 'Trang quản trị'; ?>
+                    </h1>
+                </div>
+            </div>
