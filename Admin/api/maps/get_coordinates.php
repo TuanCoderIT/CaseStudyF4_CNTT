@@ -2,7 +2,7 @@
 // File lấy tọa độ từ địa chỉ
 header('Content-Type: application/json');
 session_start();
-require_once '../config/db.php';
+require_once '../../../config/db.php';
 
 // Kiểm tra đăng nhập với quyền Admin
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] != 1) {
@@ -40,7 +40,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // Dùng Google Geocoding API (bạn cần thay API_KEY bằng key của bạn)
     // Nếu không có API key, bạn có thể sử dụng Nominatim OpenStreetMap (miễn phí nhưng hạn chế request)
-    // $api_url = "https://maps.googleapis.com/maps/api/geocode/json?address=$address&key=YOUR_API_KEY";
+    // $api_url = "https://maps.googleapis.com/maps/api/geocode/json?address=$address&key=AIzaSyAQ7hhG0JUMfN_fRK1dQl7ajyQ0-LtxYT0";
 
     // Sử dụng Nominatim OpenStreetMap (miễn phí)
     $api_url = "https://nominatim.openstreetmap.org/search?format=json&q=$address&limit=1";

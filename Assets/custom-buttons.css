@@ -1,0 +1,66 @@
+/* Thiết lập lại các nút điều hướng, loại bỏ hoàn toàn các kiểu dáng mặc định */
+.custom-nav-button {
+  opacity: 0;
+  transition: all 0.3s ease !important;
+}
+
+.banner-swiper:hover .custom-nav-button {
+  opacity: 1;
+}
+
+.custom-nav-button:hover {
+  background: rgba(255, 255, 255, 0.5) !important;
+  transform: translateY(-50%) scale(1.1) !important;
+}
+
+.custom-nav-button:active {
+  transform: translateY(-50%) scale(0.95) !important;
+}
+
+/* Hiệu ứng ripple khi click */
+.ripple-effect {
+  position: absolute;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.7);
+  width: 100px;
+  height: 100px;
+  margin-top: -50px;
+  margin-left: -50px;
+  opacity: 0;
+  animation: ripple 0.6s;
+  pointer-events: none;
+}
+
+@keyframes ripple {
+  0% {
+    transform: scale(0);
+    opacity: 0.5;
+  }
+  100% {
+    transform: scale(1.5);
+    opacity: 0;
+  }
+}
+
+/* CSS cho nút trên thiết bị di động */
+@media (max-width: 576px) {
+  .custom-nav-button {
+    width: 36px !important;
+    height: 36px !important;
+  }
+
+  .main-next.custom-nav-button,
+  .main-prev.custom-nav-button {
+    width: 42px !important;
+    height: 42px !important;
+  }
+
+  .custom-nav-button i {
+    font-size: 1rem !important;
+  }
+
+  .main-next.custom-nav-button i,
+  .main-prev.custom-nav-button i {
+    font-size: 1.2rem !important;
+  }
+}

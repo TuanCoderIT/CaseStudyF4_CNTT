@@ -64,10 +64,20 @@ $nearest_rooms = $stmt_nearest->get_result();
     <link rel="stylesheet" href="../Assets/four-column-layout.css">
     <!-- Link tới thư viện Swiper cho slider -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.css">
+    <!-- Custom CSS for banner and navigation -->
+    <link rel="stylesheet" href="../Assets/banner.css">
+    <link rel="stylesheet" href="../Assets/custom-nav.css">
+    <link rel="stylesheet" href="../Assets/nav-fix.css">
+    <link rel="stylesheet" href="../Assets/custom-buttons.css">
+    <!-- Final fix for navigation buttons that overrides all previous styles -->
+    <link rel="stylesheet" href="../Assets/button-fix.css">
 </head>
 
 <body class="home-body">
     <?php include '../Components/header.php' ?>
+
+    <!-- Banner hình ảnh nhiều phòng trọ -->
+    <?php include '../Components/image_banner.php' ?>
 
     <!-- Banner tìm kiếm -->
     <?php include '../Components/banner_search.php' ?>
