@@ -66,9 +66,7 @@ include_once '../Components/admin_header.php';
                 <a href="rooms/manage_rooms.php" class="text-primary small">Xem chi tiết <i class="fas fa-arrow-right ml-1"></i></a>
             </div>
         </div>
-    </div>
-
-    <!-- Phòng chờ duyệt -->
+    </div> <!-- Phòng chờ duyệt -->
     <div class="col-xl-3 col-md-6 mb-4">
         <div class="card stat-card stat-card-warning">
             <div class="card-body">
@@ -78,6 +76,27 @@ include_once '../Components/admin_header.php';
             </div>
             <div class="card-footer bg-transparent border-0 p-3">
                 <a href="rooms/pending_rooms.php" class="text-warning small">Xem chi tiết <i class="fas fa-arrow-right ml-1"></i></a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Phòng đã hủy -->
+    <?php
+    // Lấy số phòng đã hủy
+    $query = "SELECT COUNT(*) as cancelled FROM motel WHERE approve = 2";
+    $result = mysqli_query($conn, $query);
+    $row = mysqli_fetch_assoc($result);
+    $cancelled_rooms = $row['cancelled'];
+    ?>
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card stat-card stat-card-danger">
+            <div class="card-body">
+                <div class="card-title">Phòng đã hủy</div>
+                <div class="card-value"><?php echo $cancelled_rooms; ?></div>
+                <i class="fas fa-ban fa-2x card-icon"></i>
+            </div>
+            <div class="card-footer bg-transparent border-0 p-3">
+                <a href="rooms/manage_rooms.php?status=2" class="text-danger small">Xem chi tiết <i class="fas fa-arrow-right ml-1"></i></a>
             </div>
         </div>
     </div>
