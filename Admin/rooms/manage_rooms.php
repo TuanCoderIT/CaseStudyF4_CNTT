@@ -1,6 +1,7 @@
 <?php
 session_start();
 require_once '../../config/db.php';
+require_once '../../Components/room_status_notification.php';
 
 // Kiểm tra đăng nhập với quyền Admin
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] != 1) {
@@ -34,9 +35,71 @@ if (isset($_GET['delete']) && !empty($_GET['delete'])) {
 // Xử lý duyệt phòng trọ
 if (isset($_GET['approve']) && !empty($_GET['approve'])) {
     $id = mysqli_real_escape_string($conn, $_GET['approve']);
+
+    // Lấy thông tin phòng để thông báo
+    $get_room = mysqli_query($conn, "SELECT title FROM motel WHERE id = '$id'");
+    $room_data = mysqli_fetch_assoc($get_room);
+
     mysqli_query($conn, "UPDATE motel SET approve = 1 WHERE id = '$id'");
 
     $_SESSION['success'] = "Đã duyệt phòng trọ thành công!";
+
+    // Lưu thông tin thay đổi trạng thái
+    $_SESSION['room_status_change'] = [
+        'id' => $id,
+        'title' => $room_data['title'],
+        'status' => 1,
+        'timestamp' => time()
+    ];
+
+    header('Location: manage_rooms.php');
+    exit();
+}
+
+// Xử lý hủy phòng trọ
+if (isset($_GET['cancel']) && !empty($_GET['cancel'])) {
+    $id = mysqli_real_escape_string($conn, $_GET['cancel']);
+
+    // Lấy thông tin phòng để thông báo
+    $get_room = mysqli_query($conn, "SELECT title FROM motel WHERE id = '$id'");
+    $room_data = mysqli_fetch_assoc($get_room);
+
+    mysqli_query($conn, "UPDATE motel SET approve = 2 WHERE id = '$id'");
+
+    $_SESSION['success'] = "Đã chuyển phòng trọ sang trạng thái hủy!";
+
+    // Lưu thông tin thay đổi trạng thái
+    $_SESSION['room_status_change'] = [
+        'id' => $id,
+        'title' => $room_data['title'],
+        'status' => 2,
+        'timestamp' => time()
+    ];
+
+    header('Location: manage_rooms.php');
+    exit();
+}
+
+// Xử lý đưa phòng về trạng thái chờ duyệt
+if (isset($_GET['pending']) && !empty($_GET['pending'])) {
+    $id = mysqli_real_escape_string($conn, $_GET['pending']);
+
+    // Lấy thông tin phòng để thông báo
+    $get_room = mysqli_query($conn, "SELECT title FROM motel WHERE id = '$id'");
+    $room_data = mysqli_fetch_assoc($get_room);
+
+    mysqli_query($conn, "UPDATE motel SET approve = 0 WHERE id = '$id'");
+
+    $_SESSION['success'] = "Đã chuyển phòng trọ về trạng thái chờ duyệt!";
+
+    // Lưu thông tin thay đổi trạng thái
+    $_SESSION['room_status_change'] = [
+        'id' => $id,
+        'title' => $room_data['title'],
+        'status' => 0,
+        'timestamp' => time()
+    ];
+
     header('Location: manage_rooms.php');
     exit();
 }
@@ -49,6 +112,13 @@ $start = ($page - 1) * $limit;
 // Xây dựng truy vấn với bộ lọc
 $where_clauses = [];
 $params = [];
+
+// Lọc theo trạng thái phê duyệt
+if (isset($_GET['status']) && $_GET['status'] != '') {
+    $status = (int)$_GET['status'];
+    $where_clauses[] = "m.approve = ?";
+    $params[] = $status;
+}
 
 // Lọc theo danh mục
 if (isset($_GET['category']) && !empty($_GET['category'])) {
@@ -110,7 +180,7 @@ $count_data = mysqli_fetch_assoc($count_result);
 $total_pages = ceil($count_data['count'] / $limit);
 
 $page_title = "Quản lý phòng trọ";
-include_once ('../../Components/admin_header.php');
+include_once('../../Components/admin_header.php');
 ?>
 
 <div class="page-header mb-4">
@@ -238,7 +308,8 @@ include_once ('../../Components/admin_header.php');
                     <select name="status" id="status" class="form-control custom-select">
                         <option value="">Tất cả trạng thái</option>
                         <option value="1" <?php echo (isset($_GET['status']) && $_GET['status'] == '1') ? 'selected' : ''; ?>>Đã duyệt</option>
-                        <option value="0" <?php echo (isset($_GET['status']) && $_GET['status'] == '0') ? 'selected' : ''; ?>>Chưa duyệt</option>
+                        <option value="0" <?php echo (isset($_GET['status']) && $_GET['status'] == '0') ? 'selected' : ''; ?>>Chờ duyệt</option>
+                        <option value="2" <?php echo (isset($_GET['status']) && $_GET['status'] == '2') ? 'selected' : ''; ?>>Đã hủy</option>
                     </select>
                 </div>
 
@@ -312,6 +383,8 @@ include_once ('../../Components/admin_header.php');
                             <td class="text-center">
                                 <?php if ($row['approve'] == 1): ?>
                                     <span class="badge badge-success">Đã duyệt</span>
+                                <?php elseif ($row['approve'] == 2): ?>
+                                    <span class="badge badge-danger">Đã hủy</span>
                                 <?php else: ?>
                                     <span class="badge badge-warning">Chưa duyệt</span>
                                 <?php endif; ?>
@@ -321,11 +394,20 @@ include_once ('../../Components/admin_header.php');
                                 <div class="btn-group">
                                     <a href="edit_room.php?id=<?php echo $row['id']; ?>" class="btn btn-sm btn-outline-primary" data-toggle="tooltip" title="Sửa">
                                         <i class="fas fa-edit"></i>
-                                    </a>
-
-                                    <?php if ($row['approve'] == 0): ?>
+                                    </a> <?php if ($row['approve'] == 0): ?>
                                         <a href="?approve=<?php echo $row['id']; ?>" class="btn btn-sm btn-outline-success" onclick="return confirm('Bạn có chắc muốn duyệt phòng trọ này?')" data-toggle="tooltip" title="Duyệt">
                                             <i class="fas fa-check"></i>
+                                        </a>
+                                        <a href="?cancel=<?php echo $row['id']; ?>" class="btn btn-sm btn-outline-danger" onclick="return confirm('Bạn có chắc muốn hủy phòng trọ này?')" data-toggle="tooltip" title="Hủy">
+                                            <i class="fas fa-ban"></i>
+                                        </a>
+                                    <?php elseif ($row['approve'] == 1): ?>
+                                        <a href="?cancel=<?php echo $row['id']; ?>" class="btn btn-sm btn-outline-danger" onclick="return confirm('Bạn có chắc muốn hủy phòng trọ này?')" data-toggle="tooltip" title="Hủy">
+                                            <i class="fas fa-ban"></i>
+                                        </a>
+                                    <?php elseif ($row['approve'] == 2): ?>
+                                        <a href="?pending=<?php echo $row['id']; ?>" class="btn btn-sm btn-outline-warning" onclick="return confirm('Bạn có chắc muốn chuyển phòng này về trạng thái chờ duyệt?')" data-toggle="tooltip" title="Chuyển về Chờ duyệt">
+                                            <i class="fas fa-clock"></i>
                                         </a>
                                     <?php endif; ?>
 

@@ -69,8 +69,10 @@
                             <li>
                                 <hr class="dropdown-divider">
                             </li>
-                            <li><a class="dropdown-item" href="../Auth/logout.php"><i
-                                        class="fas fa-sign-out-alt me-2"></i>Đăng xuất</a></li>
+                            <?php if (isset($_SESSION['role']) && $_SESSION['role'] == 1): ?>
+                                <li><a class="dropdown-item" href="../Admin/index.php"><i class="fas fa-cogs me-2"></i>Quản lý admin</a></li>
+                            <?php endif; ?>
+                            <li><a class="dropdown-item" href="../Auth/logout.php"><i class="fas fa-sign-out-alt me-2"></i>Đăng xuất</a></li>
                         </ul>
                     </li>
                 </ul>
