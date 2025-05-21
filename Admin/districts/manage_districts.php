@@ -316,7 +316,7 @@ $most_popular = mysqli_fetch_assoc($most_popular_result);
     <button type="button" class="btn btn-primary mr-2" data-toggle="modal" data-target="#addDistrictModal">
         <i class="fas fa-plus-circle mr-1"></i> Thêm khu vực mới
     </button>
-    <a href="index.php" class="btn btn-info">
+    <a href="/Admin/index.php" class="btn btn-info">
         <i class="fas fa-tachometer-alt mr-1"></i> Quay lại bảng điều khiển
     </a>
 </div>

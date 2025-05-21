@@ -30,7 +30,7 @@ if (isset($_GET['delete']) && !empty($_GET['delete'])) {
             $avatar_data = mysqli_fetch_assoc($get_avatar);
 
             if (!empty($avatar_data['avatar']) && $avatar_data['avatar'] != 'default-avatar.jpg') {
-                $avatar_path = '../' . $avatar_data['avatar'];
+                $avatar_path = PROJECT_ROOT . "/" . $avatar_data['avatar'];
                 if (file_exists($avatar_path)) {
                     unlink($avatar_path);
                 }
@@ -326,9 +326,9 @@ $most_active = mysqli_fetch_assoc($most_active_result);
                                 <td class="text-center"><?php echo $user['id']; ?></td>
                                 <td>
                                     <?php if (!empty($user['avatar'])): ?>
-                                        <img src="../<?php echo $user['avatar']; ?>" class="img-profile rounded-circle" width="50" height="50" style="object-fit: cover;">
+                                        <img src="/<?php echo $user['avatar']; ?>" class="img-profile rounded-circle" width="50" height="50" style="object-fit: cover;">
                                     <?php else: ?>
-                                        <img src="../images/default-avatar.jpg" class="img-profile rounded-circle" width="50" height="50" style="object-fit: cover;">
+                                        <img src="/uploads/avatar/default-avatar.jpg" class="img-profile rounded-circle" width="50" height="50" style="object-fit: cover;">
                                     <?php endif; ?>
                                 </td>
                                 <td>
@@ -467,7 +467,7 @@ $most_active = mysqli_fetch_assoc($most_active_result);
 
 <!-- Quick Action Buttons -->
 <div class="mt-4 mb-4 text-center">
-    <a href="index.php" class="btn btn-info">
+    <a href="/Admin/index.php" class="btn btn-info">
         <i class="fas fa-tachometer-alt mr-1"></i> Quay lại bảng điều khiển
     </a>
     <a href="pending_rooms.php" class="btn btn-warning ml-2">

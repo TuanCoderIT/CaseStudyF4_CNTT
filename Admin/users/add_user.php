@@ -1,6 +1,7 @@
 <?php
 session_start();
 require_once '../../config/db.php';
+require_once '../../configs/config.php';
 
 // Kiểm tra đăng nhập với quyền Admin
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] != 1) {
@@ -75,11 +76,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     if (in_array(strtolower($file_ext), $allowed)) {
                         // Tạo tên file duy nhất
                         $new_filename = 'avatar_' . time() . '_' . rand(1000, 9999) . '.' . $file_ext;
-                        $upload_path = '../../uploads/avatar/' . $new_filename;
+                        $upload_path = PROJECT_ROOT . '/uploads/avatar/' . $new_filename;
 
                         // Kiểm tra và tạo thư mục nếu không tồn tại
-                        if (!file_exists('../../uploads/avatar/')) {
-                            mkdir('../../uploads/avatar/', 0777, true);
+                        if (!file_exists(PROJECT_ROOT . '/uploads/avatar/')) {
+                            mkdir(PROJECT_ROOT . '/uploads/avatar/', 0777, true);
                         }
 
                         if (move_uploaded_file($_FILES['avatar']['tmp_name'], $upload_path)) {

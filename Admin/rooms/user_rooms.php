@@ -133,9 +133,9 @@ include_once '../../Components/admin_header.php';
         <div class="row">
             <div class="col-md-2 text-center mb-3 mb-md-0">
                 <?php if (!empty($user['avatar'])): ?>
-                    <img src="../../<?php echo $user['avatar']; ?>" class="img-profile rounded-circle shadow" style="width:120px; height:120px; object-fit:cover;" alt="<?php echo $user['name']; ?>">
+                    <img src="<?php echo $user['avatar']; ?>" class="img-profile rounded-circle shadow" style="width:120px; height:120px; object-fit:cover;" alt="<?php echo $user['name']; ?>">
                 <?php else: ?>
-                    <img src="../../images/default-avatar.jpg" class="img-profile rounded-circle shadow" style="width:120px; height:120px; object-fit:cover;" alt="<?php echo $user['name']; ?>">
+                    <img src="images/default-avatar.jpg" class="img-profile rounded-circle shadow" style="width:120px; height:120px; object-fit:cover;" alt="<?php echo $user['name']; ?>">
                 <?php endif; ?>
             </div>
             <div class="col-md-10">

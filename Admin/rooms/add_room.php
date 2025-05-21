@@ -1,6 +1,7 @@
 <?php
 session_start();
 require_once '../../config/db.php';
+require_once '../../configs/config.php';
 
 // Kiểm tra đăng nhập với quyền Admin
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] != 1) {
@@ -33,14 +34,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     // Xử lý upload ảnh banner
     $banner_image = '';
     if (isset($_FILES['banner_image']) && $_FILES['banner_image']['error'] == 0) {
-        $upload_dir = '../uploads/';
+        $upload_dir = PROJECT_ROOT . '/uploads/banner/';
         if (!is_dir($upload_dir)) {
             mkdir($upload_dir, 0755, true);
         }
         $file_name = time() . '_' . $_FILES['banner_image']['name'];
         $target_file = $upload_dir . $file_name;
         if (move_uploaded_file($_FILES['banner_image']['tmp_name'], $target_file)) {
-            $banner_image = 'uploads/' . $file_name;
+            $banner_image = 'uploads/banner/' . $file_name;
         }
     }
 
@@ -56,7 +57,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
             // Xử lý upload nhiều hình ảnh
             if (isset($_FILES['additional_images'])) {
-                $upload_dir = '../../uploads/rooms/';
+                $upload_dir = PROJECT_ROOT . '/uploads/rooms/';
 
                 // Tạo thư mục nếu chưa tồn tại
                 if (!is_dir($upload_dir)) {
@@ -175,7 +176,7 @@ include_once '../../Components/admin_header.php';
             <div class="form-group">
                 <label>Tọa độ địa điểm</label>
                 <div id="coordinates" class="alert alert-info" style="display: none;">
-                    <i class="fas fa-map-marker-alt"></i> 
+                    <i class="fas fa-map-marker-alt"></i>
                     <span id="coordinates_text">Chưa có tọa độ</span>
                 </div>
             </div>
@@ -248,93 +249,103 @@ include_once '../../Components/admin_header.php';
 </div>
 
 <script>
-$(document).ready(function() {
-    // Khởi tạo Quill editor
-    var quill = new Quill('#editor-container', {
-        theme: 'snow',
-        placeholder: 'Mô tả chi tiết về phòng trọ...',
-        modules: {
-            toolbar: [
-                ['bold', 'italic', 'underline'],
-                [{ 'header': 1 }, { 'header': 2 }],
-                [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-                ['image', 'link'],
-                ['clean']
-            ]
-        }
-    });
-
-    // Cập nhật nội dung vào textarea khi submit form
-    $('#roomForm').on('submit', function() {
-        $('#description').val(quill.root.innerHTML);
-    });
-
-    // Cập nhật district_id khi chọn ward
-    $('#ward').change(function() {
-        var selectedOption = $(this).find('option:selected');
-        $('#district_id').val(selectedOption.data('id'));
-    });
-
-    // Cập nhật utilities khi chọn tiện ích
-    $('input[name="utility_items[]"]').change(function() {
-        var selected = [];
-        $('input[name="utility_items[]"]:checked').each(function() {
-            selected.push($(this).val());
+    $(document).ready(function() {
+        // Khởi tạo Quill editor
+        var quill = new Quill('#editor-container', {
+            theme: 'snow',
+            placeholder: 'Mô tả chi tiết về phòng trọ...',
+            modules: {
+                toolbar: [
+                    ['bold', 'italic', 'underline'],
+                    [{
+                        'header': 1
+                    }, {
+                        'header': 2
+                    }],
+                    [{
+                        'list': 'ordered'
+                    }, {
+                        'list': 'bullet'
+                    }],
+                    ['image', 'link'],
+                    ['clean']
+                ]
+            }
         });
-        $('#utilities').val(selected.join(', '));
-    });
 
-    // Hàm debounce để giới hạn số lần gọi API
-    function debounce(func, wait) {
-        let timeout;
-        return function executedFunction(...args) {
-            const later = () => {
+        // Cập nhật nội dung vào textarea khi submit form
+        $('#roomForm').on('submit', function() {
+            $('#description').val(quill.root.innerHTML);
+        });
+
+        // Cập nhật district_id khi chọn ward
+        $('#ward').change(function() {
+            var selectedOption = $(this).find('option:selected');
+            $('#district_id').val(selectedOption.data('id'));
+        });
+
+        // Cập nhật utilities khi chọn tiện ích
+        $('input[name="utility_items[]"]').change(function() {
+            var selected = [];
+            $('input[name="utility_items[]"]:checked').each(function() {
+                selected.push($(this).val());
+            });
+            $('#utilities').val(selected.join(', '));
+        });
+
+        // Hàm debounce để giới hạn số lần gọi API
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
                 clearTimeout(timeout);
-                func(...args);
+                timeout = setTimeout(later, wait);
             };
-            clearTimeout(timeout);
-            timeout = setTimeout(later, wait);
-        };
-    }
+        }
 
-    // Hàm lấy tọa độ từ địa chỉ
-    function getCoordinates() {
-        var ward = $('#ward').val();
-        var addressDetail = $('#address_detail').val();
-        
-        if (ward && addressDetail) {
-            var fullAddress = addressDetail + ', ' + ward + ', Thành phố Vinh, Nghệ An';
-            console.log('Full Address:', fullAddress);
-            
-            $.ajax({
-                url: '../api/maps/get_coordinates.php',
-                method: 'POST',
-                data: { address: fullAddress },
-                success: function(response) {
-                    if (response.lat && response.lng) {
-                        $('#coordinates').show();
-                        $('#coordinates_text').text('Vĩ độ: ' + response.lat + ', Kinh độ: ' + response.lng);
-                    } else {
+        // Hàm lấy tọa độ từ địa chỉ
+        function getCoordinates() {
+            var ward = $('#ward').val();
+            var addressDetail = $('#address_detail').val();
+
+            if (ward && addressDetail) {
+                var fullAddress = addressDetail + ', ' + ward + ', Thành phố Vinh, Nghệ An';
+                console.log('Full Address:', fullAddress);
+
+                $.ajax({
+                    url: '../api/maps/get_coordinates.php',
+                    method: 'POST',
+                    data: {
+                        address: fullAddress
+                    },
+                    success: function(response) {
+                        if (response.lat && response.lng) {
+                            $('#coordinates').show();
+                            $('#coordinates_text').text('Vĩ độ: ' + response.lat + ', Kinh độ: ' + response.lng);
+                        } else {
+                            $('#coordinates').hide();
+                        }
+                    },
+                    error: function() {
                         $('#coordinates').hide();
                     }
-                },
-                error: function() {
-                    $('#coordinates').hide();
-                }
-            });
-        } else {
-            $('#coordinates').hide();
+                });
+            } else {
+                $('#coordinates').hide();
+            }
         }
-    }
 
-    // Tạo phiên bản debounced của hàm getCoordinates
-    const debouncedGetCoordinates = debounce(getCoordinates, 1000);
+        // Tạo phiên bản debounced của hàm getCoordinates
+        const debouncedGetCoordinates = debounce(getCoordinates, 1000);
 
-    // Gọi hàm lấy tọa độ khi thay đổi phường hoặc địa chỉ
-    $('#ward, #address_detail').on('change keyup', function() {
-        debouncedGetCoordinates();
+        // Gọi hàm lấy tọa độ khi thay đổi phường hoặc địa chỉ
+        $('#ward, #address_detail').on('change keyup', function() {
+            debouncedGetCoordinates();
+        });
     });
-});
 </script>
 
 <?php include_once '../../Components/admin_footer.php'; ?>

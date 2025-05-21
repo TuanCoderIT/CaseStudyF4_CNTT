@@ -502,7 +502,7 @@ include_once('../../Components/admin_header.php');
             <span class="badge badge-light ml-1"><?php echo $pending_data['count']; ?></span>
         <?php endif; ?>
     </a>
-    <a href="index.php" class="btn btn-info">
+    <a href="/Admin/index.php" class="btn btn-info">
         <i class="fas fa-tachometer-alt mr-1"></i> Quay lại bảng điều khiển
     </a>
 </div>
