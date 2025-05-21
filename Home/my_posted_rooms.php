@@ -463,7 +463,7 @@ $result = $stmt->get_result();
 
     <?php include '../Components/footer.php' ?>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="../Assets/main.js"></script>
+    <script src="../assets/admin/js/main.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             // Hiệu ứng xuất hiện cho các phòng

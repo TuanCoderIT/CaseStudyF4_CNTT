@@ -93,7 +93,7 @@ $nearest_rooms = $stmt_nearest->get_result();
                                     </div>
                                     <div class="card-body">
                                         <h5 class="card-title">
-                                            <a href="home/room_detail.php?id=<?php echo $room['id']; ?>"><?php echo $room['title']; ?></a>
+                                            <a href="/home/room_detail.php?id=<?php echo $room['id']; ?>"><?php echo $room['title']; ?></a>
                                         </h5>
                                         <p class="card-text address"><i class="fas fa-map-marker-alt me-2"></i><?php echo $room['address']; ?></p>
                                         <div class="room-info">
@@ -236,7 +236,7 @@ $nearest_rooms = $stmt_nearest->get_result();
     <?php include '../Components/footer.php' ?>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.js"></script>
-    <script src="../Assets/main.js"></script>
+    <script src="../assets/admin/js/main.js"></script>
 </body>
 
 </html>

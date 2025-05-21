@@ -1,7 +1,7 @@
 <?php
 session_start();
 require_once '../../config/db.php';
-require_once '../../configs/config.php';
+require_once '../../config/config.php';
 
 // Kiểm tra đăng nhập với quyền Admin
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] != 1) {
