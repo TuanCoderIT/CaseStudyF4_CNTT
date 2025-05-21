@@ -113,45 +113,21 @@ if ($result->num_rows == 0) {
 
 $room = $result->fetch_assoc();
 
-// Tăng lượt xem - cải tiến để đếm chính xác hơn
-// Khởi tạo mảng viewed_rooms nếu chưa tồn tại trong session
-if (!isset($_SESSION['viewed_rooms'])) {
-    $_SESSION['viewed_rooms'] = array();
+// Lấy ảnh banner (ảnh đại diện)
+$images = [];
+if (!empty($room['images'])) {
+    $images[] = $room['images'];
 }
 
-// Chỉ tăng lượt xem nếu người dùng chưa xem phòng này trong phiên làm việc hiện tại
-if (!in_array($room_id, $_SESSION['viewed_rooms'])) {
-    $stmt_update_view = $conn->prepare("UPDATE motel SET count_view = count_view + 1 WHERE id = ?");
-    $stmt_update_view->bind_param("i", $room_id);
-    $stmt_update_view->execute();
-
-    // Thêm ID phòng vào danh sách đã xem
-    $_SESSION['viewed_rooms'][] = $room_id;
-}
-
-// Lấy phòng trọ tương tự (cùng khu vực hoặc cùng khoảng giá)
-$stmt_similar = $conn->prepare("
-    SELECT m.*, u.name as owner_name 
-    FROM motel m 
-    LEFT JOIN users u ON m.user_id = u.id 
-    WHERE m.id != ? 
-    AND m.approve = 1 
-    AND (m.district_id = ? OR (m.price BETWEEN ? AND ?))
-    ORDER BY m.count_view DESC 
-    LIMIT 3
-");
-
-$price_min = $room['price'] * 0.8;  // Lấy phòng có giá từ 80% của phòng hiện tại
-$price_max = $room['price'] * 1.2;  // Đến 120% giá của phòng hiện tại
-
-$stmt_similar->bind_param("iiii", $room_id, $room['district_id'], $price_min, $price_max);
-$stmt_similar->execute();
-$similar_rooms = $stmt_similar->get_result();
-
-// Xử lý ảnh phòng trọ (nếu có nhiều ảnh)
-$images = [$room['images']]; // Mặc định có một ảnh
-if (strpos($room['images'], ',') !== false) {
-    $images = explode(',', $room['images']);
+// Lấy các ảnh khác từ bảng motel_images
+$motel_id = $room['id'];
+$sql_images = "SELECT image_path FROM motel_images WHERE motel_id = ? ORDER BY display_order ASC, id ASC";
+$stmt_images = $conn->prepare($sql_images);
+$stmt_images->bind_param("i", $motel_id);
+$stmt_images->execute();
+$result_images = $stmt_images->get_result();
+while ($img_row = $result_images->fetch_assoc()) {
+    $images[] = $img_row['image_path'];
 }
 
 // Xử lý tiện ích
@@ -349,6 +325,9 @@ $formatted_price = number_format($room['price']) . ' đ/tháng';
                                         <i class="far fa-heart me-2"></i>Yêu thích
                                     </a>
                                 <?php endif; ?>
+                                <button type="button" class="btn btn-success btn-sm flex-grow-1" data-bs-toggle="modal" data-bs-target="#depositModal">
+                                    <i class="fas fa-wallet me-2"></i>Đặt cọc
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -411,6 +390,25 @@ $formatted_price = number_format($room['price']) . ' đ/tháng';
     </section>
 
     <?php include '../Components/footer.php' ?>
+    <!-- Modal Đặt cọc -->
+    <div class="modal fade" id="depositModal" tabindex="-1" aria-labelledby="depositModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="depositModalLabel"><i class="fas fa-wallet me-2 text-success"></i>Xác nhận đặt cọc</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <p>Bạn có chắc chắn muốn đặt cọc phòng <strong><?php echo htmlspecialchars($room['title']); ?></strong> với giá <strong><?php echo $formatted_price; ?></strong>?</p>
+            <p class="text-muted small mb-0">Sau khi đặt cọc, chủ phòng sẽ liên hệ với bạn để xác nhận thông tin.</p>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+            <button type="button" class="btn btn-success" onclick="alert('Chức năng đặt cọc sẽ được phát triển!')">Xác nhận đặt cọc</button>
+          </div>
+        </div>
+      </div>
+    </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.js"></script>
     <script>

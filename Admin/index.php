@@ -247,7 +247,7 @@ include_once '../Components/admin_header.php';
                         </a>
                     </div>
                     <div class="col-md-3 col-sm-6 mb-4">
-                        <a href="../index.php" target="_blank" class="btn btn-info btn-block">
+                        <a href="../Home/index.php" target="_blank" class="btn btn-info btn-block">
                             <i class="fas fa-external-link-alt fa-2x mb-2"></i><br>
                             Xem trang chủ
                         </a>

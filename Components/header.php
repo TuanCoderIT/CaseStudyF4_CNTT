@@ -1,4 +1,4 @@
-<link rel="stylesheet" href="../Assets/style.css">
+<link rel="stylesheet" href="/CaseStudyF4_CNTT/Assets/style.css">
 <header>
     <nav class="navbar navbar-expand-lg fixed-top">
         <div class=" container">

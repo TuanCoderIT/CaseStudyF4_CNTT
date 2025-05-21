@@ -44,43 +44,54 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         }
     }
 
-    // Thêm phòng trọ vào database
-    $query = "INSERT INTO motel (title, description, price, area, address, phone, 
+    try {
+        // Thêm phòng trọ vào database
+        $query = "INSERT INTO motel (title, description, price, area, address, latlng, phone, 
                                 category_id, district_id, utilities, user_id, images, approve)
-              VALUES ('$title', '$description', '$price', '$area', '$address', '$phone',
-                      '$category_id', '$district_id', '$utilities', '$user_id', '$banner_image', 1)";
+                VALUES ('$title', '$description', '$price', '$area', '$address', '$latlng', '$phone',
+                        '$category_id', '$district_id', '$utilities', '$user_id', '$banner_image', 1)";
 
-    if (mysqli_query($conn, $query)) {
-        $motel_id = mysqli_insert_id($conn);
-        
-        // Xử lý upload nhiều hình ảnh
-        if (isset($_FILES['additional_images'])) {
-            $upload_dir = '../uploads/rooms/';
-            if (!is_dir($upload_dir)) {
-                mkdir($upload_dir, 0755, true);
-            }
+        if (mysqli_query($conn, $query)) {
+            $motel_id = mysqli_insert_id($conn);
 
-            foreach ($_FILES['additional_images']['tmp_name'] as $key => $tmp_name) {
-                if ($_FILES['additional_images']['error'][$key] == 0) {
-                    $file_name = time() . '_' . $key . '_' . $_FILES['additional_images']['name'][$key];
-                    $target_file = $upload_dir . $file_name;
-                    
-                    if (move_uploaded_file($tmp_name, $target_file)) {
-                        $image_path = 'uploads/rooms/' . $file_name;
-                        $insert_image = "INSERT INTO motel_images (motel_id, image_path, display_order) 
-                                        VALUES ($motel_id, '$image_path', $key)";
-                        mysqli_query($conn, $insert_image);
+            // Xử lý upload nhiều hình ảnh
+            if (isset($_FILES['additional_images'])) {
+                $upload_dir = '../../uploads/rooms/';
+
+                // Tạo thư mục nếu chưa tồn tại
+                if (!is_dir($upload_dir)) {
+                    mkdir($upload_dir, 0755, true);
+                }
+
+                $file_count = count($_FILES['additional_images']['name']);
+
+                for ($i = 0; $i < $file_count; $i++) {
+                    // Kiểm tra nếu file hợp lệ
+                    if ($_FILES['additional_images']['error'][$i] == 0) {
+                        $file_name = time() . '_' . $i . '_' . $_FILES['additional_images']['name'][$i];
+                        $target_file = $upload_dir . $file_name;
+
+                        // Di chuyển file tạm vào thư mục đích
+                        if (move_uploaded_file($_FILES['additional_images']['tmp_name'][$i], $target_file)) {
+                            $image_path = 'uploads/rooms/' . $file_name;
+
+                            // Lưu thông tin hình ảnh vào bảng motel_images
+                            $insert_image = "INSERT INTO motel_images (motel_id, image_path, display_order) 
+                                            VALUES ($motel_id, '$image_path', $i)";
+                            mysqli_query($conn, $insert_image);
+                        }
                     }
                 }
             }
         }
-
-        $_SESSION['success'] = "Thêm phòng trọ thành công!";
-        header('Location: manage_rooms.php');
-        exit();
-    } else {
-        $error = "Lỗi: " . mysqli_error($conn);
+    } catch (Exception $e) {
+        mysqli_rollback($conn);
+        $error = "Lỗi: " . $e->getMessage();
     }
+
+    $_SESSION['success'] = "Thêm phòng trọ thành công!";
+    header('Location: manage_rooms.php');
+    exit();
 }
 
 $page_title = "Thêm phòng trọ mới";

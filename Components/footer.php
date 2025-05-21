@@ -1,4 +1,4 @@
-<link rel="stylesheet" href="../Assets/style.css">
+<link rel="stylesheet" href="/CaseStudyF4_CNTT/Assets/style.css">
 <footer class="py-4 mt-5 bg-black text-white">
     <div class="container">
         <div class="row">
