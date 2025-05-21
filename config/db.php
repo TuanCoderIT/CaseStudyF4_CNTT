@@ -1,12 +1,13 @@
 <?php
 // Thông tin kết nối đến cơ sở dữ liệu
-$host = 'localhost:3307';       // Host CSDL
-$username = 'root';        // Tên đăng nhập MySQL (mặc định là 'root')
-$password = '';            // Mật khẩu MySQL (mặc định là trống cho XAMPP)
-$database = 'gtpt';  // Tên CSDL
+$host = '103.97.126.29';       // Host CSDL
+$username = 'yoxdhlgk_root';        // Tên đăng nhập MySQL (mặc định là 'root')
+$password = 'admin123';            // Mật khẩu MySQL (mặc định là trống cho XAMPP)
+$database = 'yoxdhlgk_Case_Study';  // Tên CSDL
+$port = '3306';
  
 // Tạo kết nối đến MySQL
-$conn = new mysqli($host, $username, $password, $database);
+$conn = new mysqli($host, $username, $password, $database, $port);
 
 // Kiểm tra kết nối
 if ($conn->connect_error) {

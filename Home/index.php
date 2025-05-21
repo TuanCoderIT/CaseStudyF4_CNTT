@@ -38,6 +38,7 @@ $stmt_newest = $conn->prepare("
 $stmt_newest->execute();
 $newest_rooms = $stmt_newest->get_result();
 
+
 // Lấy danh sách phòng trọ gần trường ĐH Vinh
 $stmt_nearest = $conn->prepare("
     SELECT m.*, u.name as owner_name 

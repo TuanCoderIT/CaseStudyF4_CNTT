@@ -55,7 +55,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         // Xử lý upload ảnh banner
         $banner_image = '';
         if (isset($_FILES['banner_image']) && $_FILES['banner_image']['error'] == 0) {
-            $upload_dir = '../uploads/';
+            $upload_dir = '../../uploads/';
 
             // Tạo thư mục nếu chưa tồn tại
             if (!is_dir($upload_dir)) {
@@ -86,7 +86,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
                 // Xử lý upload nhiều hình ảnh
                 if (isset($_FILES['additional_images'])) {
-                    $upload_dir = '../uploads/rooms/';
+                    $upload_dir = '../../uploads/rooms/';
 
                     // Tạo thư mục nếu chưa tồn tại
                     if (!is_dir($upload_dir)) {

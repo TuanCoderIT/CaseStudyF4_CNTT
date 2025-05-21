@@ -33,7 +33,8 @@ $result = $stmt->get_result();
     <title>Quản lý phòng trọ - Trang Quản trị</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="../Assets/style.css">
+    <link rel="stylesheet" href="/CaseStudyF4_CNTT/Admin/assets/css/admin.css">
+
     <style>
         .admin-container {
             padding-top: 2rem;
@@ -207,7 +208,7 @@ $result = $stmt->get_result();
                                                         <hr class="dropdown-divider">
                                                     </li>
                                                     <li>
-                                                        <a href="../Home/room_detail.php?id=<?php echo $room['id']; ?>" target="_blank" class="dropdown-item">
+                                                        <a href="/CaseStudyF4_CNTT/Home/room_detail.php?id=<?php echo $room['id']; ?>" target="_blank" class="dropdown-item">
                                                             <i class="fas fa-eye me-2 text-primary"></i>Xem chi tiết
                                                         </a>
                                                     </li>
