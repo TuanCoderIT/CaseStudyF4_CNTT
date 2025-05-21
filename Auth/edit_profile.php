@@ -55,7 +55,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             
             if (isset($_FILES['avatar']) && $_FILES['avatar']['error'] == 0) {
                 // Thư mục lưu trữ ảnh
-                $upload_dir = '../images/';
+                $upload_dir = '../uploads/avatar/';
                 
                 // Đảm bảo thư mục tồn tại
                 if (!file_exists($upload_dir)) {
@@ -64,9 +64,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 
                 // Tạo tên file duy nhất để tránh trùng lặp
                 $file_extension = pathinfo($_FILES['avatar']['name'], PATHINFO_EXTENSION);
-                $avatar_filename = 'avatar_' . $user_id . '_' . time() . '.' . $file_extension;
-                $avatar_path = 'images/' . $avatar_filename;
-                $upload_path = $upload_dir . $avatar_filename;
+                $avatar_filename = 'avatar_' . time() . '_' . rand(1000, 9999) . '.' . $file_extension;
+                $avatar_path = 'uploads/avatar/' . $avatar_filename; // Đường dẫn tương đối để lưu vào database
+                $upload_path = $upload_dir . $avatar_filename; // Đường dẫn vật lý để upload file
                 
                 // Các định dạng ảnh được phép
                 $allowed_types = array('jpg', 'jpeg', 'png', 'gif');
@@ -82,7 +82,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         // Di chuyển file từ thư mục tạm vào thư mục upload
                         if (move_uploaded_file($_FILES['avatar']['tmp_name'], $upload_path)) {
                             // Nếu upload thành công, xóa ảnh cũ nếu có
-                            if ($user['avatar'] && $user['avatar'] != 'images/default_avatar.png') {
+                            if ($user['avatar'] && $user['avatar'] != 'uploads/avatar/default-avatar.jpg') {
                                 $old_avatar_path = '../' . $user['avatar'];
                                 if (file_exists($old_avatar_path)) {
                                     unlink($old_avatar_path);
@@ -208,7 +208,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             
             <form action="edit_profile.php" method="POST" enctype="multipart/form-data">
                 <div class="avatar-container">
-                    <img src="<?php echo !empty($user['avatar']) ? '../' . $user['avatar'] : '../images/default_avatar.png'; ?>" 
+                    <img src="<?php echo !empty($user['avatar']) ? '/' . $user['avatar'] : '/uploads/avatar/default-avatar.jpg'; ?>" 
                          alt="Avatar" class="avatar-preview" id="avatar-preview">
                     <div>
                         <label for="avatar" class="custom-file-upload">
@@ -259,6 +259,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </div>
 </div>
 
-<script src="../Assets/main.js"></script>
+<script src="../assets/admin/js/main.js"></script>
 </body>
 </html>

@@ -75,6 +75,6 @@
 </div>
 
 <!-- Thêm tham chiếu đến file JavaScript chung -->
-<script src="../Assets/main.js"></script>
+<script src="../assets/admin/js/main.js"></script>
 </body>
 </html>
