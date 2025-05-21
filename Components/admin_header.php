@@ -45,7 +45,7 @@
 <body>
     <!-- Sidebar -->
     <div class="admin-sidebar">
-        <a class="sidebar-brand d-flex align-items-center" href="/CaseStudyF4_CNTT/Admin/index.php">
+        <a class="sidebar-brand d-flex align-items-center" href="/Admin/index.php">
             <i class="fas fa-home mr-2"></i>
             <div>Admin Phòng Trọ</div>
         </a>
@@ -54,21 +54,21 @@
 
         <ul class="nav flex-column">
             <li class="nav-item">
-                <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'index.php' ? 'active' : ''; ?>" href="/CaseStudyF4_CNTT/Admin/index.php">
+                <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'index.php' ? 'active' : ''; ?>" href="/Admin/index.php">
                     <i class="fas fa-fw fa-tachometer-alt"></i>
                     <span>Bảng điều khiển</span>
                 </a>
             </li>
 
             <li class="nav-item">
-                <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'manage_rooms.php' ? 'active' : ''; ?>" href="/CaseStudyF4_CNTT/Admin/rooms/manage_rooms.php">
+                <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'manage_rooms.php' ? 'active' : ''; ?>" href="/Admin/rooms/manage_rooms.php">
                     <i class="fas fa-fw fa-building"></i>
                     <span>Quản lý phòng trọ</span>
                 </a>
             </li>
 
             <li class="nav-item">
-                <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'pending_rooms.php' ? 'active' : ''; ?>" href="/CaseStudyF4_CNTT/Admin/rooms/pending_rooms.php">
+                <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'pending_rooms.php' ? 'active' : ''; ?>" href="/Admin/rooms/pending_rooms.php">
                     <i class="fas fa-fw fa-clipboard-check"></i>
                     <span>Duyệt phòng trọ</span>
                     <?php
@@ -83,14 +83,14 @@
             </li>
 
             <li class="nav-item">
-                <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'manage_categories.php' ? 'active' : ''; ?>" href="/CaseStudyF4_CNTT/Admin/categories/manage_categories.php">
+                <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'manage_categories.php' ? 'active' : ''; ?>" href="/Admin/categories/manage_categories.php">
                     <i class="fas fa-fw fa-list"></i>
                     <span>Quản lý danh mục</span>
                 </a>
             </li>
 
             <li class="nav-item">
-                <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'manage_districts.php' ? 'active' : ''; ?>" href="/CaseStudyF4_CNTT/Admin/districts/manage_districts.php">
+                <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'manage_districts.php' ? 'active' : ''; ?>" href="/Admin/districts/manage_districts.php">
                     <i class="fas fa-fw fa-map-marker-alt"></i>
                     <span>Quản lý khu vực</span>
                 </a>

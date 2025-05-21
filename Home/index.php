@@ -70,9 +70,6 @@ $nearest_rooms = $stmt_nearest->get_result();
 <body class="home-body">
     <?php include '../Components/header.php' ?>
 
-    <!-- Banner hình ảnh nhiều phòng trọ -->
-    <?php include '../Components/image_banner.php' ?>
-
     <!-- Banner tìm kiếm -->
     <?php include '../Components/banner_search.php' ?>
     <!-- Phần nội dung chính -->
