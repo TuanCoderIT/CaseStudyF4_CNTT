@@ -36,7 +36,7 @@
     ?>
 
     <!-- Admin Custom CSS -->
-    <link rel="stylesheet" href="/CaseStudyF4_CNTT/Admin/assets/css/admin.css">
+    <link rel="stylesheet" href="/Assets/admin/css/admin.css">
 
     <!-- jQuery -->
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
