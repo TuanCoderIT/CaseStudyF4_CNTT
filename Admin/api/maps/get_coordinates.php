@@ -1,81 +1,130 @@
 <?php
-// File lấy tọa độ từ địa chỉ
 header('Content-Type: application/json');
-session_start();
-require_once '../../../config/db.php';
 
-// Kiểm tra đăng nhập với quyền Admin
-if (!isset($_SESSION['user_id']) || $_SESSION['role'] != 1) {
-    http_response_code(401);
-    echo json_encode(['success' => false, 'message' => 'Unauthorized']);
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    echo json_encode(['success' => false, 'message' => 'Invalid request method']);
     exit;
 }
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Kiểm tra xem có dữ liệu địa chỉ thành phần không
-    if (isset($_POST['province_name']) || isset($_POST['district_name']) || isset($_POST['ward_name']) || isset($_POST['address_detail'])) {
-        // Lấy dữ liệu từ form
-        $address_detail = isset($_POST['address_detail']) ? $_POST['address_detail'] : '';
-        $ward_name = isset($_POST['ward_name']) ? $_POST['ward_name'] : '';
-        $district_name = isset($_POST['district_name']) ? $_POST['district_name'] : '';
-        $province_name = isset($_POST['province_name']) ? $_POST['province_name'] : '';
+$address = isset($_POST['address']) ? trim($_POST['address']) : '';
 
-        // Tạo địa chỉ đầy đủ
-        $full_address = "";
-        if (!empty($address_detail)) $full_address .= $address_detail;
-        if (!empty($ward_name)) $full_address .= (!empty($full_address) ? ", " : "") . $ward_name;
-        if (!empty($district_name)) $full_address .= (!empty($full_address) ? ", " : "") . $district_name;
-        if (!empty($province_name)) $full_address .= (!empty($full_address) ? ", " : "") . $province_name;
-        $full_address .= ", Vietnam"; // Thêm quốc gia để tăng độ chính xác
+if (empty($address)) {
+    echo json_encode(['success' => false, 'message' => 'Address is required']);
+    exit;
+}
 
-        $address = urlencode($full_address);
+// Hàm chuẩn hóa địa chỉ
+function formatAddress($address) {
+    $address = mb_strtolower($address, 'UTF-8');
+    $address = iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $address);
+    $address = preg_replace('/[^a-zA-Z0-9\s,.-]/', '', $address);
+
+    $replaceMap = [
+        'tp.' => 'thanh pho',
+        't.p.' => 'thanh pho',
+        'tp ' => 'thanh pho ',
+        't.p ' => 'thanh pho ',
+        'p.' => 'phuong',
+        'p ' => 'phuong ',
+        'f.' => 'phuong',
+        'f ' => 'phuong ',
+        'q.' => 'quan',
+        'q ' => 'quan ',
+        'duong' => 'duong',
+        'pho' => 'duong',
+        'tinh' => '',
+        'xa' => 'xa',
+        'huyen' => 'huyen',
+        'nghe an' => 'nghe an'
+    ];
+
+    foreach ($replaceMap as $search => $replace) {
+        $address = str_replace($search, $replace, $address);
     }
-    // Nếu không có địa chỉ thành phần, kiểm tra địa chỉ đầy đủ
-    else if (isset($_POST['address'])) {
-        $address = urlencode($_POST['address']);
-    } else {
-        echo json_encode(['success' => false, 'message' => 'Địa chỉ không được cung cấp']);
-        exit;
-    }
 
-    // Dùng Google Geocoding API (bạn cần thay API_KEY bằng key của bạn)
-    // Nếu không có API key, bạn có thể sử dụng Nominatim OpenStreetMap (miễn phí nhưng hạn chế request)
-    // $api_url = "https://maps.googleapis.com/maps/api/geocode/json?address=$address&key=AIzaSyAQ7hhG0JUMfN_fRK1dQl7ajyQ0-LtxYT0";
+    $address = preg_replace('/\s+/', ' ', $address);
+    $address = trim($address);
+    $address = preg_replace('/\s*,\s*/', ', ', $address);
+    $address = preg_replace('/\s*\.\s*/', '. ', $address);
+    $address = rtrim($address, ',.');
 
-    // Sử dụng Nominatim OpenStreetMap (miễn phí)
-    $api_url = "https://nominatim.openstreetmap.org/search?format=json&q=$address&limit=1";
+    return $address;
+}
+
+// Hàm gọi API Google Maps
+function queryGoogleMaps($address, $api_key) {
+    $encoded = urlencode($address);
+    $url = "https://maps.googleapis.com/maps/api/geocode/json?address={$encoded}&components=country:VN&key={$api_key}";
 
     $ch = curl_init();
-    curl_setopt($ch, CURLOPT_URL, $api_url);
+    curl_setopt($ch, CURLOPT_URL, $url);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($ch, CURLOPT_USERAGENT, 'PhongTroApplication/1.0'); // OpenStreetMap yêu cầu User-Agent
-
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
     $response = curl_exec($ch);
-
-    if (curl_errno($ch)) {
-        echo json_encode(['success' => false, 'message' => 'Curl error: ' . curl_error($ch)]);
-        exit;
-    }
-
+    
+    // Thêm thông tin debug
+    $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    $error = curl_error($ch);
     curl_close($ch);
-    $data = json_decode($response, true);
 
-    // Xử lý kết quả từ Nominatim
-    if (is_array($data) && count($data) > 0) {
-        $result = [
-            'success' => true,
-            'lat' => $data[0]['lat'],
-            'lng' => $data[0]['lon'],
-            'formatted_address' => $data[0]['display_name']
+    $data = json_decode($response, true);
+    
+    // Thêm thông tin debug vào response
+    if (isset($data['error_message'])) {
+        $data['debug_info'] = [
+            'http_code' => $http_code,
+            'curl_error' => $error,
+            'request_url' => $url
         ];
-        echo json_encode($result);
-    } else {
-        echo json_encode([
-            'success' => false,
-            'message' => 'Không thể tìm thấy tọa độ cho địa chỉ này.',
-            'data' => $data
-        ]);
     }
+
+    return $data;
+}
+
+// Bắt đầu xử lý
+$api_key = 'AIzaSyAZLD0ujNK_I-2BCE8w4j76Ko6aUPiFXs4';
+$formatted = formatAddress($address);
+$data = queryGoogleMaps($formatted, $api_key);
+
+// Xử lý các trường hợp lỗi cụ thể
+if ($data['status'] === 'REQUEST_DENIED') {
+    http_response_code(403);
+    echo json_encode([
+        'success' => false,
+        'message' => 'API key không hợp lệ hoặc chưa được cấu hình đúng',
+        'status' => $data['status'],
+        'error_message' => $data['error_message'] ?? 'Không có thông tin lỗi chi tiết',
+        'debug_info' => $data['debug_info'] ?? null
+    ]);
+    exit;
+}
+
+// Nếu không tìm thấy thì thử "làm mềm" địa chỉ
+if ($data['status'] !== 'OK') {
+    $soft = preg_replace('/^\s*\d+\s*(ngõ|ngo|hem|ngo|ngach)?\s*\S*\s*/i', '', $formatted);
+    $data = queryGoogleMaps($soft, $api_key);
+}
+
+// Trả về kết quả nếu có
+if ($data['status'] === 'OK' && !empty($data['results'])) {
+    $result = $data['results'][0];
+    
+    echo json_encode([
+        'success' => true,
+        'coordinates' => [
+            'lat' => $result['geometry']['location']['lat'],
+            'lng' => $result['geometry']['location']['lng'],
+            'address' => $result['formatted_address'],
+            'confidence' => $result['geometry']['location_type']
+        ]
+    ]);
 } else {
-    echo json_encode(['success' => false, 'message' => 'Địa chỉ không được cung cấp']);
+    http_response_code(404);
+    echo json_encode([
+        'success' => false, 
+        'message' => 'Không tìm thấy tọa độ cho địa chỉ này',
+        'status' => $data['status'] ?? 'UNKNOWN_ERROR',
+        'error_message' => $data['error_message'] ?? null,
+        'debug_info' => $data['debug_info'] ?? null
+    ]);
 }

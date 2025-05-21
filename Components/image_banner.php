@@ -55,211 +55,240 @@ if ($banner_result && $banner_result->num_rows > 0) {
 }
 ?>
 
-<!-- Banner Slider với nhiều hình ảnh -->
-<div class="image-banner-container">
-    <div class="swiper banner-swiper">
-        <div class="swiper-wrapper">
-            <?php foreach ($banner_rooms as $room): ?>
-                <div class="swiper-slide">
-                    <div class="banner-slide-content">
-                        <!-- Slider con cho mỗi phòng trọ -->
-                        <div class="swiper room-image-swiper">
-                            <div class="swiper-wrapper">
-                                <?php foreach ($room['images'] as $image): ?>
-                                    <div class="swiper-slide">
-                                        <img src="<?php echo str_starts_with($image, '/') ? substr($image, 1) : $image; ?>" alt="<?php echo htmlspecialchars($room['title']); ?>" class="banner-image">
-                                    </div>
-                                <?php endforeach; ?>
-                            </div>
-                            <div class="swiper-pagination"></div>
-                            <!-- Simplified navigation buttons -->
-                            <div class="swiper-button-next">
-                                <i class="fas fa-chevron-right"></i>
-                            </div>
-                            <div class="swiper-button-prev">
-                                <i class="fas fa-chevron-left"></i>
-                            </div>
-                        </div>
-                        <div class="banner-info">
-                            <h3 class="banner-title"><?php echo htmlspecialchars($room['title']); ?></h3>
-                            <p class="banner-price"><?php echo number_format($room['price']); ?> đ/tháng</p>
-                            <p class="banner-address"><i class="fas fa-map-marker-alt"></i> <?php echo htmlspecialchars($room['address']); ?></p>
-                            <div class="d-flex flex-wrap gap-3 mb-3">
-                                <div class="banner-view-count">
-                                    <i class="fas fa-eye"></i> <?php echo number_format($room['count_view']); ?> lượt xem
+<!-- Bootstrap Carousel Banner -->
+<div class="container-fluid p-0 mb-4">
+    <div id="featuredRoomsCarousel" class="carousel slide" data-bs-ride="carousel">
+        <!-- Indicators -->
+        <div class="carousel-indicators">
+            <?php foreach ($banner_rooms as $index => $room): ?>
+                <button type="button" data-bs-target="#featuredRoomsCarousel" data-bs-slide-to="<?= $index ?>"
+                    <?= $index === 0 ? 'class="active" aria-current="true"' : '' ?>
+                    aria-label="Slide <?= $index + 1 ?>"></button>
+            <?php endforeach; ?>
+        </div>
+
+        <!-- Carousel slides -->
+        <div class="carousel-inner">
+            <?php foreach ($banner_rooms as $index => $room): ?>
+                <div class="carousel-item <?= $index === 0 ? 'active' : '' ?>">
+                    <a href="room_detail.php?id=<?= $room['id']; ?>" class="position-relative banner-slide">
+                        <!-- Image -->
+                        <?php if (isset($room['images'][0])): ?>
+                            <img src="<?= str_starts_with($room['images'][0], '/') ? substr($room['images'][0], 1) : $room['images'][0]; ?>"
+                                class="d-block w-100 banner-image" alt="<?= htmlspecialchars($room['title']); ?>">
+                        <?php endif; ?>
+
+                        <!-- Info overlay -->
+                        <div class="carousel-caption d-none d-md-block banner-info-overlay">
+                            <h3 class="banner-title"><?= htmlspecialchars($room['title']); ?></h3>
+                            <p class="banner-price"><?= number_format($room['price']); ?> đ/tháng</p>
+                            <p class="banner-address"><i class="fas fa-map-marker-alt"></i> <?= htmlspecialchars($room['address']); ?></p>
+
+                            <div class="d-flex flex-wrap justify-content-center gap-2 mb-3">
+                                <div class="banner-view-badge">
+                                    <i class="fas fa-eye"></i> <?= number_format($room['count_view']); ?> lượt xem
                                 </div>
+
                                 <?php if (!empty($room['category_name'])): ?>
-                                    <span class="badge bg-primary"><?php echo htmlspecialchars($room['category_name']); ?></span>
+                                    <span class="badge bg-primary"><?= htmlspecialchars($room['category_name']); ?></span>
                                 <?php endif; ?>
+
                                 <?php if (!empty($room['district_name'])): ?>
-                                    <span class="badge bg-info"><?php echo htmlspecialchars($room['district_name']); ?></span>
+                                    <span class="badge bg-info"><?= htmlspecialchars($room['district_name']); ?></span>
                                 <?php endif; ?>
                             </div>
-                            <a href="room_detail.php?id=<?php echo $room['id']; ?>" class="banner-btn">Xem chi tiết</a>
+
+                            <div class="pt-2"></div>
                         </div>
-                    </div>
+
+                        <!-- Mobile info (displayed below the image on smaller screens) -->
+                        <div class="d-md-none mobile-banner-info">
+                            <h3 class="h5"><?= htmlspecialchars($room['title']); ?></h3>
+                            <p class="text-danger fw-bold"><?= number_format($room['price']); ?> đ/tháng</p>
+                            <a href="room_detail.php?id=<?= $room['id']; ?>" class="btn btn-sm btn-primary">Chi tiết</a>
+                        </div>
+                    </a>
                 </div>
             <?php endforeach; ?>
         </div>
-        <!-- Điều hướng chính và phân trang -->
-        <div class="swiper-main-pagination"></div>
-        <!-- Simplified main navigation buttons -->
-        <div class="swiper-button-next main-next">
-            <i class="fas fa-chevron-right"></i>
-        </div>
-        <div class="swiper-button-prev main-prev">
-            <i class="fas fa-chevron-left"></i>
-        </div>
+
+        <!-- Controls/Navigation buttons -->
+        <button class="carousel-control-prev" type="button" data-bs-target="#featuredRoomsCarousel" data-bs-slide="prev">
+            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+            <span class="visually-hidden">Previous</span>
+        </button>
+        <button class="carousel-control-next" type="button" data-bs-target="#featuredRoomsCarousel" data-bs-slide="next">
+            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+            <span class="visually-hidden">Next</span>
+        </button>
     </div>
 </div>
 
-<!-- CSS được định nghĩa trong Assets/banner.css -->
+<style>
+    /* Custom styling for Bootstrap Carousel Banner */
+    .carousel {
+        margin-bottom: 2rem;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    }
 
-<!-- JavaScript để khởi tạo Swiper -->
+    .banner-slide {
+        height: 500px;
+        overflow: hidden;
+    }
+
+    .banner-image {
+        width: 100%;
+        height: 500px;
+        object-fit: cover;
+        transition: transform 0.5s ease;
+    }
+
+    .carousel-item:hover .banner-image {
+        transform: scale(1.05);
+    }
+
+    .banner-info-overlay {
+        background: linear-gradient(to top, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0.4) 70%, transparent 100%);
+        border-radius: 0 0 8px 8px;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        padding: 2rem 1.5rem 1.5rem;
+    }
+
+    .banner-title {
+        font-size: 1.75rem;
+        font-weight: 600;
+        margin-bottom: 0.75rem;
+        text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .banner-price {
+        color: #ff6b6b;
+        font-weight: bold;
+        font-size: 1.4rem;
+        margin-bottom: 0.75rem;
+        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.7);
+    }
+
+    .banner-address {
+        margin-bottom: 0.75rem;
+        font-size: 1.1rem;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .banner-address i {
+        color: #5eead4;
+        margin-right: 8px;
+    }
+
+    .banner-view-badge {
+        margin-bottom: 0;
+        font-size: 0.9rem;
+        background: rgba(255, 255, 255, 0.2);
+        padding: 4px 10px;
+        border-radius: 20px;
+        display: inline-flex;
+        align-items: center;
+    }
+
+    .banner-view-badge i {
+        color: #fcd34d;
+        margin-right: 6px;
+    }
+
+    /* Mobile info styling */
+    .mobile-banner-info {
+        background: #fff;
+        padding: 15px;
+        text-align: center;
+        border-top: 1px solid #eee;
+    }
+
+    /* Enhance carousel controls */
+    .carousel-control-prev,
+    .carousel-control-next {
+        width: 50px;
+        height: 50px;
+        background-color: rgba(255, 255, 255, 0.3);
+        top: 50%;
+        transform: translateY(-50%);
+        border-radius: 50%;
+        opacity: 0.8;
+    }
+
+    .carousel-control-prev {
+        left: 20px;
+    }
+
+    .carousel-control-next {
+        right: 20px;
+    }
+
+    .carousel-control-prev:hover,
+    .carousel-control-next:hover {
+        background-color: rgba(255, 255, 255, 0.5);
+    }
+
+    .carousel-indicators [data-bs-target] {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        margin: 0 5px;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+
+        .banner-slide,
+        .banner-image {
+            height: 400px;
+        }
+
+        .banner-title {
+            font-size: 1.4rem;
+        }
+    }
+
+    @media (max-width: 576px) {
+
+        .banner-slide,
+        .banner-image {
+            height: 350px;
+        }
+    }
+</style>
+
 <script>
+    // Initialize the carousel with options
     document.addEventListener('DOMContentLoaded', function() {
-        // Phương pháp mới: xóa và tạo lại các nút điều hướng để khắc phục vấn đề méo mó
-        setTimeout(() => {
-            // Chờ một khoảng thời gian ngắn để đảm bảo Swiper đã được khởi tạo hoàn toàn
-            document.querySelectorAll('.swiper-button-next, .swiper-button-prev').forEach(button => {
-                const parent = button.parentElement;
-                const isNext = button.classList.contains('swiper-button-next');
-                const isMain = button.classList.contains('main-next') || button.classList.contains('main-prev');
+        const carousel = new bootstrap.Carousel(document.getElementById('featuredRoomsCarousel'), {
+            interval: 5000, // 5 seconds between slides
+            wrap: true, // Continuous loop
+            keyboard: true // Respond to keyboard
+        });
 
-                // Lấy nội dung icon từ nút cũ nếu có, hoặc tạo mới nếu không có
-                let icon;
-                if (button.querySelector('i')) {
-                    icon = button.querySelector('i').cloneNode(true);
-                } else {
-                    icon = document.createElement('i');
-                    icon.className = isNext ? 'fas fa-chevron-right' : 'fas fa-chevron-left';
-                }
-
-                // Xóa nút cũ
-                const buttonClasses = button.className;
-                button.remove();
-
-                // Tạo nút mới với các class giống nút cũ để Swiper có thể nhận diện
-                const newButton = document.createElement('div');
-                newButton.className = buttonClasses + ' fixed-nav-button';
-
-                // Thêm icon vào nút
-                newButton.appendChild(icon);
-
-                // Thêm nút vào DOM
-                parent.appendChild(newButton);
+        // Optional: Add fade animation to caption text when slide changes
+        const carouselElement = document.getElementById('featuredRoomsCarousel');
+        carouselElement.addEventListener('slide.bs.carousel', function() {
+            document.querySelectorAll('.carousel-caption').forEach(caption => {
+                caption.style.opacity = 0;
+                caption.style.transform = 'translateY(20px)';
             });
-        }, 100);
-
-        // Xử lý hiệu ứng khi cuộn trang
-        window.addEventListener('scroll', function() {
-            const bannerContainer = document.querySelector('.image-banner-container');
-            if (bannerContainer) {
-                if (window.scrollY > 50) {
-                    bannerContainer.classList.add('scrolled');
-                } else {
-                    bannerContainer.classList.remove('scrolled');
-                }
-            }
         });
 
-        // Khởi tạo Swiper con cho từng phòng trọ
-        const roomSwipers = new Swiper('.room-image-swiper', {
-            loop: true,
-            navigation: {
-                nextEl: '.swiper-button-next',
-                prevEl: '.swiper-button-prev',
-            },
-            pagination: {
-                el: '.swiper-pagination',
-                clickable: true,
-            },
-            effect: 'fade',
-            fadeEffect: {
-                crossFade: true
-            },
-            autoplay: {
-                delay: 4000,
-                disableOnInteraction: false,
-            },
-            speed: 800,
-            grabCursor: true
-        });
-
-        // Khởi tạo Swiper chính cho banner
-        const bannerSwiper = new Swiper('.banner-swiper', {
-            loop: true,
-            navigation: {
-                nextEl: '.main-next',
-                prevEl: '.main-prev',
-            },
-            pagination: {
-                el: '.swiper-main-pagination',
-                clickable: true,
-                dynamicBullets: true,
-            },
-            autoplay: {
-                delay: 8000,
-                disableOnInteraction: false,
-            },
-            effect: 'fade',
-            fadeEffect: {
-                crossFade: true
-            },
-            speed: 1000,
-            grabCursor: true,
-            keyboard: {
-                enabled: true,
-            },
-            on: {
-                slideChangeTransitionStart: function() {
-                    // Tạo hiệu ứng khi chuyển slide
-                    document.querySelectorAll('.banner-info').forEach(info => {
-                        info.style.opacity = 0;
-                        info.style.transform = 'translateY(20px)';
-                    });
-                },
-                slideChangeTransitionEnd: function() {
-                    // Hiện thông tin khi slide hiển thị
-                    const activeSlide = document.querySelector('.swiper-slide-active .banner-info');
-                    if (activeSlide) {
-                        activeSlide.style.opacity = 1;
-                        activeSlide.style.transform = 'translateY(0)';
-                        activeSlide.style.transition = 'all 0.5s ease';
-                    }
-                },
+        carouselElement.addEventListener('slid.bs.carousel', function() {
+            const activeCaption = document.querySelector('.carousel-item.active .carousel-caption');
+            if (activeCaption) {
+                activeCaption.style.opacity = 1;
+                activeCaption.style.transform = 'translateY(0)';
+                activeCaption.style.transition = 'all 0.5s ease';
             }
-        });
-
-        // Khởi tạo hiệu ứng cho slide đầu tiên
-        setTimeout(() => {
-            const activeSlide = document.querySelector('.swiper-slide-active .banner-info');
-            if (activeSlide) {
-                activeSlide.style.opacity = 1;
-                activeSlide.style.transform = 'translateY(0)';
-                activeSlide.style.transition = 'all 0.5s ease';
-            }
-        }, 100);
-
-        // Thêm sự kiện cho các nút điều hướng để có hiệu ứng nhấn chuột đẹp
-        document.querySelectorAll('.swiper-button-next, .swiper-button-prev').forEach(button => {
-            // Thêm hiệu ứng ripple khi click
-            button.addEventListener('click', function(e) {
-                const rect = this.getBoundingClientRect();
-                const x = e.clientX - rect.left;
-                const y = e.clientY - rect.top;
-
-                const ripple = document.createElement('span');
-                ripple.classList.add('ripple-effect');
-                ripple.style.left = x + 'px';
-                ripple.style.top = y + 'px';
-
-                this.appendChild(ripple);
-
-                setTimeout(() => {
-                    ripple.remove();
-                }, 600);
-            });
         });
     });
 </script>
