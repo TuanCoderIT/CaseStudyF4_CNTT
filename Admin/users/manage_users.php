@@ -2,9 +2,9 @@
 session_start();
 require_once '../../config/db.php';
 
-// Kiểm tra đăng nhập với quyền Admin
+// Kiểm tra đăng nhập với quyền admin
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] != 1) {
-    header('Location: ../../Auth/login.php?message=Bạn cần đăng nhập với tài khoản admin');
+    header('Location: ../../auth/login.php?message=Bạn cần đăng nhập với tài khoản admin');
     exit();
 }
 
@@ -204,11 +204,11 @@ $most_active = mysqli_fetch_assoc($most_active_result);
         </div>
     </div>
 
-    <!-- Số Admin -->
+    <!-- Số admin -->
     <div class="col-xl-3 col-md-6 mb-4">
         <div class="card stat-card stat-card-danger h-100">
             <div class="card-body">
-                <div class="card-title">Số Admin</div>
+                <div class="card-title">Số admin</div>
                 <div class="card-value"><?php echo $total_admins; ?></div>
                 <i class="fas fa-user-shield fa-2x card-icon"></i>
             </div>
@@ -260,7 +260,7 @@ $most_active = mysqli_fetch_assoc($most_active_result);
                     <label for="role">Vai trò</label>
                     <select name="role" id="role" class="form-control custom-select">
                         <option value="">Tất cả vai trò</option>
-                        <option value="1" <?php echo (isset($_GET['role']) && $_GET['role'] == '1') ? 'selected' : ''; ?>>Admin</option>
+                        <option value="1" <?php echo (isset($_GET['role']) && $_GET['role'] == '1') ? 'selected' : ''; ?>>admin</option>
                         <option value="2" <?php echo (isset($_GET['role']) && $_GET['role'] == '2') ? 'selected' : ''; ?>>Người dùng thường</option>
                     </select>
                 </div>
@@ -341,7 +341,7 @@ $most_active = mysqli_fetch_assoc($most_active_result);
                                 </td>
                                 <td class="text-center">
                                     <?php if ($user['role'] == 1): ?>
-                                        <span class="badge badge-pill badge-primary"><i class="fas fa-user-shield mr-1"></i> Admin</span>
+                                        <span class="badge badge-pill badge-primary"><i class="fas fa-user-shield mr-1"></i> admin</span>
                                     <?php else: ?>
                                         <span class="badge badge-pill badge-secondary"><i class="fas fa-user mr-1"></i> Người dùng</span>
                                     <?php endif; ?>
@@ -467,7 +467,7 @@ $most_active = mysqli_fetch_assoc($most_active_result);
 
 <!-- Quick Action Buttons -->
 <div class="mt-4 mb-4 text-center">
-    <a href="/Admin/index.php" class="btn btn-info">
+    <a href="/admin/index.php" class="btn btn-info">
         <i class="fas fa-tachometer-alt mr-1"></i> Quay lại bảng điều khiển
     </a>
     <a href="pending_rooms.php" class="btn btn-warning ml-2">

@@ -2,7 +2,7 @@
 <header>
     <nav class="navbar navbar-expand-lg fixed-top">
         <div class=" container">
-            <a class="navbar-brand text-white me-5" href="../Home/index.php">
+            <a class="navbar-brand text-white me-5" href="/">
                 <i class="fas fa-home me-2"></i>F4 Case Study
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
@@ -11,16 +11,16 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item">
-                        <a class="text-white nav-link" href="index.php">Trang chủ</a>
+                        <a class="text-white nav-link" href="/">Trang chủ</a>
                     </li>
                     <li class="nav-item">
-                        <a class="text-white nav-link" href="search.php">Tìm kiếm</a>
+                        <a class="text-white nav-link" href="/search.php">Tìm kiếm</a>
                     </li>
                     <li class="nav-item">
-                        <a class="text-white nav-link" href="post.php">Đăng tin</a>
+                        <a class="text-white nav-link" href="/post.php">Đăng tin</a>
                     </li>
                     <li class="nav-item">
-                        <a class="text-white nav-link" href="my_rooms.php">
+                        <a class="text-white nav-link" href="/my_rooms.php">
                             <i class="fas fa-heart me-1 text-danger"></i>Yêu thích
                             <?php
                             // Đếm số lượng yêu thích từ cơ sở dữ liệu
@@ -58,21 +58,21 @@
                             $result = $stmt->get_result();
                             $user = $result->fetch_assoc();
 
-                            echo '<img src="../' . $user['avatar'] . '" class="avatar-header me-2" alt="Avatar"> ';
+                            echo '<img src="/' . $user['avatar'] . '" class="avatar-header me-2" alt="Avatar"> ';
                             echo htmlspecialchars($user['name']);
                             ?>
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end">
-                            <li><a class="dropdown-item" href="../Auth/edit_profile.php"><i class="fas fa-user-edit me-2"></i>Chỉnh sửa hồ sơ</a></li>
+                            <li><a class="dropdown-item" href="../auth/edit_profile.php"><i class="fas fa-user-edit me-2"></i>Chỉnh sửa hồ sơ</a></li>
                             <li><a class="dropdown-item" href="my_rooms.php"><i class="fas fa-heart me-2"></i>Danh sách yêu thích</a></li>
                             <li><a class="dropdown-item" href="my_posted_rooms.php"><i class="fas fa-list me-2"></i>Phòng trọ đã đăng</a></li>
                             <li>
                                 <hr class="dropdown-divider">
                             </li>
                             <?php if (isset($_SESSION['role']) && $_SESSION['role'] == 1): ?>
-                                <li><a class="dropdown-item" href="../Admin/index.php"><i class="fas fa-cogs me-2"></i>Quản lý admin</a></li>
+                                <li><a class="dropdown-item" href="../admin/index.php"><i class="fas fa-cogs me-2"></i>Quản lý admin</a></li>
                             <?php endif; ?>
-                            <li><a class="dropdown-item" href="../Auth/logout.php"><i class="fas fa-sign-out-alt me-2"></i>Đăng xuất</a></li>
+                            <li><a class="dropdown-item" href="../auth/logout.php"><i class="fas fa-sign-out-alt me-2"></i>Đăng xuất</a></li>
                         </ul>
                     </li>
                 </ul>

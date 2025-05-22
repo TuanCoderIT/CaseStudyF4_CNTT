@@ -54,7 +54,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     unset($_SESSION['login_attempt']);
 
                     // Chuyển hướng đến trang chính sau khi đăng nhập thành công
-                    header("Location: ../Home/index.php");
+                    header("Location: /");
                     // exit();
                 } else {
                     $error_message = "Mật khẩu không chính xác.";

@@ -2,7 +2,7 @@
 session_start();
 require_once '../config/db.php';
 
-// Kiểm tra đăng nhập với quyền Admin
+// Kiểm tra đăng nhập với quyền admin
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] != 1) {
     header('Location: ../Auth/login.php?message=Bạn cần đăng nhập với tài khoản admin');
     exit();
@@ -45,7 +45,7 @@ $recent_rooms_query = "SELECT m.*, c.name as category_name, d.name as district_n
                       LIMIT 5";
 $recent_rooms_result = mysqli_query($conn, $recent_rooms_query);
 
-$page_title = "Bảng điều khiển Admin";
+$page_title = "Bảng điều khiển admin";
 include_once '../Components/admin_header.php';
 ?>
 
@@ -247,7 +247,7 @@ include_once '../Components/admin_header.php';
                         </a>
                     </div>
                     <div class="col-md-3 col-sm-6 mb-4">
-                        <a href="../Home/index.php" target="_blank" class="btn btn-info btn-block">
+                        <a href="..index.php" target="_blank" class="btn btn-info btn-block">
                             <i class="fas fa-external-link-alt fa-2x mb-2"></i><br>
                             Xem trang chủ
                         </a>

@@ -4,7 +4,7 @@ session_start();
 
 // Kiểm tra xem người dùng đã đăng nhập hay chưa
 if (!isset($_SESSION['user_id'])) {
-    header('Location: ../Auth/login.php');
+    header('Location: ../auth/login.php');
     exit;
 }
 
@@ -378,7 +378,7 @@ $result = $stmt->get_result();
                                                     <i class="fas fa-trash"></i>
                                                 </a>
                                                 <?php if (isset($_SESSION['admin']) && $_SESSION['admin'] === true): ?>
-                                                    <a href="../Admin/manage_rooms.php" class="btn btn-sm btn-secondary ms-1" title="Quản lý phòng">
+                                                    <a href="../admin/manage_rooms.php" class="btn btn-sm btn-secondary ms-1" title="Quản lý phòng">
                                                         <i class="fas fa-cog"></i>
                                                     </a>
                                                 <?php endif; ?>

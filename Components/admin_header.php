@@ -19,23 +19,23 @@
     <?php
     // Determine admin directory level using the path
     if (
-        strpos($_SERVER['PHP_SELF'], '/Admin/rooms/') !== false
-        || strpos($_SERVER['PHP_SELF'], '/Admin/users/') !== false
-        || strpos($_SERVER['PHP_SELF'], '/Admin/categories/') !== false
-        || strpos($_SERVER['PHP_SELF'], '/Admin/districts/') !== false
-        || strpos($_SERVER['PHP_SELF'], '/Admin/api/') !== false
+        strpos($_SERVER['PHP_SELF'], '/admin/rooms/') !== false
+        || strpos($_SERVER['PHP_SELF'], '/admin/users/') !== false
+        || strpos($_SERVER['PHP_SELF'], '/admin/categories/') !== false
+        || strpos($_SERVER['PHP_SELF'], '/admin/districts/') !== false
+        || strpos($_SERVER['PHP_SELF'], '/admin/api/') !== false
     ) {
-        // We are in a subdirectory of Admin
+        // We are in a subdirectory of admin
         $basePath = "../../";
         $adminPath = "../";
     } else {
-        // We are in the main Admin directory
+        // We are in the main admin directory
         $basePath = "../";
         $adminPath = "";
     }
     ?>
 
-    <!-- Admin Custom CSS -->
+    <!-- admin Custom CSS -->
     <link rel="stylesheet" href="/Assets/admin/css/admin.css">
 
     <!-- jQuery -->
@@ -45,30 +45,30 @@
 <body>
     <!-- Sidebar -->
     <div class="admin-sidebar">
-        <a class="sidebar-brand d-flex align-items-center" href="/Admin/index.php">
+        <a class="sidebar-brand d-flex align-items-center" href="/admin/index.php">
             <i class="fas fa-home mr-2"></i>
-            <div>Admin Phòng Trọ</div>
+            <div>admin Phòng Trọ</div>
         </a>
 
         <hr class="sidebar-divider my-0" style="border-color: rgba(255,255,255,0.15)">
 
         <ul class="nav flex-column">
             <li class="nav-item">
-                <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'index.php' ? 'active' : ''; ?>" href="/Admin/index.php">
+                <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'index.php' ? 'active' : ''; ?>" href="/admin/index.php">
                     <i class="fas fa-fw fa-tachometer-alt"></i>
                     <span>Bảng điều khiển</span>
                 </a>
             </li>
 
             <li class="nav-item">
-                <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'manage_rooms.php' ? 'active' : ''; ?>" href="/Admin/rooms/manage_rooms.php">
+                <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'manage_rooms.php' ? 'active' : ''; ?>" href="/admin/rooms/manage_rooms.php">
                     <i class="fas fa-fw fa-building"></i>
                     <span>Quản lý phòng trọ</span>
                 </a>
             </li>
 
             <li class="nav-item">
-                <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'pending_rooms.php' ? 'active' : ''; ?>" href="/Admin/rooms/pending_rooms.php">
+                <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'pending_rooms.php' ? 'active' : ''; ?>" href="/admin/rooms/pending_rooms.php">
                     <i class="fas fa-fw fa-clipboard-check"></i>
                     <span>Duyệt phòng trọ</span>
                     <?php
@@ -83,14 +83,14 @@
             </li>
 
             <li class="nav-item">
-                <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'manage_categories.php' ? 'active' : ''; ?>" href="/Admin/categories/manage_categories.php">
+                <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'manage_categories.php' ? 'active' : ''; ?>" href="/admin/categories/manage_categories.php">
                     <i class="fas fa-fw fa-list"></i>
                     <span>Quản lý danh mục</span>
                 </a>
             </li>
 
             <li class="nav-item">
-                <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'manage_districts.php' ? 'active' : ''; ?>" href="/Admin/districts/manage_districts.php">
+                <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'manage_districts.php' ? 'active' : ''; ?>" href="/admin/districts/manage_districts.php">
                     <i class="fas fa-fw fa-map-marker-alt"></i>
                     <span>Quản lý khu vực</span>
                 </a>
@@ -120,7 +120,7 @@
             </li>
 
             <li class="nav-item">
-                <a class="nav-link" href="<?php echo $basePath; ?>Auth/logout.php">
+                <a class="nav-link" href="<?php echo $basePath; ?>auth/logout.php">
                     <i class="fas fa-fw fa-sign-out-alt"></i>
                     <span>Đăng xuất</span>
                 </a>

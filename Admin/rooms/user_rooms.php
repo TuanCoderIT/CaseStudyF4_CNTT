@@ -2,9 +2,9 @@
 session_start();
 require_once '../config/db.php';
 
-// Kiểm tra đăng nhập với quyền Admin
+// Kiểm tra đăng nhập với quyền admin
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] != 1) {
-    header('Location: ../../Auth/login.php?message=Bạn cần đăng nhập với tài khoản admin');
+    header('Location: ../../auth/login.php?message=Bạn cần đăng nhập với tài khoản admin');
     exit();
 }
 
@@ -165,7 +165,7 @@ include_once '../../Components/admin_header.php';
                             <th class="text-muted"><i class="fas fa-user-shield mr-2"></i>Vai trò:</th>
                             <td>
                                 <?php if ($user['role'] == 1): ?>
-                                    <span class="badge badge-pill badge-primary">Admin</span>
+                                    <span class="badge badge-pill badge-primary">admin</span>
                                 <?php else: ?>
                                     <span class="badge badge-pill badge-secondary">Người dùng</span>
                                 <?php endif; ?>

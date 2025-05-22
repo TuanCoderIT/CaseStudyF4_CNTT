@@ -3,9 +3,9 @@ session_start();
 require_once '../../config/db.php';
 require_once '../../Components/room_status_notification.php';
 
-// Kiểm tra đăng nhập với quyền Admin
+// Kiểm tra đăng nhập với quyền admin
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] != 1) {
-    header('Location: ../../Auth/login.php?message=Bạn cần đăng nhập với tài khoản admin');
+    header('Location: ../../auth/login.php?message=Bạn cần đăng nhập với tài khoản admin');
     exit();
 }
 
@@ -502,7 +502,7 @@ include_once('../../Components/admin_header.php');
             <span class="badge badge-light ml-1"><?php echo $pending_data['count']; ?></span>
         <?php endif; ?>
     </a>
-    <a href="/Admin/index.php" class="btn btn-info">
+    <a href="/admin/index.php" class="btn btn-info">
         <i class="fas fa-tachometer-alt mr-1"></i> Quay lại bảng điều khiển
     </a>
 </div>
