@@ -5,7 +5,7 @@ $username = 'yoxdhlgk_root';        // Tên đăng nhập MySQL (mặc định l
 $password = 'admin123';            // Mật khẩu MySQL (mặc định là trống cho XAMPP)
 $database = 'yoxdhlgk_Case_Study';  // Tên CSDL
 $port = '3306';
- 
+
 // Tạo kết nối đến MySQL
 $conn = new mysqli($host, $username, $password, $database, $port);
 

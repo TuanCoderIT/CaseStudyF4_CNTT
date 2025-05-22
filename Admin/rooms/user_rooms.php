@@ -2,9 +2,9 @@
 session_start();
 require_once '../config/db.php';
 
-// Kiểm tra đăng nhập với quyền Admin
+// Kiểm tra đăng nhập với quyền admin
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] != 1) {
-    header('Location: ../../Auth/login.php?message=Bạn cần đăng nhập với tài khoản admin');
+    header('Location: ../../auth/login.php?message=Bạn cần đăng nhập với tài khoản admin');
     exit();
 }
 
@@ -87,7 +87,7 @@ $users_query = "SELECT id, name, username FROM users WHERE id != '$user_id' ORDE
 $users_result = mysqli_query($conn, $users_query);
 
 $page_title = "Quản lý phòng trọ của người dùng: " . $user['name'];
-include_once '../../Components/admin_header.php';
+include_once '../../components/admin_header.php';
 ?>
 
 <div class="page-header mb-4">
@@ -165,7 +165,7 @@ include_once '../../Components/admin_header.php';
                             <th class="text-muted"><i class="fas fa-user-shield mr-2"></i>Vai trò:</th>
                             <td>
                                 <?php if ($user['role'] == 1): ?>
-                                    <span class="badge badge-pill badge-primary">Admin</span>
+                                    <span class="badge badge-pill badge-primary">admin</span>
                                 <?php else: ?>
                                     <span class="badge badge-pill badge-secondary">Người dùng</span>
                                 <?php endif; ?>
@@ -348,4 +348,4 @@ include_once '../../Components/admin_header.php';
     });
 </script>
 
-<?php include_once '../../Components/admin_footer.php'; ?>
+<?php include_once '../../components/admin_footer.php'; ?>

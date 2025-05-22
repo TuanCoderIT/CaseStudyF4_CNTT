@@ -2,9 +2,9 @@
 session_start();
 require_once '../../config/db.php';
 
-// Kiểm tra đăng nhập với quyền Admin
+// Kiểm tra đăng nhập với quyền admin
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] != 1) {
-    header('Location: ../../Auth/login.php?message=Bạn cần đăng nhập với tài khoản admin');
+    header('Location: ../../auth/login.php?message=Bạn cần đăng nhập với tài khoản admin');
     exit();
 }
 
@@ -79,7 +79,7 @@ $query = "SELECT d.*, COUNT(m.id) as room_count
 $result = mysqli_query($conn, $query);
 
 $page_title = "Quản lý khu vực";
-include_once '../../Components/admin_header.php';
+include_once '../../components/admin_header.php';
 ?>
 
 <div class="page-header mb-4">
@@ -316,7 +316,7 @@ $most_popular = mysqli_fetch_assoc($most_popular_result);
     <button type="button" class="btn btn-primary mr-2" data-toggle="modal" data-target="#addDistrictModal">
         <i class="fas fa-plus-circle mr-1"></i> Thêm khu vực mới
     </button>
-    <a href="/Admin/index.php" class="btn btn-info">
+    <a href="/admin/index.php" class="btn btn-info">
         <i class="fas fa-tachometer-alt mr-1"></i> Quay lại bảng điều khiển
     </a>
 </div>
@@ -417,4 +417,4 @@ $most_popular = mysqli_fetch_assoc($most_popular_result);
     });
 </script>
 
-<?php include_once '../../Components/admin_footer.php'; ?>
+<?php include_once '../../components/admin_footer.php'; ?>

@@ -2,9 +2,9 @@
 session_start();
 require_once '../../config/db.php';
 
-// Kiểm tra đăng nhập với quyền Admin
+// Kiểm tra đăng nhập với quyền admin
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] != 1) {
-    header('Location: ../../Auth/login.php?message=Bạn cần đăng nhập với tài khoản admin');
+    header('Location: ../../auth/login.php?message=Bạn cần đăng nhập với tài khoản admin');
     exit();
 }
 
@@ -53,7 +53,7 @@ $query = "SELECT m.*, c.name as category_name, d.name as district_name, u.name a
 $result = mysqli_query($conn, $query);
 
 $page_title = "Duyệt phòng trọ";
-include_once '../../Components/admin_header.php';
+include_once '../../components/admin_header.php';
 ?>
 
 <div class="container mt-4">
@@ -259,4 +259,4 @@ include_once '../../Components/admin_header.php';
     });
 </script>
 
-<?php include_once '../../Components/admin_footer.php'; ?>
+<?php include_once '../../components/admin_footer.php'; ?>

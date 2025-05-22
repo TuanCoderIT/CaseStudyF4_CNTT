@@ -4,7 +4,7 @@ session_start();
 
 // Kiểm tra xem người dùng đã đăng nhập hay chưa
 if (!isset($_SESSION['user_id'])) {
-    header('Location: ../Auth/login.php');
+    header('Location: ../auth/login.php');
     exit;
 }
 
@@ -29,7 +29,7 @@ if (!$is_admin) {
     $check_stmt = $conn->prepare("SELECT * FROM motel WHERE id = ? AND user_id = ?");
     $check_stmt->bind_param("ii", $room_id, $user_id);
 } else {
-    // Admin có thể xóa bất kỳ phòng nào
+    // admin có thể xóa bất kỳ phòng nào
     $check_stmt = $conn->prepare("SELECT * FROM motel WHERE id = ?");
     $check_stmt->bind_param("i", $room_id);
 }
@@ -39,7 +39,7 @@ $result = $check_stmt->get_result();
 
 if ($result->num_rows === 0) {
     $_SESSION['error'] = "Bạn không có quyền xóa phòng trọ này hoặc phòng trọ không tồn tại.";
-    header('Location: ' . ($is_admin ? '../Admin/rooms/manage_rooms.php' : 'my_posted_rooms.php'));
+    header('Location: ' . ($is_admin ? '../admin/rooms/manage_rooms.php' : 'my_posted_rooms.php'));
     exit;
 }
 
@@ -70,7 +70,7 @@ if ($delete_stmt->execute()) {
 
 // Chuyển hướng về trang thích hợp
 if ($is_admin) {
-    header('Location: ../Admin/rooms/manage_rooms.php');
+    header('Location: ../admin/rooms/manage_rooms.php');
 } else {
     header('Location: my_posted_rooms.php');
 }

@@ -4,15 +4,15 @@ session_start();
 
 // Kiểm tra xem người dùng đã đăng nhập hay chưa
 if (!isset($_SESSION['user_id'])) {
-    header('Location: ../Auth/login.php');
+    header('Location: ./auth/login.php');
     exit;
 }
 
 // Kết nối đến CSDL
-require_once('../config/db.php');
+require_once('./config/db.php');
 
 // Khởi tạo mảng favorite_rooms từ CSDL
-require_once('../config/favorites.php');
+require_once('./config/favorites.php');
 
 // Danh sách quận/huyện
 $stmt_districts = $conn->prepare("SELECT * FROM districts ORDER BY name");
@@ -146,15 +146,15 @@ $rooms = $stmt->get_result();
     <title>Tìm phòng trọ - Phòng trọ sinh viên</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="../Assets/style.css">
+    <link rel="stylesheet" href="./Assets/style.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/nouislider@14.7.0/distribute/nouislider.min.css">
 </head>
 
 <body class="search-body">
-    <?php include '../Components/header.php' ?>
+    <?php include './components/header.php' ?>
 
     <!-- Banner tìm kiếm -->
-    <?php include '../Components/banner_search.php' ?>
+    <?php include './components/banner_search.php' ?>
 
     <!-- Kết quả tìm kiếm -->
     <section class="py-5 bg-light">
@@ -344,7 +344,7 @@ $rooms = $stmt->get_result();
                             <div class="col-md-4 mb-4">
                                 <div class="card room-card four-col h-100">
                                     <div class="room-image">
-                                        <img src="../<?php echo $room['images']; ?>" class="card-img-top" alt="<?php echo $room['title']; ?>">
+                                        <img src="./<?php echo $room['images']; ?>" class="card-img-top" alt="<?php echo $room['title']; ?>">
                                         <span class="price-tag"><?php echo number_format($room['price']); ?> đ/tháng</span>
                                         <span class="view-count"><i class="fas fa-eye me-1"></i><?php echo number_format($room['count_view']); ?></span>
                                     </div>
@@ -390,7 +390,7 @@ $rooms = $stmt->get_result();
             </div>
     </section>
 
-    <?php include '../Components/footer.php' ?>
+    <?php include './components/footer.php' ?>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/nouislider@14.7.0/distribute/nouislider.min.js"></script>
     <script>

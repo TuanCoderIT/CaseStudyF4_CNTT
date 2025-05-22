@@ -4,7 +4,7 @@ session_start();
 
 // Kiểm tra xem người dùng đã đăng nhập hay chưa
 if (!isset($_SESSION['user_id'])) {
-    header('Location: ../Auth/login.php');
+    header('Location: ../auth/login.php');
     exit;
 }
 
@@ -155,7 +155,7 @@ $result = $stmt->get_result();
 </head>
 
 <body class="home-body">
-    <?php include '../Components/header.php' ?>
+    <?php include '../components/header.php' ?>
 
     <main class="py-5 mt-5">
         <div class="container">
@@ -184,7 +184,7 @@ $result = $stmt->get_result();
                 <?php unset($_SESSION['error']); ?>
             <?php endif; ?>
 
-            <?php include '../Components/room_status_notification.php'; ?>
+            <?php include '../components/room_status_notification.php'; ?>
 
             <?php if ($result->num_rows > 0): ?> <!-- Tìm kiếm và lọc -->
                 <div class="card mb-4">
@@ -378,7 +378,7 @@ $result = $stmt->get_result();
                                                     <i class="fas fa-trash"></i>
                                                 </a>
                                                 <?php if (isset($_SESSION['admin']) && $_SESSION['admin'] === true): ?>
-                                                    <a href="../Admin/manage_rooms.php" class="btn btn-sm btn-secondary ms-1" title="Quản lý phòng">
+                                                    <a href="../admin/manage_rooms.php" class="btn btn-sm btn-secondary ms-1" title="Quản lý phòng">
                                                         <i class="fas fa-cog"></i>
                                                     </a>
                                                 <?php endif; ?>
@@ -461,7 +461,7 @@ $result = $stmt->get_result();
         </div>
     </div>
 
-    <?php include '../Components/footer.php' ?>
+    <?php include '../components/footer.php' ?>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="../assets/admin/js/main.js"></script>
     <script>

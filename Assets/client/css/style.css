@@ -522,7 +522,7 @@ social-links a:hover {
   padding-top: 60px; /* Added padding to account for fixed header */
 }
 
-/* Auth pages maintain the gradient background */
+/* auth pages maintain the gradient background */
 .login-body,
 .register-body {
   display: flex;

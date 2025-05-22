@@ -1,4 +1,6 @@
-<link rel="stylesheet" href="../assets/client/css/style.css">
+
+<link rel="stylesheet" href="/assets/client/css/style.css">
+
 <footer class="py-4 mt-5 bg-black text-white">
     <div class="container">
         <div class="row">

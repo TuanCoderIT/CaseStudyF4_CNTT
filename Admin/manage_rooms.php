@@ -4,7 +4,7 @@ session_start();
 
 // Kiểm tra vai trò admin
 if (!isset($_SESSION['admin']) || $_SESSION['admin'] !== true) {
-    header('Location: ../Auth/login.php');
+    header('Location: ../auth/login.php');
     exit;
 }
 
@@ -33,7 +33,7 @@ $result = $stmt->get_result();
     <title>Quản lý phòng trọ - Trang Quản trị</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="/CaseStudyF4_CNTT/Admin/assets/css/admin.css">
+    <link rel="stylesheet" href="/CaseStudyF4_CNTT/admin/assets/css/admin.css">
 
     <style>
         .admin-container {

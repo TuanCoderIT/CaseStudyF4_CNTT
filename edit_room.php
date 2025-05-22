@@ -4,15 +4,15 @@ session_start();
 
 // Kiểm tra xem người dùng đã đăng nhập hay chưa
 if (!isset($_SESSION['user_id'])) {
-    header('Location: ../Auth/login.php');
+    header('Location: ./auth/login.php');
     exit;
 }
 
 // Kết nối đến CSDL
-require_once('../config/db.php');
+require_once('./config/db.php');
 
 // Khởi tạo mảng favorite_rooms từ CSDL
-require_once('../config/favorites.php');
+require_once('./config/favorites.php');
 
 // Lấy ID của phòng trọ cần chỉnh sửa
 if (!isset($_GET['id']) || empty($_GET['id'])) {
@@ -114,7 +114,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $uploadedImages[] = $img;
             } else {
                 // Xóa file ảnh cũ
-                $filePath = '../' . $img;
+                $filePath = './' . $img;
                 if (file_exists($filePath)) {
                     unlink($filePath);
                 }
@@ -123,7 +123,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     // Xử lý upload ảnh mới
-    $uploadDir = '../uploads/';
+    $uploadDir = './uploads/';
 
     // Kiểm tra xem thư mục upload đã tồn tại chưa, nếu chưa thì tạo mới
     if (!file_exists($uploadDir)) {
@@ -228,7 +228,7 @@ $room_utilities = explode(',', $room['utilities']);
     <title>Chỉnh sửa phòng trọ - Phòng trọ sinh viên</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="../Assets/style.css">
+    <link rel="stylesheet" href="./Assets/style.css">
     <!-- Thêm các thư viện Tagify cho chọn nhiều tiện ích -->
     <link rel="stylesheet" href="https://unpkg.com/@yaireo/tagify/dist/tagify.css">
     <script src="https://unpkg.com/@yaireo/tagify/dist/tagify.min.js"></script>
@@ -267,7 +267,7 @@ $room_utilities = explode(',', $room['utilities']);
 </head>
 
 <body class="home-body">
-    <?php include '../Components/header.php' ?>
+    <?php include './components/header.php' ?>
 
     <main class="py-5 mt-5">
         <div class="container">
@@ -452,7 +452,7 @@ $room_utilities = explode(',', $room['utilities']);
                                         <?php foreach ($currentImages as $index => $img) : ?>
                                             <div class="col-6 col-md-3 mb-3">
                                                 <div class="image-preview">
-                                                    <img src="../<?php echo $img; ?>" class="img-thumbnail" alt="Ảnh phòng trọ">
+                                                    <img src="./<?php echo $img; ?>" class="img-thumbnail" alt="Ảnh phòng trọ">
                                                     <button type="button" class="delete-btn" data-image="<?php echo $img; ?>">
                                                         <i class="fas fa-times"></i>
                                                     </button>
@@ -500,10 +500,14 @@ $room_utilities = explode(',', $room['utilities']);
         </div>
     </main>
 
-    <?php include '../Components/footer.php' ?>
+    <?php include './components/footer.php' ?>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<<<<<<< HEAD:edit_room.php
+    <script src="./Assets/main.js"></script>
+=======
     <script src="../assets/admin/js/main.js"></script>
+>>>>>>> d6352d11d3736a08bd206d9a28a728f1fa6dee7c:Home/edit_room.php
     <script src="https://cdnjs.cloudflare.com/ajax/libs/summernote/0.8.20/summernote-bs5.min.js"></script>
 
     <script>

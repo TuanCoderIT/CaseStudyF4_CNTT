@@ -4,15 +4,15 @@ session_start();
 
 // Kiểm tra xem người dùng đã đăng nhập hay chưa
 if (!isset($_SESSION['user_id'])) {
-    header('Location: ../Auth/login.php');
+    header('Location: ./auth/login.php');
     exit;
 }
 
 // Kết nối đến CSDL
-require_once('../config/db.php');
+require_once('./config/db.php');
 
 // Khởi tạo mảng favorite_rooms từ CSDL
-require_once('../config/favorites.php');
+require_once('./config/favorites.php');
 
 // Khởi tạo session viewed_rooms nếu chưa có
 if (!isset($_SESSION['viewed_rooms'])) {
@@ -184,14 +184,18 @@ $similar_rooms = $stmt_similar->get_result();
     <title><?php echo $room['title']; ?> - Phòng trọ sinh viên</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<<<<<<< HEAD:room_detail.php
+    <link rel="stylesheet" href="./Assets/style.css">
+=======
     <link rel="stylesheet" href="../assets/client/css/style.css">
+>>>>>>> d6352d11d3736a08bd206d9a28a728f1fa6dee7c:Home/room_detail.php
     <!-- Link tới thư viện Swiper cho slider -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.css">
     <!-- Link tới thư viện Animate.css cho các hiệu ứng -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
 </head>
 
-<body class="room-detail-body"> <?php include '../Components/header.php' ?>
+<body class="room-detail-body"> <?php include './components/header.php' ?>
 
     <?php if (isset($_GET['message'])): ?>
     <div class="container mt-4">
@@ -213,9 +217,15 @@ $similar_rooms = $stmt_similar->get_result();
                     <div class="room-gallery swiper">
                         <div class="swiper-wrapper">
                             <?php foreach ($images as $image): ?>
+<<<<<<< HEAD:room_detail.php
+                                <div class="swiper-slide">
+                                    <img src="./<?php echo $image; ?>" alt="<?php echo $room['title']; ?>">
+                                </div>
+=======
                             <div class="swiper-slide">
                                 <img src="../<?php echo $image; ?>" alt="<?php echo $room['title']; ?>">
                             </div>
+>>>>>>> d6352d11d3736a08bd206d9a28a728f1fa6dee7c:Home/room_detail.php
                             <?php endforeach; ?>
                         </div>
                         <div class="swiper-pagination"></div>
@@ -317,6 +327,9 @@ $similar_rooms = $stmt_similar->get_result();
                 <div class="col-lg-4">
                     <!-- Thông tin chủ trọ -->
                     <div class="owner-profile mb-4">
+<<<<<<< HEAD:room_detail.php
+                        <img src="./<?php echo $room['owner_avatar'] ?? 'images/default_avatar.jpg'; ?>" alt="<?php echo $room['owner_name']; ?>" class="owner-avatar">
+=======
                         <?php
                         // Xử lý đường dẫn ảnh đại diện chủ trọ
                         $owner_avatar = $room['owner_avatar'] ?? 'uploads/avatar/default-avatar.jpg';
@@ -327,6 +340,7 @@ $similar_rooms = $stmt_similar->get_result();
                         ?>
                         <img src="<?php echo $owner_avatar; ?>" alt="<?php echo $room['owner_name']; ?>"
                             class="owner-avatar">
+>>>>>>> d6352d11d3736a08bd206d9a28a728f1fa6dee7c:Home/room_detail.php
                         <div>
                             <h5 class="mb-1"><?php echo $room['owner_name']; ?></h5>
                             <p class="mb-3 text-muted small">Chủ phòng trọ</p>
@@ -395,6 +409,28 @@ $similar_rooms = $stmt_similar->get_result();
 
             <!-- Phòng trọ tương tự -->
             <?php if ($similar_rooms->num_rows > 0): ?>
+<<<<<<< HEAD:room_detail.php
+                <div class="mt-5">
+                    <h3 class="similar-rooms-title">Phòng trọ tương tự</h3>
+                    <div class="row">
+                        <?php while ($similar = $similar_rooms->fetch_assoc()): ?>
+                            <div class="col-md-4 mb-4">
+                                <div class="card room-card h-100">
+                                    <div class="room-image">
+                                        <img src="./<?php echo $similar['images']; ?>" class="card-img-top" alt="<?php echo $similar['title']; ?>">
+                                        <span class="price-tag"><?php echo number_format($similar['price']); ?> đ/tháng</span>
+                                    </div>
+                                    <div class="card-body">
+                                        <h5 class="card-title">
+                                            <a href="room_detail.php?id=<?php echo $similar['id']; ?>"><?php echo $similar['title']; ?></a>
+                                        </h5>
+                                        <p class="card-text address"><i class="fas fa-map-marker-alt me-2"></i><?php echo $similar['address']; ?></p>
+                                        <div class="room-info">
+                                            <span><i class="fas fa-expand me-1"></i><?php echo $similar['area']; ?> m²</span>
+                                            <?php if (!empty($similar['utilities'])): ?>
+                                                <span><i class="fas fa-bolt me-1"></i>
+                                                    <?php
+=======
             <div class="mt-5">
                 <h3 class="similar-rooms-title">Phòng trọ tương tự</h3>
                 <div class="row">
@@ -418,6 +454,7 @@ $similar_rooms = $stmt_similar->get_result();
                                     <?php if (!empty($similar['utilities'])): ?>
                                     <span><i class="fas fa-bolt me-1"></i>
                                         <?php
+>>>>>>> d6352d11d3736a08bd206d9a28a728f1fa6dee7c:Home/room_detail.php
                                                     $sim_utilities = explode(',', $similar['utilities']);
                                                     echo count($sim_utilities) . ' tiện ích';
                                                     ?>
@@ -444,12 +481,24 @@ $similar_rooms = $stmt_similar->get_result();
         </div>
     </section>
 
-    <?php include '../Components/footer.php' ?>
+    <?php include './components/footer.php' ?>
     <!-- Modal Đặt cọc -->
     <div class="modal fade" id="depositModal" tabindex="-1" aria-labelledby="depositModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
+<<<<<<< HEAD:room_detail.php
+                    <h5 class="modal-title" id="depositModalLabel"><i class="fas fa-wallet me-2 text-success"></i>Xác nhận đặt cọc</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Bạn có chắc chắn muốn đặt cọc phòng <strong><?php echo htmlspecialchars($room['title']); ?></strong> với giá <strong><?php echo $formatted_price; ?></strong>?</p>
+                    <p class="text-muted small mb-0">Sau khi đặt cọc, chủ phòng sẽ liên hệ với bạn để xác nhận thông tin.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="button" class="btn btn-success" onclick="alert('Chức năng đặt cọc sẽ được phát triển!')">Xác nhận đặt cọc</button>
+=======
                     <h5 class="modal-title" id="depositModalLabel"><i class="fas fa-wallet me-2 text-success"></i>Xác
                         nhận đặt cọc</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -495,6 +544,7 @@ $similar_rooms = $stmt_similar->get_result();
                     <button type="button" class="btn btn-success" onclick="processPayment()">
                         <i class="fas fa-money-bill-wave me-2"></i>Tiến hành thanh toán
                     </button>
+>>>>>>> d6352d11d3736a08bd206d9a28a728f1fa6dee7c:Home/room_detail.php
                 </div>
             </div>
         </div>
