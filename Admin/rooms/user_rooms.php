@@ -87,7 +87,7 @@ $users_query = "SELECT id, name, username FROM users WHERE id != '$user_id' ORDE
 $users_result = mysqli_query($conn, $users_query);
 
 $page_title = "Quản lý phòng trọ của người dùng: " . $user['name'];
-include_once '../../Components/admin_header.php';
+include_once '../../components/admin_header.php';
 ?>
 
 <div class="page-header mb-4">
@@ -348,4 +348,4 @@ include_once '../../Components/admin_header.php';
     });
 </script>
 
-<?php include_once '../../Components/admin_footer.php'; ?>
+<?php include_once '../../components/admin_footer.php'; ?>

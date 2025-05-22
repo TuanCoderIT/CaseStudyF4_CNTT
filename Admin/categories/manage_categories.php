@@ -79,7 +79,7 @@ $query = "SELECT c.*, COUNT(m.id) as room_count
 $result = mysqli_query($conn, $query);
 
 $page_title = "Quản lý danh mục";
-include_once '../../Components/admin_header.php';
+include_once '../../components/admin_header.php';
 ?>
 
 <div class="page-header mb-4">
@@ -398,4 +398,4 @@ $most_popular = mysqli_fetch_assoc($most_popular_result);
     });
 </script>
 
-<?php include_once '../../Components/admin_footer.php'; ?>
+<?php include_once '../../components/admin_footer.php'; ?>

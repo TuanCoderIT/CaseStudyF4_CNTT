@@ -155,7 +155,7 @@ $result = $stmt->get_result();
 </head>
 
 <body class="home-body">
-    <?php include '../Components/header.php' ?>
+    <?php include '../components/header.php' ?>
 
     <main class="py-5 mt-5">
         <div class="container">
@@ -184,7 +184,7 @@ $result = $stmt->get_result();
                 <?php unset($_SESSION['error']); ?>
             <?php endif; ?>
 
-            <?php include '../Components/room_status_notification.php'; ?>
+            <?php include '../components/room_status_notification.php'; ?>
 
             <?php if ($result->num_rows > 0): ?> <!-- Tìm kiếm và lọc -->
                 <div class="card mb-4">
@@ -461,7 +461,7 @@ $result = $stmt->get_result();
         </div>
     </div>
 
-    <?php include '../Components/footer.php' ?>
+    <?php include '../components/footer.php' ?>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="../Assets/main.js"></script>
     <script>

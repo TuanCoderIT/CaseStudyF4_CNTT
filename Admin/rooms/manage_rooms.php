@@ -1,7 +1,7 @@
 <?php
 session_start();
 require_once '../../config/db.php';
-require_once '../../Components/room_status_notification.php';
+require_once '../../components/room_status_notification.php';
 
 // Kiểm tra đăng nhập với quyền admin
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] != 1) {
@@ -180,7 +180,7 @@ $count_data = mysqli_fetch_assoc($count_result);
 $total_pages = ceil($count_data['count'] / $limit);
 
 $page_title = "Quản lý phòng trọ";
-include_once('../../Components/admin_header.php');
+include_once('../../components/admin_header.php');
 ?>
 
 <div class="page-header mb-4">
@@ -534,4 +534,4 @@ include_once('../../Components/admin_header.php');
     });
 </script>
 
-<?php include_once '../../Components/admin_footer.php'; ?>
+<?php include_once '../../components/admin_footer.php'; ?>

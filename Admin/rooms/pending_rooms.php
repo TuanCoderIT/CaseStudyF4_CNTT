@@ -53,7 +53,7 @@ $query = "SELECT m.*, c.name as category_name, d.name as district_name, u.name a
 $result = mysqli_query($conn, $query);
 
 $page_title = "Duyệt phòng trọ";
-include_once '../../Components/admin_header.php';
+include_once '../../components/admin_header.php';
 ?>
 
 <div class="container mt-4">
@@ -259,4 +259,4 @@ include_once '../../Components/admin_header.php';
     });
 </script>
 
-<?php include_once '../../Components/admin_footer.php'; ?>
+<?php include_once '../../components/admin_footer.php'; ?>

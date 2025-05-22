@@ -83,7 +83,7 @@ $favorite_rooms = $stmt->get_result();
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
 </head>
 
-<body class="home-body"> <?php include './Components/header.php' ?>
+<body class="home-body"> <?php include './components/header.php' ?>
 
     <main class="py-5 mt-5">
         <div class="container">
@@ -160,7 +160,7 @@ $favorite_rooms = $stmt->get_result();
         </div>
     </main>
 
-    <?php include './Components/footer.php' ?>
+    <?php include './components/footer.php' ?>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="./Assets/main.js"></script>
     <script>

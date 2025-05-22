@@ -68,10 +68,10 @@ $nearest_rooms = $stmt_nearest->get_result();
 </head>
 
 <body class="home-body">
-    <?php include './Components/header.php' ?>
+    <?php include './components/header.php' ?>
 
     <!-- Banner tìm kiếm -->
-    <?php include './Components/banner_search.php' ?>
+    <?php include './components/banner_search.php' ?>
     <!-- Phần nội dung chính -->
     <main class="py-5">
         <div class="container">
@@ -233,7 +233,7 @@ $nearest_rooms = $stmt_nearest->get_result();
         </div>
     </main>
 
-    <?php include './Components/footer.php' ?>
+    <?php include './components/footer.php' ?>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.js"></script>
     <script src="/Assets/admin/js/main.js"></script>

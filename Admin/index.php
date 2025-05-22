@@ -46,7 +46,7 @@ $recent_rooms_query = "SELECT m.*, c.name as category_name, d.name as district_n
 $recent_rooms_result = mysqli_query($conn, $recent_rooms_query);
 
 $page_title = "Bảng điều khiển admin";
-include_once '../Components/admin_header.php';
+include_once '../components/admin_header.php';
 ?>
 
 <div class="d-sm-flex align-items-center justify-content-between mb-4">
@@ -258,4 +258,4 @@ include_once '../Components/admin_header.php';
     </div>
 </div>
 
-<?php include_once '../Components/admin_footer.php'; ?>
+<?php include_once '../components/admin_footer.php'; ?>

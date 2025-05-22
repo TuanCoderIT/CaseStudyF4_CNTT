@@ -151,10 +151,10 @@ $rooms = $stmt->get_result();
 </head>
 
 <body class="search-body">
-    <?php include './Components/header.php' ?>
+    <?php include './components/header.php' ?>
 
     <!-- Banner tìm kiếm -->
-    <?php include './Components/banner_search.php' ?>
+    <?php include './components/banner_search.php' ?>
 
     <!-- Kết quả tìm kiếm -->
     <section class="py-5 bg-light">
@@ -390,7 +390,7 @@ $rooms = $stmt->get_result();
             </div>
     </section>
 
-    <?php include './Components/footer.php' ?>
+    <?php include './components/footer.php' ?>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/nouislider@14.7.0/distribute/nouislider.min.js"></script>
     <script>

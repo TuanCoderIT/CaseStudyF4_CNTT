@@ -156,7 +156,7 @@ $formatted_price = number_format($room['price']) . ' đ/tháng';
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
 </head>
 
-<body class="room-detail-body"> <?php include './Components/header.php' ?>
+<body class="room-detail-body"> <?php include './components/header.php' ?>
 
     <?php if (isset($_GET['message'])): ?>
         <div class="container mt-4">
@@ -389,7 +389,7 @@ $formatted_price = number_format($room['price']) . ' đ/tháng';
         </div>
     </section>
 
-    <?php include './Components/footer.php' ?>
+    <?php include './components/footer.php' ?>
     <!-- Modal Đặt cọc -->
     <div class="modal fade" id="depositModal" tabindex="-1" aria-labelledby="depositModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">

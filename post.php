@@ -180,7 +180,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </head>
 
 <body class="home-body">
-    <?php include '../Components/header.php' ?>
+    <?php include '../components/header.php' ?>
 
     <main class="py-5 mt-5">
         <div class="container">
@@ -407,7 +407,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
     </main>
 
-    <?php include '../Components/footer.php' ?>
+    <?php include '../components/footer.php' ?>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="../Assets/main.js"></script>
