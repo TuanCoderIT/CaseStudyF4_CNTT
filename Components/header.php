@@ -1,3 +1,4 @@
+<?php require_once '../config/config.php';?>
 <link rel="stylesheet" href="/Assets/client/css/style.css">
 <header>
     <nav class="navbar navbar-expand-lg fixed-top">
@@ -21,6 +22,7 @@
                     </li>
                     <li class="nav-item">
                         <a class="text-white nav-link" href="/my_rooms.php">
+
                             <i class="fas fa-heart me-1 text-danger"></i>Yêu thích
                             <?php
                             // Đếm số lượng yêu thích từ cơ sở dữ liệu
@@ -38,9 +40,10 @@
 
                             if ($favorite_count > 0):
                             ?>
-                                <span class="badge rounded-pill bg-danger favorite-counter animate__animated <?php echo isset($_GET['action']) && in_array($_GET['action'], ['favorite', 'unfavorite']) ? 'animate__heartBeat' : ''; ?>">
-                                    <?php echo $favorite_count; ?>
-                                </span>
+                            <span
+                                class="badge rounded-pill bg-danger favorite-counter animate__animated <?php echo isset($_GET['action']) && in_array($_GET['action'], ['favorite', 'unfavorite']) ? 'animate__heartBeat' : ''; ?>">
+                                <?php echo $favorite_count; ?>
+                            </span>
                             <?php endif; ?>
                         </a>
                     </li>
@@ -59,13 +62,16 @@
                             $user = $result->fetch_assoc();
 
                             echo '<img src="/' . $user['avatar'] . '" class="avatar-header me-2" alt="Avatar"> ';
+
                             echo htmlspecialchars($user['name']);
                             ?>
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end">
+
                             <li><a class="dropdown-item" href="../auth/edit_profile.php"><i class="fas fa-user-edit me-2"></i>Chỉnh sửa hồ sơ</a></li>
                             <li><a class="dropdown-item" href="my_rooms.php"><i class="fas fa-heart me-2"></i>Danh sách yêu thích</a></li>
                             <li><a class="dropdown-item" href="my_posted_rooms.php"><i class="fas fa-list me-2"></i>Phòng trọ đã đăng</a></li>
+
                             <li>
                                 <hr class="dropdown-divider">
                             </li>
@@ -73,6 +79,7 @@
                                 <li><a class="dropdown-item" href="../admin/index.php"><i class="fas fa-cogs me-2"></i>Quản lý admin</a></li>
                             <?php endif; ?>
                             <li><a class="dropdown-item" href="../auth/logout.php"><i class="fas fa-sign-out-alt me-2"></i>Đăng xuất</a></li>
+
                         </ul>
                     </li>
                 </ul>

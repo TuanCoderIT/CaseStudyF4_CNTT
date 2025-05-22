@@ -93,7 +93,11 @@ $nearest_rooms = $stmt_nearest->get_result();
                                     </div>
                                     <div class="card-body">
                                         <h5 class="card-title">
+<<<<<<< HEAD:index.php
                                             <a href="room_detail.php?id=<?php echo $room['id']; ?>"><?php echo $room['title']; ?></a>
+=======
+                                            <a href="/home/room_detail.php?id=<?php echo $room['id']; ?>"><?php echo $room['title']; ?></a>
+>>>>>>> d6352d11d3736a08bd206d9a28a728f1fa6dee7c:Home/index.php
                                         </h5>
                                         <p class="card-text address"><i class="fas fa-map-marker-alt me-2"></i><?php echo $room['address']; ?></p>
                                         <div class="room-info">
@@ -236,6 +240,7 @@ $nearest_rooms = $stmt_nearest->get_result();
     <?php include './components/footer.php' ?>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.js"></script>
+<<<<<<< HEAD:index.php
     <script src="/Assets/admin/js/main.js"></script>
     <script>
         if (<?= isset($_SESSION['user_id']) && !isset($_SESSION['lat']) ? 'true' : 'false' ?>) {
@@ -270,6 +275,9 @@ $nearest_rooms = $stmt_nearest->get_result();
             });
         }
     </script>
+=======
+    <script src="../assets/admin/js/main.js"></script>
+>>>>>>> d6352d11d3736a08bd206d9a28a728f1fa6dee7c:Home/index.php
 </body>
 
 </html>
