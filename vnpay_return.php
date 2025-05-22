@@ -4,7 +4,7 @@
 session_start();
 
 // 1. Kết nối DB
-require_once('../config/db.php');
+require_once('./config/db.php');
 
 // 2. Khóa bí mật
 $vnp_HashSecret = "FZJ7KT64QMGB48NTW0HQG1DBKPTLG8N6";
@@ -23,7 +23,7 @@ foreach ($_GET as $key => $value) {
 
 ksort($inputData);
 $hashData  = urldecode(http_build_query($inputData));
-$secureHash= hash_hmac('sha512', $hashData, $vnp_HashSecret);
+$secureHash = hash_hmac('sha512', $hashData, $vnp_HashSecret);
 
 // 4. So sánh chữ ký
 if ($secureHash !== $_GET['vnp_SecureHash']) {
