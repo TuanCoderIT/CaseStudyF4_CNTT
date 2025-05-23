@@ -9,10 +9,10 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 // Kết nối đến CSDL
-require_once('./config/db.php');
+require_once(dirname(__DIR__) . '/config/db.php');
 
 // Khởi tạo mảng favorite_rooms từ CSDL
-require_once('./config/favorites.php');
+require_once(dirname(__DIR__) . '/config/favorites.php');
 
 // Danh sách quận/huyện
 $stmt_districts = $conn->prepare("SELECT * FROM districts ORDER BY name");
@@ -36,7 +36,6 @@ switch ($sort) {
         $sort_icon = "fas fa-fire text-danger";
         break;
     case 'nearest':
-        $sort_sql = "ORDER BY CAST(m.latlng AS DECIMAL(10,6))";
         $sort_text = "Phòng trọ gần trường ĐH Vinh";
         $sort_icon = "fas fa-university text-primary";
         break;
@@ -51,6 +50,15 @@ switch ($sort) {
         $sort_icon = "fas fa-sort-amount-up text-warning";
         break;
     case 'newest':
+        $sort_sql = "ORDER BY m.price DESC";
+        $sort_text = "Phòng trọ mới nhất";
+        $sort_icon = "fas fa-sort-amount-up text-warning";
+        break;
+    case 'nearyou':
+        $sort_sql = "";
+        $sort_text = "Phòng trọ gần bạn";
+        $sort_icon = "fas fa-user-friends text-info";
+        break;
     default:
         $sort_sql = "ORDER BY m.created_at DESC";
         $sort_text = "Phòng trọ mới đăng tải";
@@ -129,12 +137,24 @@ $sql = "
     $sort_sql
 ";
 
+
+
 $stmt = $conn->prepare($sql);
 if (!empty($params)) {
     $stmt->bind_param($param_types, ...$params);
 }
 $stmt->execute();
 $rooms = $stmt->get_result();
+$rooms = $rooms->fetch_all(MYSQLI_ASSOC);
+
+if ($sort == 'nearest') {
+    require_once(dirname(__DIR__) . '/utils/haversine.php');
+    $rooms = handleGetRoomByIP($rooms, uniLatVinh, unitLngVinh);
+}
+if ($sort == 'nearyou') {
+    require_once(dirname(__DIR__) . '/utils/haversine.php');
+    $rooms = handleGetRoomByIP($rooms, $_SESSION['lat'], $_SESSION['lng']);
+}
 ?>
 
 <!DOCTYPE html>
@@ -146,15 +166,15 @@ $rooms = $stmt->get_result();
     <title>Tìm phòng trọ - Phòng trọ sinh viên</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="./Assets/style.css">
+    <link rel="stylesheet" href="./assets/style.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/nouislider@14.7.0/distribute/nouislider.min.css">
 </head>
 
 <body class="search-body">
-    <?php include './components/header.php' ?>
+    <?php include dirname(__DIR__) . '/components/header.php' ?>
 
     <!-- Banner tìm kiếm -->
-    <?php include './components/banner_search.php' ?>
+    <?php include dirname(__DIR__) . '/components/banner_search.php' ?>
 
     <!-- Kết quả tìm kiếm -->
     <section class="py-5 bg-light">
@@ -302,7 +322,7 @@ $rooms = $stmt->get_result();
                         <h4 class="mb-0 d-inline-block">
                             <i class="<?php echo $sort_icon; ?> me-2"></i><?php echo $sort_text; ?>
                         </h4>
-                        <span class="ms-2 text-muted">(<?php echo $rooms->num_rows; ?> phòng)</span>
+                        <span class="ms-2 text-muted">(<?php echo count($rooms); ?> phòng)</span>
                     </div>
                     <!-- Dropdown menu sắp xếp -->
                     <div class="dropdown sort-dropdown">
@@ -323,6 +343,10 @@ $rooms = $stmt->get_result();
                                     <i class="fas fa-university text-primary"></i> Phòng trọ gần trường ĐH Vinh
                                 </a></li>
                             <li>
+                            <li><a class="dropdown-item <?php echo $sort == 'nearyou' ? 'active' : ''; ?>" href="javascript:void(0)" onclick="setSort('nearyou')">
+                                    <i class="fas fa-university text-primary"></i> Phòng trọ gần bạn
+                                </a></li>
+                            <li>
                                 <hr class="dropdown-divider">
                             </li>
                             <li>
@@ -338,13 +362,13 @@ $rooms = $stmt->get_result();
                     </div>
                 </div>
 
-                <?php if ($rooms->num_rows > 0): ?>
+                <?php if (count($rooms) > 0): ?>
                     <div class="row">
-                        <?php while ($room = $rooms->fetch_assoc()): ?>
+                        <?php foreach ($rooms as $room): ?>
                             <div class="col-md-4 mb-4">
                                 <div class="card room-card four-col h-100">
                                     <div class="room-image">
-                                        <img src="./<?php echo $room['images']; ?>" class="card-img-top" alt="<?php echo $room['title']; ?>">
+                                        <img src="/<?php echo $room['images']; ?>" class="card-img-top" alt="<?php echo $room['title']; ?>">
                                         <span class="price-tag"><?php echo number_format($room['price']); ?> đ/tháng</span>
                                         <span class="view-count"><i class="fas fa-eye me-1"></i><?php echo number_format($room['count_view']); ?></span>
                                     </div>
@@ -375,7 +399,7 @@ $rooms = $stmt->get_result();
                                     </div>
                                 </div>
                             </div>
-                        <?php endwhile; ?>
+                        <?php endforeach; ?>
                     </div>
                 <?php else: ?>
                     <div class="alert alert-info text-center py-5">
@@ -390,7 +414,7 @@ $rooms = $stmt->get_result();
             </div>
     </section>
 
-    <?php include './components/footer.php' ?>
+    <?php include dirname(__DIR__) . '/components/footer.php' ?>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/nouislider@14.7.0/distribute/nouislider.min.js"></script>
     <script>

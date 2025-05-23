@@ -9,10 +9,10 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 // Kết nối đến CSDL
-require_once('./config/db.php');
+require_once('../config/db.php');
 
 // Khởi tạo mảng favorite_rooms từ CSDL
-require_once('./config/favorites.php');
+require_once('../config/favorites.php');
 
 // Xử lý xóa phòng khỏi yêu thích
 if (isset($_GET['action']) && $_GET['action'] === 'remove' && isset($_GET['id'])) {
@@ -79,11 +79,11 @@ $favorite_rooms = $stmt->get_result();
     <title>Phòng trọ yêu thích - Phòng trọ sinh viên</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="./Assets/style.css">
+    <link rel="stylesheet" href="./assets/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
 </head>
 
-<body class="home-body"> <?php include './components/header.php' ?>
+<body class="home-body"> <?php include dirname(__DIR__) . '/components/header.php' ?>
 
     <main class="py-5 mt-5">
         <div class="container">
@@ -108,7 +108,7 @@ $favorite_rooms = $stmt->get_result();
                         <div class="col-md-4 mb-4 animated-element">
                             <div class="card room-card h-100">
                                 <div class="room-image">
-                                    <img src="./<?php echo $room['images']; ?>" class="card-img-top" alt="<?php echo $room['title']; ?>">
+                                    <img src="/<?php echo $room['images']; ?>" class="card-img-top" alt="<?php echo $room['title']; ?>">
                                     <span class="price-tag"><?php echo number_format($room['price']); ?> đ/tháng</span>
                                     <span class="view-count"><i class="fas fa-eye me-1"></i><?php echo number_format($room['count_view']); ?></span>
                                     <span class="favorite-badge">
@@ -160,13 +160,11 @@ $favorite_rooms = $stmt->get_result();
         </div>
     </main>
 
-    <?php include './components/footer.php' ?>
+    <?php include dirname(__DIR__) . '/components/footer.php' ?>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<<<<<<<< HEAD:my_rooms.php
-    <script src="./Assets/main.js"></script>
-========
+
     <script src="../assets/admin/js/main.js"></script>
->>>>>>>> d6352d11d3736a08bd206d9a28a728f1fa6dee7c:my_favorite.php
+
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             // Hiệu ứng xuất hiện cho các phòng

@@ -1,5 +1,8 @@
-<?php require_once '../config/config.php';?>
-<link rel="stylesheet" href="/Assets/client/css/style.css">
+<?php
+require_once dirname(__DIR__) . '/config/config.php';
+require_once PROJECT_ROOT . '/config/config.php';
+?>
+<link rel="stylesheet" href="/assets/client/css/style.css">
 <header>
     <nav class="navbar navbar-expand-lg fixed-top">
         <div class=" container">
@@ -15,13 +18,13 @@
                         <a class="text-white nav-link" href="/">Trang chủ</a>
                     </li>
                     <li class="nav-item">
-                        <a class="text-white nav-link" href="/search.php">Tìm kiếm</a>
+                        <a class="text-white nav-link" href="/room/search.php">Tìm kiếm</a>
                     </li>
                     <li class="nav-item">
-                        <a class="text-white nav-link" href="/post.php">Đăng tin</a>
+                        <a class="text-white nav-link" href="/room/post.php">Đăng tin</a>
                     </li>
                     <li class="nav-item">
-                        <a class="text-white nav-link" href="/my_rooms.php">
+                        <a class="text-white nav-link" href="/room/my_rooms.php">
 
                             <i class="fas fa-heart me-1 text-danger"></i>Yêu thích
                             <?php
@@ -40,10 +43,10 @@
 
                             if ($favorite_count > 0):
                             ?>
-                            <span
-                                class="badge rounded-pill bg-danger favorite-counter animate__animated <?php echo isset($_GET['action']) && in_array($_GET['action'], ['favorite', 'unfavorite']) ? 'animate__heartBeat' : ''; ?>">
-                                <?php echo $favorite_count; ?>
-                            </span>
+                                <span
+                                    class="badge rounded-pill bg-danger favorite-counter animate__animated <?php echo isset($_GET['action']) && in_array($_GET['action'], ['favorite', 'unfavorite']) ? 'animate__heartBeat' : ''; ?>">
+                                    <?php echo $favorite_count; ?>
+                                </span>
                             <?php endif; ?>
                         </a>
                     </li>
@@ -61,8 +64,7 @@
                             $result = $stmt->get_result();
                             $user = $result->fetch_assoc();
 
-                            echo '<img src="/' . $user['avatar'] . '" class="avatar-header me-2" alt="Avatar"> ';
-
+                            echo '<img src="/' . $user['avatar'] . '" class="avatar-header me-2" alt="Avatar">';
                             echo htmlspecialchars($user['name']);
                             ?>
                         </a>

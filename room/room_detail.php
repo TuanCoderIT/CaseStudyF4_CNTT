@@ -9,10 +9,10 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 // Kết nối đến CSDL
-require_once('./config/db.php');
-
+require_once('../config/db.php');
+require_once(dirname(__DIR__) . '/utils/haversine.php');
 // Khởi tạo mảng favorite_rooms từ CSDL
-require_once('./config/favorites.php');
+require_once('../config/favorites.php');
 
 // Khởi tạo session viewed_rooms nếu chưa có
 if (!isset($_SESSION['viewed_rooms'])) {
@@ -192,7 +192,7 @@ $similar_rooms = $stmt_similar->get_result();
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
 </head>
 
-<body class="room-detail-body"> <?php include './components/header.php' ?>
+<body class="room-detail-body"> <?php include dirname(__DIR__) . '/components/header.php' ?>
 
     <?php if (isset($_GET['message'])): ?>
         <div class="container mt-4">
@@ -215,7 +215,7 @@ $similar_rooms = $stmt_similar->get_result();
                         <div class="swiper-wrapper">
                             <?php foreach ($images as $image): ?>
                                 <div class="swiper-slide">
-                                    <img src="./<?php echo $image; ?>" alt="<?php echo $room['title']; ?>">
+                                    <img src="/<?php echo $image; ?>" alt="<?php echo $room['title']; ?>">
                                 </div>
 
                             <?php endforeach; ?>
@@ -273,7 +273,9 @@ $similar_rooms = $stmt_similar->get_result();
                                     <i class="fas fa-university"></i>
                                     <div>
                                         <strong>Khoảng cách</strong>
-                                        <div><?php echo $room['latlng']; ?> km đến ĐH Vinh</div>
+                                        <div><?php
+                                                $latlng = splitAndTrim($room['latlng']);
+                                                echo number_format(haversine(uniLatVinh, unitLngVinh, $latlng[0], $latlng[1]), 2, ',', ','); ?> km đến ĐH Vinh</div>
                                     </div>
                                 </div>
                             <?php endif; ?>
@@ -319,7 +321,7 @@ $similar_rooms = $stmt_similar->get_result();
                 <div class="col-lg-4">
                     <!-- Thông tin chủ trọ -->
                     <div class="owner-profile mb-4">
-                        <img src="./<?php echo $room['owner_avatar'] ?? 'images/default_avatar.jpg'; ?>" alt="<?php echo $room['owner_name']; ?>" class="owner-avatar">
+                        <img src="/<?php echo $room['owner_avatar'] ?? 'images/default_avatar.jpg'; ?>" alt="<?php echo $room['owner_name']; ?>" class="owner-avatar">
 
                         <div>
                             <h5 class="mb-1"><?php echo $room['owner_name']; ?></h5>
@@ -439,7 +441,7 @@ $similar_rooms = $stmt_similar->get_result();
         </div>
     </section>
 
-    <?php include './components/footer.php' ?>
+    <?php include '../components/footer.php' ?>
     <!-- Modal Đặt cọc -->
     <div class="modal fade" id="depositModal" tabindex="-1" aria-labelledby="depositModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">

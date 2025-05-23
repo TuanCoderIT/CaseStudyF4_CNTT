@@ -9,7 +9,7 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 // Kết nối đến CSDL
-require_once('./config/db.php');
+require_once('../config/db.php');
 
 // Khởi tạo mảng favorite_rooms từ CSDL
 require_once('./config/favorites.php');
@@ -79,7 +79,7 @@ $favorite_rooms = $stmt->get_result();
     <title>Phòng trọ yêu thích - Phòng trọ sinh viên</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="./Assets/style.css">
+    <link rel="stylesheet" href="./assets/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
 </head>
 
@@ -108,7 +108,7 @@ $favorite_rooms = $stmt->get_result();
                         <div class="col-md-4 mb-4 animated-element">
                             <div class="card room-card h-100">
                                 <div class="room-image">
-                                    <img src="./<?php echo $room['images']; ?>" class="card-img-top" alt="<?php echo $room['title']; ?>">
+                                    <img src="/<?php echo $room['images']; ?>" class="card-img-top" alt="<?php echo $room['title']; ?>">
                                     <span class="price-tag"><?php echo number_format($room['price']); ?> đ/tháng</span>
                                     <span class="view-count"><i class="fas fa-eye me-1"></i><?php echo number_format($room['count_view']); ?></span>
                                     <span class="favorite-badge">
@@ -162,56 +162,57 @@ $favorite_rooms = $stmt->get_result();
 
     <?php include './components/footer.php' ?>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<<<<<<<< HEAD:my_rooms.php
-    <script src="./Assets/main.js"></script>
-========
-    <script src="../assets/admin/js/main.js"></script>
->>>>>>>> d6352d11d3736a08bd206d9a28a728f1fa6dee7c:my_favorite.php
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Hiệu ứng xuất hiện cho các phòng
-            const animatedElements = document.querySelectorAll('.animated-element');
+    <<<<<<<< HEAD:my_rooms.php
+        <script src="./assets/main.js">
+        </script>
+        ========
+        <script src="../assets/admin/js/main.js"></script>
+        >>>>>>>> d6352d11d3736a08bd206d9a28a728f1fa6dee7c:my_favorite.php
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                // Hiệu ứng xuất hiện cho các phòng
+                const animatedElements = document.querySelectorAll('.animated-element');
 
-            animatedElements.forEach((element, index) => {
-                setTimeout(() => {
-                    element.classList.add('animated', 'animate__fadeInUp');
-                }, index * 100);
-            });
-
-            // Hiệu ứng xóa phòng khỏi yêu thích
-            const deleteButtons = document.querySelectorAll('.btn-danger[title="Xóa khỏi yêu thích"]');
-            deleteButtons.forEach(button => {
-                button.addEventListener('click', function(e) {
-                    if (confirm('Bạn có chắc muốn xóa phòng này khỏi danh sách yêu thích?')) {
-                        const roomCard = this.closest('.animated-element');
-
-                        // Thêm hiệu ứng biến mất trước khi chuyển hướng
-                        e.preventDefault();
-                        roomCard.classList.add('animate__animated', 'animate__fadeOutRight');
-
-                        // Chờ hiệu ứng hoàn thành rồi mới chuyển hướng
-                        setTimeout(() => {
-                            window.location.href = this.getAttribute('href');
-                        }, 500);
-                    } else {
-                        e.preventDefault(); // Ngăn chặn chuyển hướng nếu không xác nhận
-                    }
-                });
-            });
-
-            // Tự động ẩn alert sau 5 giây
-            const alertElement = document.querySelector('.alert');
-            if (alertElement) {
-                setTimeout(() => {
-                    alertElement.classList.remove('animate__fadeIn');
-                    alertElement.classList.add('animate__fadeOut');
+                animatedElements.forEach((element, index) => {
                     setTimeout(() => {
-                        alertElement.remove();
-                    }, 500);
-                }, 5000);
-            }
-        });
-    </script>
+                        element.classList.add('animated', 'animate__fadeInUp');
+                    }, index * 100);
+                });
+
+                // Hiệu ứng xóa phòng khỏi yêu thích
+                const deleteButtons = document.querySelectorAll('.btn-danger[title="Xóa khỏi yêu thích"]');
+                deleteButtons.forEach(button => {
+                    button.addEventListener('click', function(e) {
+                        if (confirm('Bạn có chắc muốn xóa phòng này khỏi danh sách yêu thích?')) {
+                            const roomCard = this.closest('.animated-element');
+
+                            // Thêm hiệu ứng biến mất trước khi chuyển hướng
+                            e.preventDefault();
+                            roomCard.classList.add('animate__animated', 'animate__fadeOutRight');
+
+                            // Chờ hiệu ứng hoàn thành rồi mới chuyển hướng
+                            setTimeout(() => {
+                                window.location.href = this.getAttribute('href');
+                            }, 500);
+                        } else {
+                            e.preventDefault(); // Ngăn chặn chuyển hướng nếu không xác nhận
+                        }
+                    });
+                });
+
+                // Tự động ẩn alert sau 5 giây
+                const alertElement = document.querySelector('.alert');
+                if (alertElement) {
+                    setTimeout(() => {
+                        alertElement.classList.remove('animate__fadeIn');
+                        alertElement.classList.add('animate__fadeOut');
+                        setTimeout(() => {
+                            alertElement.remove();
+                        }, 500);
+                    }, 5000);
+                }
+            });
+        </script>
 </body>
 
 </html>

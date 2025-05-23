@@ -1,4 +1,4 @@
-<link rel="stylesheet" href="/Assets/client/css/style.css">
+<link rel="stylesheet" href="/assets/client/css/style.css">
 <section class="search-banner">
     <div class="container py-5">
         <div class="row">
