@@ -411,7 +411,7 @@ include_once('../../components/admin_header.php');
                                         </a>
                                     <?php endif; ?>
 
-                                    <a href="/CaseStudyF4_CNTT/Home/room_detail.php?id=<?php echo $row['id']; ?>" class="btn btn-sm btn-outline-info" target="_blank" data-toggle="tooltip" title="Xem">
+                                    <a href="room_detail.php?id=<?php echo $row['id']; ?>" class="btn btn-sm btn-outline-info" target="_blank" data-toggle="tooltip" title="Xem">
                                         <i class="fas fa-eye"></i>
                                     </a>
 

@@ -9,10 +9,10 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 // Kết nối đến CSDL
-require_once('../config/db.php');
+require_once __DIR__ . '/config/db.php';
 
 // Khởi tạo mảng favorite_rooms từ CSDL
-require_once('../config/favorites.php');
+require_once __DIR__ . '/config/favorites.php';
 
 // Danh sách quận/huyện
 $stmt_districts = $conn->prepare("SELECT * FROM districts ORDER BY name");
@@ -180,7 +180,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </head>
 
 <body class="home-body">
-    <?php include '../components/header.php' ?>
+    <?php include __DIR__ . '/components/header.php' ?>
 
     <main class="py-5 mt-5">
         <div class="container">

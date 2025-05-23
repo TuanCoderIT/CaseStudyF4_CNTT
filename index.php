@@ -93,11 +93,7 @@ $nearest_rooms = $stmt_nearest->get_result();
                                     </div>
                                     <div class="card-body">
                                         <h5 class="card-title">
-<<<<<<< HEAD:index.php
                                             <a href="room_detail.php?id=<?php echo $room['id']; ?>"><?php echo $room['title']; ?></a>
-=======
-                                            <a href="/home/room_detail.php?id=<?php echo $room['id']; ?>"><?php echo $room['title']; ?></a>
->>>>>>> d6352d11d3736a08bd206d9a28a728f1fa6dee7c:Home/index.php
                                         </h5>
                                         <p class="card-text address"><i class="fas fa-map-marker-alt me-2"></i><?php echo $room['address']; ?></p>
                                         <div class="room-info">

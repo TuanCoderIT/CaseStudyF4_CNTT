@@ -241,7 +241,7 @@ include_once '../../components/admin_header.php';
                                     <a href="edit_room.php?id=<?php echo $room['id']; ?>" class="btn btn-sm btn-outline-primary" data-toggle="tooltip" title="Chỉnh sửa">
                                         <i class="fas fa-edit"></i>
                                     </a>
-                                    <a href="../../Home/room_detail.php?id=<?php echo $room['id']; ?>" target="_blank" class="btn btn-sm btn-outline-info" data-toggle="tooltip" title="Xem chi tiết">
+                                    <a href="../../room_detail.php?id=<?php echo $room['id']; ?>" target="_blank" class="btn btn-sm btn-outline-info" data-toggle="tooltip" title="Xem chi tiết">
                                         <i class="fas fa-eye"></i>
                                     </a>
                                     <button class="btn btn-sm btn-outline-warning" type="button" data-toggle="modal" data-target="#transferModal"

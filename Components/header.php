@@ -1,4 +1,29 @@
-<?php require_once '../config/config.php';?>
+<?php require_once __DIR__ . '/../config/db.php';
+$user_id = $_SESSION['user_id'] ?? 0;
+$stmt = $conn->prepare("
+    SELECT COUNT(*) 
+    FROM notifications 
+    WHERE user_id = ? AND is_read = 0
+");
+$stmt->bind_param('i', $user_id);
+$stmt->execute();
+$stmt->bind_result($unreadCount);
+$stmt->fetch();
+$stmt->close();
+
+$stmt = $conn->prepare("
+    SELECT id, title, message, created_at, is_read
+    FROM notifications
+    WHERE user_id = ?
+    ORDER BY created_at DESC
+    LIMIT 2
+");
+$stmt->bind_param('i', $user_id);
+$stmt->execute();
+$result = $stmt->get_result();
+$notes = $result->fetch_all(MYSQLI_ASSOC);
+$stmt->close();
+?>
 <link rel="stylesheet" href="/Assets/client/css/style.css">
 <header>
     <nav class="navbar navbar-expand-lg fixed-top">
@@ -40,15 +65,82 @@
 
                             if ($favorite_count > 0):
                             ?>
-                            <span
-                                class="badge rounded-pill bg-danger favorite-counter animate__animated <?php echo isset($_GET['action']) && in_array($_GET['action'], ['favorite', 'unfavorite']) ? 'animate__heartBeat' : ''; ?>">
-                                <?php echo $favorite_count; ?>
-                            </span>
+                                <span
+                                    class="badge rounded-pill bg-danger favorite-counter animate__animated <?php echo isset($_GET['action']) && in_array($_GET['action'], ['favorite', 'unfavorite']) ? 'animate__heartBeat' : ''; ?>">
+                                    <?php echo $favorite_count; ?>
+                                </span>
                             <?php endif; ?>
                         </a>
                     </li>
                 </ul>
                 <ul class="navbar-nav ms-auto">
+                    <!-- Notification dropdown -->
+                    <li class="nav-item dropdown mt-3">
+                        <a class="nav-link position-relative" href="#" id="notifDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-bell fa-lg"></i>
+                            <?php if ($unreadCount > 0): ?>
+                                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger notification-badge">
+                                    <?= $unreadCount ?>
+                                </span>
+                            <?php endif; ?>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end notification-dropdown" aria-labelledby="notifDropdown">
+                            <div class="notification-header">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div class="d-flex align-items-center">
+                                        <i class="fas fa-bell fa-lg me-2"></i>
+                                        <h6 class="mb-0">Thông báo của bạn</h6>
+                                    </div>
+                                    <?php if ($unreadCount > 0): ?>
+                                        <span class="badge bg-light text-primary"><?= $unreadCount ?> mới</span>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+
+                            <div class="notifications-body" style="max-height: 400px; overflow-y: auto;">
+                                <?php if (empty($notes)): ?>
+                                    <div class="text-center py-5">
+                                        <i class="fas fa-bell-slash fa-2x text-muted mb-3"></i>
+                                        <p class="text-muted mb-0">Chưa có thông báo nào</p>
+                                    </div>
+                                <?php else: ?>
+                                    <?php foreach ($notes as $note): ?>
+                                        <a href="/notification_detail.php?id=<?= $note['id'] ?>"
+                                            class="notification-item d-block text-decoration-none <?= !$note['is_read'] ? 'unread' : '' ?>">
+                                            <div class="d-flex align-items-center">
+                                                <div class="notification-icon">
+                                                    <i class="fas <?= !$note['is_read'] ? 'fa-bell' : 'fa-check' ?>"></i>
+                                                </div>
+                                                <div class="ms-3">
+                                                    <h6 class="mb-1 text-dark <?= !$note['is_read'] ? 'fw-bold' : '' ?>">
+                                                        <?= htmlspecialchars($note['title']) ?>
+                                                    </h6>
+                                                    <p class="text-muted small text-truncate mb-1" style="max-width: 250px;">
+                                                        <?= htmlspecialchars($note['message']) ?>
+                                                    </p>
+                                                    <div class="d-flex align-items-center">
+                                                        <i class="far fa-clock text-muted me-1"></i>
+                                                        <small class="text-muted">
+                                                            <?= date('H:i d/m/Y', strtotime($note['created_at'])) ?>
+                                                        </small>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </a>
+                                    <?php endforeach; ?>
+                                <?php endif; ?>
+                            </div>
+
+                            <?php if (!empty($notes)): ?>
+                                <div class="p-2 border-top text-center">
+                                    <a href="/notifications.php" class="btn btn-light btn-sm w-100">
+                                        <i class="fas fa-list-ul me-1"></i>
+                                        Xem tất cả thông báo
+                                    </a>
+                                </div>
+                            <?php endif; ?>
+                        </ul>
+                    </li>
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle text-white" href="#" id="navbarDropdown" role="button"
                             data-bs-toggle="dropdown">
