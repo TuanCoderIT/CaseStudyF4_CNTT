@@ -61,7 +61,7 @@ $result = $stmt->get_result();
     <title>Phòng trọ đã đăng - Phòng trọ sinh viên</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="../Assets/style.css">
+    <link rel="stylesheet" href="../assets/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
     <style>
         .approval-badge.cancelled {
@@ -319,7 +319,7 @@ $result = $stmt->get_result();
                                             $images = explode(',', $room['images']);
                                             $firstImage = $images[0];
                                             ?>
-                                            <img src="../<?php echo $firstImage; ?>" class="card-img-top" alt="<?php echo $room['title']; ?>">
+                                            <img src="/<?php echo $firstImage; ?>" class="card-img-top" alt="<?php echo $room['title']; ?>">
                                             <span class="price-tag"><?php echo number_format($room['price']); ?> đ/tháng</span>
                                             <span class="view-count"><i class="fas fa-eye me-1"></i><?php echo number_format($room['count_view']); ?></span> <!-- Badge status -->
                                             <?php if ($room['approve'] == 1): ?>

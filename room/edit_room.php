@@ -9,10 +9,10 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 // Kết nối đến CSDL
-require_once('./config/db.php');
+require_once('../config/db.php');
 
 // Khởi tạo mảng favorite_rooms từ CSDL
-require_once('./config/favorites.php');
+require_once('../config/favorites.php');
 
 // Lấy ID của phòng trọ cần chỉnh sửa
 if (!isset($_GET['id']) || empty($_GET['id'])) {
@@ -228,7 +228,7 @@ $room_utilities = explode(',', $room['utilities']);
     <title>Chỉnh sửa phòng trọ - Phòng trọ sinh viên</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="./Assets/style.css">
+    <link rel="stylesheet" href="./assets/style.css">
     <!-- Thêm các thư viện Tagify cho chọn nhiều tiện ích -->
     <link rel="stylesheet" href="https://unpkg.com/@yaireo/tagify/dist/tagify.css">
     <script src="https://unpkg.com/@yaireo/tagify/dist/tagify.min.js"></script>
@@ -503,108 +503,109 @@ $room_utilities = explode(',', $room['utilities']);
     <?php include './components/footer.php' ?>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<<<<<<< HEAD:edit_room.php
-    <script src="./Assets/main.js"></script>
-=======
-    <script src="../assets/admin/js/main.js"></script>
->>>>>>> d6352d11d3736a08bd206d9a28a728f1fa6dee7c:Home/edit_room.php
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/summernote/0.8.20/summernote-bs5.min.js"></script>
+    <<<<<<< HEAD:edit_room.php
+        <script src="./assets/main.js">
+        </script>
+        =======
+        <script src="../assets/admin/js/main.js"></script>
+        >>>>>>> d6352d11d3736a08bd206d9a28a728f1fa6dee7c:Home/edit_room.php
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/summernote/0.8.20/summernote-bs5.min.js"></script>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Initialize form validation
-            const forms = document.querySelectorAll('.needs-validation');
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                // Initialize form validation
+                const forms = document.querySelectorAll('.needs-validation');
 
-            Array.prototype.slice.call(forms).forEach(function(form) {
-                form.addEventListener('submit', function(event) {
-                    if (!form.checkValidity()) {
-                        event.preventDefault();
-                        event.stopPropagation();
-                    }
-                    form.classList.add('was-validated');
-                }, false);
-            });
-
-            // Image preview functionality for new images
-            const imageInput = document.getElementById('images');
-            const previewContainer = document.getElementById('imagePreviewContainer');
-
-            imageInput.addEventListener('change', function() {
-                // Clear previous previews
-                previewContainer.innerHTML = '';
-
-                if (this.files) {
-                    // Limit to first 5 files
-                    const filesToPreview = Array.from(this.files).slice(0, 5);
-
-                    filesToPreview.forEach(file => {
-                        if (file.type.match('image.*')) {
-                            const reader = new FileReader();
-
-                            reader.onload = function(e) {
-                                const col = document.createElement('div');
-                                col.className = 'col-6 col-md-4 col-lg-3';
-
-                                const previewCard = document.createElement('div');
-                                previewCard.className = 'card h-100';
-
-                                const img = document.createElement('img');
-                                img.src = e.target.result;
-                                img.className = 'card-img-top';
-                                img.style.height = '120px';
-                                img.style.objectFit = 'cover';
-
-                                const cardBody = document.createElement('div');
-                                cardBody.className = 'card-body p-2';
-                                cardBody.innerHTML = `<p class="card-text small text-truncate">${file.name}</p>`;
-
-                                previewCard.appendChild(img);
-                                previewCard.appendChild(cardBody);
-                                col.appendChild(previewCard);
-                                previewContainer.appendChild(col);
-                            }
-
-                            reader.readAsDataURL(file);
+                Array.prototype.slice.call(forms).forEach(function(form) {
+                    form.addEventListener('submit', function(event) {
+                        if (!form.checkValidity()) {
+                            event.preventDefault();
+                            event.stopPropagation();
                         }
+                        form.classList.add('was-validated');
+                    }, false);
+                });
+
+                // Image preview functionality for new images
+                const imageInput = document.getElementById('images');
+                const previewContainer = document.getElementById('imagePreviewContainer');
+
+                imageInput.addEventListener('change', function() {
+                    // Clear previous previews
+                    previewContainer.innerHTML = '';
+
+                    if (this.files) {
+                        // Limit to first 5 files
+                        const filesToPreview = Array.from(this.files).slice(0, 5);
+
+                        filesToPreview.forEach(file => {
+                            if (file.type.match('image.*')) {
+                                const reader = new FileReader();
+
+                                reader.onload = function(e) {
+                                    const col = document.createElement('div');
+                                    col.className = 'col-6 col-md-4 col-lg-3';
+
+                                    const previewCard = document.createElement('div');
+                                    previewCard.className = 'card h-100';
+
+                                    const img = document.createElement('img');
+                                    img.src = e.target.result;
+                                    img.className = 'card-img-top';
+                                    img.style.height = '120px';
+                                    img.style.objectFit = 'cover';
+
+                                    const cardBody = document.createElement('div');
+                                    cardBody.className = 'card-body p-2';
+                                    cardBody.innerHTML = `<p class="card-text small text-truncate">${file.name}</p>`;
+
+                                    previewCard.appendChild(img);
+                                    previewCard.appendChild(cardBody);
+                                    col.appendChild(previewCard);
+                                    previewContainer.appendChild(col);
+                                }
+
+                                reader.readAsDataURL(file);
+                            }
+                        });
+                    }
+                });
+
+                // Handle delete current images
+                const deleteButtons = document.querySelectorAll('.delete-btn');
+                deleteButtons.forEach(button => {
+                    button.addEventListener('click', function() {
+                        const image = this.getAttribute('data-image');
+                        const container = this.parentElement.parentElement;
+
+                        // Create hidden input to track deleted images
+                        const hiddenInput = document.createElement('input');
+                        hiddenInput.type = 'hidden';
+                        hiddenInput.name = 'deleted_images[]';
+                        hiddenInput.value = image;
+                        document.querySelector('form').appendChild(hiddenInput);
+
+                        // Remove the image preview
+                        container.remove();
                     });
-                }
-            });
+                });
 
-            // Handle delete current images
-            const deleteButtons = document.querySelectorAll('.delete-btn');
-            deleteButtons.forEach(button => {
-                button.addEventListener('click', function() {
-                    const image = this.getAttribute('data-image');
-                    const container = this.parentElement.parentElement;
-
-                    // Create hidden input to track deleted images
-                    const hiddenInput = document.createElement('input');
-                    hiddenInput.type = 'hidden';
-                    hiddenInput.name = 'deleted_images[]';
-                    hiddenInput.value = image;
-                    document.querySelector('form').appendChild(hiddenInput);
-
-                    // Remove the image preview
-                    container.remove();
+                // Initialize rich text editor for description
+                $('#description').summernote({
+                    placeholder: 'Viết mô tả chi tiết về phòng trọ...',
+                    tabsize: 2,
+                    height: 200,
+                    toolbar: [
+                        ['style', ['style']],
+                        ['font', ['bold', 'underline', 'clear']],
+                        ['color', ['color']],
+                        ['para', ['ul', 'ol', 'paragraph']],
+                        ['insert', ['link']],
+                        ['view', ['fullscreen', 'codeview', 'help']]
+                    ]
                 });
             });
-
-            // Initialize rich text editor for description
-            $('#description').summernote({
-                placeholder: 'Viết mô tả chi tiết về phòng trọ...',
-                tabsize: 2,
-                height: 200,
-                toolbar: [
-                    ['style', ['style']],
-                    ['font', ['bold', 'underline', 'clear']],
-                    ['color', ['color']],
-                    ['para', ['ul', 'ol', 'paragraph']],
-                    ['insert', ['link']],
-                    ['view', ['fullscreen', 'codeview', 'help']]
-                ]
-            });
-        });
-    </script>
+        </script>
 </body>
 
 </html>

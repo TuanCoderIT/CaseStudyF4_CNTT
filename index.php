@@ -11,6 +11,7 @@ if (!isset($_SESSION['user_id'])) {
 // Kết nối đến CSDL
 require_once('./config/db.php');
 
+require_once('./utils/haversine.php');
 // Khởi tạo mảng favorite_rooms từ CSDL
 require_once('./config/favorites.php');
 
@@ -45,13 +46,45 @@ $stmt_nearest = $conn->prepare("
     FROM motel m 
     LEFT JOIN users u ON m.user_id = u.id 
     WHERE m.approve = 1 
-    ORDER BY CAST(m.latlng AS DECIMAL(10,6)) 
-    LIMIT 4
 ");
 $stmt_nearest->execute();
 $nearest_rooms = $stmt_nearest->get_result();
+// Tọa độ Đại học Vinh
+
+$roomNearVinhUniversity = handleGetRoomByIP($nearest_rooms, uniLatVinh, unitLngVinh);
+
+$roomNearVinhUniversityTop4 = array_slice($roomNearVinhUniversity, 0, 4);
+
+
+if ($_SESSION['lat'] && $_SESSION['lng']) {
+    $latUser = $_SESSION['lat'];
+    $lngUser = $_SESSION['lng'];
+} else {
+    $latUser = null;
+    $lngUser = null;
+}
+
+if (isset($latUser) && isset($lngUser)) {
+    $stmt = $conn->prepare("
+    SELECT m.*, u.name as owner_name 
+    FROM motel m 
+    LEFT JOIN users u ON m.user_id = u.id 
+    WHERE m.approve = 1 
+");
+    $stmt->execute();
+    $rooms = $stmt->get_result();
+
+    $roomNearUser = handleGetRoomByIP($rooms, $latUser, $lngUser);
+    $roomNearUserTop4 = array_slice($roomNearUser, 0, 4);
+} else {
+    $roomNearUserTop4 = [];
+}
+
 
 ?>
+
+
+
 <!DOCTYPE html>
 <html lang="vi">
 
@@ -61,7 +94,7 @@ $nearest_rooms = $stmt_nearest->get_result();
     <title>Trang chủ - Phòng trọ sinh viên</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="./Assets/client/css/style.css">
+    <link rel="stylesheet" href="./assets/client/css/style.css">
     <!-- Link tới thư viện Swiper cho slider -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.css">
 
@@ -87,17 +120,13 @@ $nearest_rooms = $stmt_nearest->get_result();
                             <div class="col-md-3 mb-4">
                                 <div class="card room-card four-col h-100">
                                     <div class="room-image">
-                                        <img src="./<?php echo $room['images']; ?>" class="card-img-top" alt="<?php echo $room['title']; ?>">
+                                        <img src="/<?php echo $room['images']; ?>" class="card-img-top" alt="<?php echo $room['title']; ?>">
                                         <span class="price-tag"><?php echo number_format($room['price']); ?> đ/tháng</span>
                                         <span class="view-count"><i class="fas fa-eye me-1"></i><?php echo number_format($room['count_view']); ?></span>
                                     </div>
                                     <div class="card-body">
                                         <h5 class="card-title">
-<<<<<<< HEAD:index.php
-                                            <a href="room_detail.php?id=<?php echo $room['id']; ?>"><?php echo $room['title']; ?></a>
-=======
-                                            <a href="/home/room_detail.php?id=<?php echo $room['id']; ?>"><?php echo $room['title']; ?></a>
->>>>>>> d6352d11d3736a08bd206d9a28a728f1fa6dee7c:Home/index.php
+                                            <a href="/room/room_detail.php?id=<?php echo $room['id']; ?>"><?php echo $room['title']; ?></a>
                                         </h5>
                                         <p class="card-text address"><i class="fas fa-map-marker-alt me-2"></i><?php echo $room['address']; ?></p>
                                         <div class="room-info">
@@ -143,15 +172,17 @@ $nearest_rooms = $stmt_nearest->get_result();
                             <div class="col-md-3 mb-4">
                                 <div class="card room-card four-col h-100">
                                     <div class="room-image">
-                                        <img src="./<?php echo $room['images']; ?>" class="card-img-top" alt="<?php echo $room['title']; ?>">
+                                        <img src="/<?php echo htmlspecialchars($room['images']); ?>" class="card-img-top" alt="<?php echo htmlspecialchars($room['title']); ?>">
                                         <span class="price-tag"><?php echo number_format($room['price']); ?> đ/tháng</span>
                                         <span class="new-tag">Mới</span>
                                     </div>
                                     <div class="card-body">
                                         <h5 class="card-title">
-                                            <a href="room_detail.php?id=<?php echo $room['id']; ?>"><?php echo $room['title']; ?></a>
+                                            <a href="/room/room_detail.php?id=<?php echo $room['id']; ?>"><?php echo htmlspecialchars($room['title']); ?></a>
                                         </h5>
-                                        <p class="card-text address"><i class="fas fa-map-marker-alt me-2"></i><?php echo $room['address']; ?></p>
+                                        <p class="card-text address">
+                                            <i class="fas fa-map-marker-alt me-2"></i><?php echo htmlspecialchars($room['address']); ?>
+                                        </p>
                                         <div class="room-info">
                                             <span><i class="fas fa-expand me-1"></i><?php echo $room['area']; ?> m²</span>
                                             <span><i class="fas fa-bolt me-1"></i>
@@ -163,7 +194,7 @@ $nearest_rooms = $stmt_nearest->get_result();
                                         </div>
                                     </div>
                                     <div class="card-footer">
-                                        <small class="text-muted">Đăng bởi: <?php echo $room['owner_name']; ?></small>
+                                        <small class="text-muted">Đăng bởi: <?php echo htmlspecialchars($room['owner_name']); ?></small>
                                         <small class="text-muted float-end">
                                             <i class="far fa-clock me-1"></i>
                                             <?php
@@ -180,6 +211,7 @@ $nearest_rooms = $stmt_nearest->get_result();
                             <div class="alert alert-info">Chưa có phòng trọ mới.</div>
                         </div>
                     <?php endif; ?>
+
                 </div>
             </section>
 
@@ -191,17 +223,68 @@ $nearest_rooms = $stmt_nearest->get_result();
                 </div>
 
                 <div class="row">
-                    <?php if ($nearest_rooms->num_rows > 0): ?> <?php while ($room = $nearest_rooms->fetch_assoc()): ?>
+                    <?php if (count($roomNearVinhUniversityTop4) > 0): ?> <?php foreach ($roomNearVinhUniversityTop4 as $room): ?>
                             <div class="col-md-3 mb-4">
                                 <div class="card room-card four-col h-100">
                                     <div class="room-image">
-                                        <img src="./<?php echo $room['images']; ?>" class="card-img-top" alt="<?php echo $room['title']; ?>">
+                                        <img src="/<?php echo $room['images']; ?>" class="card-img-top" alt="<?php echo $room['title']; ?>">
                                         <span class="price-tag"><?php echo number_format($room['price']); ?> đ/tháng</span>
                                         <span class="distance-tag"><i class="fas fa-walking me-1"></i><?php echo $room['latlng']; ?> km</span>
                                     </div>
                                     <div class="card-body">
                                         <h5 class="card-title">
-                                            <a href="room_detail.php?id=<?php echo $room['id']; ?>"><?php echo $room['title']; ?></a>
+                                            <a href="/room/room_detail.php?id=<?php echo $room['id']; ?>"><?php echo $room['title']; ?></a>
+                                        </h5>
+                                        <p class="card-text address"><i class="fas fa-map-marker-alt me-2"></i><?php echo $room['address']; ?></p>
+                                        <div class="room-info">
+                                            <span><i class="fas fa-expand me-1"></i><?php echo $room['area']; ?> m²</span>
+                                            <span><i class="fas fa-bolt me-1"></i>
+                                                <?php
+                                                                                $utilities = explode(',', $room['utilities']);
+                                                                                echo count($utilities) . ' tiện ích';
+                                                ?>
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="card-footer">
+                                        <small class="text-muted">Đăng bởi: <?php echo $room['owner_name']; ?></small>
+                                        <small class="text-muted float-end">
+                                            <i class="far fa-clock me-1"></i>
+                                            <?php
+                                                                                $date = new DateTime($room['created_at']);
+                                                                                echo $date->format('d/m/Y');
+                                            ?>
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <div class="col-12">
+                            <div class="alert alert-info">Không tìm thấy phòng trọ gần trường.</div>
+                        </div>
+                    <?php endif; ?>
+                </div>
+            </section>
+            <!-- Phòng trọ gần trường ĐH Vinh -->
+            <section class="mb-5">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2 class="section-title"><i class="fas fa-university me-2 text-primary"></i>Phòng trọ gần bạn</h2>
+                    <a href="search.php?sort=nearest" class="btn btn-outline-primary btn-sm">Xem tất cả</a>
+                </div>
+
+                <div class="row">
+                    <?php if (count($roomNearUserTop4) > 0): ?> <?php foreach ($roomNearUserTop4 as $room): ?>
+                            <div class="col-md-3 mb-4">
+                                <div class="card room-card four-col h-100">
+                                    <div class="room-image">
+                                        <img src="/<?php echo $room['images']; ?>" class="card-img-top" alt="<?php echo $room['title']; ?>">
+                                        <span class="price-tag"><?php echo number_format($room['price']); ?> đ/tháng</span>
+                                        <span class="distance-tag"><i class="fas fa-walking me-1"></i><?php echo $room['latlng']; ?> km</span>
+                                    </div>
+                                    <div class="card-body">
+                                        <h5 class="card-title">
+                                            <a href="/room/room_detail.php?id=<?php echo $room['id']; ?>"><?php echo $room['title']; ?></a>
                                         </h5>
                                         <p class="card-text address"><i class="fas fa-map-marker-alt me-2"></i><?php echo $room['address']; ?></p>
                                         <div class="room-info">
@@ -226,10 +309,10 @@ $nearest_rooms = $stmt_nearest->get_result();
                                     </div>
                                 </div>
                             </div>
-                        <?php endwhile; ?>
+                        <?php endforeach; ?>
                     <?php else: ?>
                         <div class="col-12">
-                            <div class="alert alert-info">Không tìm thấy phòng trọ gần trường.</div>
+                            <div class="alert alert-info">Không tìm thấy phòng trọ gần bạn.</div>
                         </div>
                     <?php endif; ?>
                 </div>
@@ -240,14 +323,13 @@ $nearest_rooms = $stmt_nearest->get_result();
     <?php include './components/footer.php' ?>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.js"></script>
-<<<<<<< HEAD:index.php
-    <script src="/Assets/admin/js/main.js"></script>
+    <script src="/assets/admin/js/main.js"></script>
     <script>
-        if (<?= isset($_SESSION['user_id']) && !isset($_SESSION['lat']) ? 'true' : 'false' ?>) {
+        if (<?= isset($_SESSION['user_id']) ?>) {
             // Đảm bảo xử lý kết quả bất đồng bộ đúng cách
             getLocation().then(data => {
                 console.log("Vị trí:", data.raw.position.lat, data.raw.position.lng);
-
+                console.log(data);
                 if (data.success) {
                     // alert("Tọa độ của bạn là: " + data.lat + ", " + data.lng);
                     // Lưu tọa độ vào session
@@ -261,9 +343,7 @@ $nearest_rooms = $stmt_nearest->get_result();
                             lng: data.raw.position.lng,
                         })
                     }).then(response => response.json()).then(result => {
-                        if (result.success) {
-                            alert();
-                        } else {
+                        if (result.success) {} else {
                             console.error("Lỗi khi lưu tọa độ:", result.message);
                         }
                     });
@@ -275,9 +355,6 @@ $nearest_rooms = $stmt_nearest->get_result();
             });
         }
     </script>
-=======
-    <script src="../assets/admin/js/main.js"></script>
->>>>>>> d6352d11d3736a08bd206d9a28a728f1fa6dee7c:Home/index.php
 </body>
 
 </html>
