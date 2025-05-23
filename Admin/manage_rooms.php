@@ -149,7 +149,7 @@ $result = $stmt->get_result();
                                         <td><?php echo $room['id']; ?></td>
                                         <td>
                                             <div class="room-title">
-                                                <a href="../Home/room_detail.php?id=<?php echo $room['id']; ?>" target="_blank">
+                                                <a href="room_detail.php?id=<?php echo $room['id']; ?>" target="_blank">
                                                     <?php echo $room['title']; ?>
                                                 </a>
                                             </div>
@@ -208,7 +208,7 @@ $result = $stmt->get_result();
                                                         <hr class="dropdown-divider">
                                                     </li>
                                                     <li>
-                                                        <a href="/CaseStudyF4_CNTT/Home/room_detail.php?id=<?php echo $room['id']; ?>" target="_blank" class="dropdown-item">
+                                                        <a href="room_detail.php?id=<?php echo $room['id']; ?>" target="_blank" class="dropdown-item">
                                                             <i class="fas fa-eye me-2 text-primary"></i>Xem chi tiết
                                                         </a>
                                                     </li>

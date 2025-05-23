@@ -126,7 +126,7 @@ if (isset($latUser) && isset($lngUser)) {
                                     </div>
                                     <div class="card-body">
                                         <h5 class="card-title">
-                                            <a href="/room/room_detail.php?id=<?php echo $room['id']; ?>"><?php echo $room['title']; ?></a>
+                                            <a href="room_detail.php?id=<?php echo $room['id']; ?>"><?php echo $room['title']; ?></a>
                                         </h5>
                                         <p class="card-text address"><i class="fas fa-map-marker-alt me-2"></i><?php echo $room['address']; ?></p>
                                         <div class="room-info">

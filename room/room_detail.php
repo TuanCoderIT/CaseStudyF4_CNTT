@@ -447,7 +447,6 @@ $similar_rooms = $stmt_similar->get_result();
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
-
                     <h5 class="modal-title" id="depositModalLabel"><i class="fas fa-wallet me-2 text-success"></i>Xác
                         nhận đặt cọc</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
