@@ -1,6 +1,6 @@
 <?php
 session_start();
-require_once __DIR__ . '/config/db.php';
+require_once __DIR__ . '/../config/db.php';
 $user_id = $_SESSION['user_id'] ?? 0;
 $note_id = intval($_GET['id'] ?? 0);
 
@@ -117,7 +117,7 @@ $conn->query("UPDATE notifications SET is_read = 1 WHERE id = $note_id");
 </head>
 
 <body>
-    <?php include 'components/header.php'; ?>
+    <?php include  __DIR__ . '/../components/header.php'; ?>
 
     <div class="container">
         <div class="notification-detail-card">

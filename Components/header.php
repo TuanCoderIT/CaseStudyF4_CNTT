@@ -107,7 +107,7 @@ $stmt->close();
                                     </div>
                                 <?php else: ?>
                                     <?php foreach ($notes as $note): ?>
-                                        <a href="/notification_detail.php?id=<?= $note['id'] ?>"
+                                        <a href="/room/notification_detail.php?id=<?= $note['id'] ?>"
                                             class="notification-item d-block text-decoration-none <?= !$note['is_read'] ? 'unread' : '' ?>">
                                             <div class="d-flex align-items-center">
                                                 <div class="notification-icon">
@@ -135,7 +135,7 @@ $stmt->close();
 
                             <?php if (!empty($notes)): ?>
                                 <div class="p-2 border-top text-center">
-                                    <a href="/notifications.php" class="btn btn-light btn-sm w-100">
+                                    <a href="/room/notifications.php" class="btn btn-light btn-sm w-100">
                                         <i class="fas fa-list-ul me-1"></i>
                                         Xem tất cả thông báo
                                     </a>

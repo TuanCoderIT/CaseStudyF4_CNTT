@@ -1,6 +1,6 @@
 <?php
 session_start();
-require_once __DIR__ . '/config/db.php';
+require_once __DIR__ . '/../config/db.php';
 $user_id = $_SESSION['user_id'] ?? 0;
 
 // Đánh dấu tất cả đã đọc khi vào trang
@@ -72,7 +72,7 @@ $stmt->close();
 </head>
 
 <body>
-    <?php include 'components/header.php'; ?>
+    <?php include  __DIR__ . '/../components/header.php'; ?>
 
     <div class="card notifications-card">
         <div class="card-header notifications-header d-flex align-items-center">
@@ -115,7 +115,7 @@ $stmt->close();
         </div>
         <?php if (!empty($notes)): ?>
             <div class="card-footer text-center">
-                <a href="notifications.php" class="text-decoration-none">Xem lại trang</a>
+                <a href="/room/notifications.php" class="text-decoration-none">Xem lại trang</a>
             </div>
         <?php endif; ?>
     </div>

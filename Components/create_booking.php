@@ -162,7 +162,7 @@ $inputData = [
     "vnp_Locale"         => "vn",
     "vnp_OrderInfo"      => "Dat coc phong $motelId, booking $bookingId",
     "vnp_OrderType"      => "other",
-    "vnp_ReturnUrl"      => "http://localhost/vnpay_return.php",
+    "vnp_ReturnUrl"      => "http://localhost/room/vnpay_return.php",
     "vnp_TxnRef"         => $bookingId
 ];
 
