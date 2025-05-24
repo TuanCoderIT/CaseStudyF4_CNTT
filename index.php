@@ -56,7 +56,7 @@ $roomNearVinhUniversity = handleGetRoomByIP($nearest_rooms, uniLatVinh, unitLngV
 $roomNearVinhUniversityTop4 = array_slice($roomNearVinhUniversity, 0, 4);
 
 
-if ($_SESSION['lat'] && $_SESSION['lng']) {
+if (isset($_SESSION['lat']) && isset($_SESSION['lng']) && $_SESSION['lat'] && $_SESSION['lng']) {
     $latUser = $_SESSION['lat'];
     $lngUser = $_SESSION['lng'];
 } else {

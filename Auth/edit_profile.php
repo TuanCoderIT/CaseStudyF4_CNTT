@@ -131,7 +131,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <title>Chỉnh sửa thông tin tài khoản</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="../assets/style.css">
+    <link rel="stylesheet" href="../Assets/client/css/style.css">
     <style>
         .profile-body {
             background: linear-gradient(135deg, #4b6cb7, #182848);
@@ -193,111 +193,97 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </head>
 
 <body class="profile-body">
-    <<<<<<< HEAD
-        <div class="container">
+    <div class="container">
         <div class="row justify-content-center">
             <div class="col-md-6 form-container">
-                <h3 class="text-center mb-4">Chỉnh sửa thông tin tài khoản</h3>
-
-                <?php if (!empty($success_message)): ?>
+                <h3 class="text-center mb-4">Chỉnh sửa thông tin tài khoản</h3>                <?php if (!empty($success_message)): ?>
                     <div class="alert alert-success" role="alert">
                         <i class="fas fa-check-circle me-2"></i><?php echo $success_message; ?>
-                        =======
-                        <div class="container">
-                            <div class="row justify-content-center">
-                                <div class="col-md-6 form-container">
-                                    <h3 class="text-center mb-4">Chỉnh sửa thông tin tài khoản</h3>
+                    </div>
+                <?php endif; ?>
+                
+                <?php if (!empty($error_message)): ?>
+                    <div class="alert alert-danger" role="alert">
+                        <i class="fas fa-exclamation-circle me-2"></i><?php echo $error_message; ?>
+                    </div>
+                <?php endif; ?>
 
-                                    <?php if (!empty($success_message)): ?>
-                                        <div class="alert alert-success" role="alert">
-                                            <i class="fas fa-check-circle me-2"></i><?php echo $success_message; ?>
-                                        </div>
-                                    <?php endif; ?>
+                <form action="edit_profile.php" method="POST" enctype="multipart/form-data">
+                    <div class="avatar-container">
+                        <img src="<?php echo !empty($user['avatar']) ? '../' . $user['avatar'] : '../images/default_avatar.png'; ?>"
+                            alt="Avatar" class="avatar-preview" id="avatar-preview">
+                        <div>
+                            <label for="avatar" class="custom-file-upload">
+                                <i class="fas fa-camera me-2"></i>Thay đổi ảnh đại diện
+                            </label>
+                            <input type="file" name="avatar" id="avatar" style="display: none;"
+                                onchange="previewImage(this)">
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label><i class="fas fa-user-circle me-2"></i>Họ tên</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-user-circle"></i></span>
+                            <input type="text" class="form-control" name="name"
+                                placeholder="Nhập họ và tên"
+                                value="<?php echo htmlspecialchars($user['name']); ?>" required>
+                        </div>
+                    </div>
 
-                                    <?php if (!empty($error_message)): ?>
-                                        <div class="alert alert-danger" role="alert">
-                                            <i class="fas fa-exclamation-circle me-2"></i><?php echo $error_message; ?>
-                                        </div>
-                                    <?php endif; ?>
+                    <div class="mb-3">
+                        <label><i class="fas fa-user me-2"></i>Tên đăng nhập</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-user"></i></span>
+                            <input type="text" class="form-control"
+                                name="username" placeholder="Nhập tên đăng nhập"
+                                value="<?php echo htmlspecialchars($user['username']); ?>"
+                                required>
+                        </div>
+                    </div>
 
-                                    <form action="edit_profile.php" method="POST" enctype="multipart/form-data">
-                                        <div class="avatar-container">
-                                            <img src="<?php echo !empty($user['avatar']) ? '/' . $user['avatar'] : '/uploads/avatar/default-avatar.jpg'; ?>"
-                                                alt="Avatar" class="avatar-preview" id="avatar-preview">
-                                            <div>
-                                                <label for="avatar" class="custom-file-upload">
-                                                    <i class="fas fa-camera me-2"></i>Thay đổi ảnh đại diện
-                                                </label>
-                                                <input type="file" name="avatar" id="avatar" style="display: none;" onchange="previewImage(this)">
-                                                >>>>>>> d6352d11d3736a08bd206d9a28a728f1fa6dee7c
-                                            </div>
-                                        <?php endif; ?>
+                    <div class="mb-3">
+                        <label><i class="fas fa-envelope me-2"></i>Email</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-envelope"></i></span>
+                            <input type="email" class="form-control"
+                                name="email" placeholder="Nhập địa chỉ email"
+                                value="<?php echo htmlspecialchars($user['email']); ?>"
+                                required>
+                        </div>
+                    </div>
 
-                                        <?php if (!empty($error_message)): ?>
-                                            <div class="alert alert-danger" role="alert">
-                                                <i class="fas fa-exclamation-circle me-2"></i><?php echo $error_message; ?>
-                                            </div>
-                                        <?php endif; ?>
-
-                                        <form action="edit_profile.php" method="POST" enctype="multipart/form-data">
-                                            <div class="avatar-container">
-                                                <img src="<?php echo !empty($user['avatar']) ? '../' . $user['avatar'] : '../images/default_avatar.png'; ?>"
-                                                    alt="Avatar" class="avatar-preview" id="avatar-preview">
-                                                <div>
-                                                    <label for="avatar" class="custom-file-upload">
-                                                        <i class="fas fa-camera me-2"></i>Thay đổi ảnh đại diện
-                                                    </label>
-                                                    <input type="file" name="avatar" id="avatar" style="display: none;" onchange="previewImage(this)">
-                                                </div>
-                                            </div>
-
-                                            <div class="mb-3">
-                                                <label><i class="fas fa-user-circle me-2"></i>Họ tên</label>
-                                                <div class="input-group">
-                                                    <input type="text" class="form-control input-with-icon" name="name"
-                                                        placeholder="Nhập họ và tên" value="<?php echo htmlspecialchars($user['name']); ?>" required>
-                                                </div>
-                                            </div>
-
-                                            <div class="mb-3">
-                                                <label><i class="fas fa-user me-2"></i>Tên đăng nhập</label>
-                                                <div class="input-group">
-                                                    <input type="text" class="form-control input-with-icon" name="username"
-                                                        placeholder="Nhập tên đăng nhập" value="<?php echo htmlspecialchars($user['username']); ?>" required>
-                                                </div>
-                                            </div>
-
-                                            <div class="mb-3">
-                                                <label><i class="fas fa-envelope me-2"></i>Email</label>
-                                                <div class="input-group">
-                                                    <input type="email" class="form-control input-with-icon" name="email"
-                                                        placeholder="Nhập địa chỉ email" value="<?php echo htmlspecialchars($user['email']); ?>" required>
-                                                </div>
-                                            </div>
-
-                                            <div class="mb-4">
-                                                <label><i class="fas fa-phone me-2"></i>Số điện thoại</label>
-                                                <div class="input-group">
-                                                    <input type="text" class="form-control input-with-icon" name="phone"
-                                                        placeholder="Nhập số điện thoại" value="<?php echo htmlspecialchars($user['phone']); ?>" required>
-                                                </div>
-                                            </div>
-
-                                            <div class="d-grid gap-2">
-                                                <button type="submit" class="btn btn-primary btn-update">Cập nhật thông tin</button>
-                                                <a href="..index.php" class="btn btn-outline-secondary">Quay lại trang chủ</a>
-                                            </div>
-                                        </form>
-                                        </div>
-                                </div>
-                            </div>
-
-                            <<<<<<< HEAD
-                                <script src="../assets/main.js">
-                                </script>
-                                =======
-                                <script src="../assets/admin/js/main.js"></script>
-                                >>>>>>> d6352d11d3736a08bd206d9a28a728f1fa6dee7c
-</body>
-
+                    <div class="mb-4">
+                        <label><i class="fas fa-phone me-2"></i>Số điện thoại</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-phone"></i></span>
+                            <input type="text" class="form-control" name="phone"
+                                placeholder="Nhập số điện thoại"
+                                value="<?php echo htmlspecialchars($user['phone']); ?>"
+                                required>
+                        </div>
+                    </div>                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary btn-update">Cập nhật thông tin</button>
+                        <a href="../index.php" class="btn btn-outline-secondary">Quay lại trang chủ</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+                </div>
+            </div>
+            <script>
+                function previewImage(input) {
+                    if (input.files && input.files[0]) {
+                        var reader = new FileReader();
+                        reader.onload = function(e) {
+                            document.getElementById('avatar-preview').src = e.target.result;
+                        }
+                        reader.readAsDataURL(input.files[0]);
+                    }
+                }
+            </script>
+            <script src="../assets/main.js"></script>
+            <script src="../assets/admin/js/main.js"></script>
+        </body>
 </html>
