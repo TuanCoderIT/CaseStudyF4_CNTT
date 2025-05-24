@@ -54,17 +54,17 @@ include_once '../components/admin_header.php';
         box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
         margin-bottom: 20px;
     }
-    
+
     .profile-header {
         padding: 20px;
         border-bottom: 1px solid #eee;
         position: relative;
     }
-    
+
     .profile-body {
         padding: 20px;
     }
-    
+
     .profile-avatar {
         width: 100px;
         height: 100px;
@@ -73,7 +73,7 @@ include_once '../components/admin_header.php';
         border: 3px solid white;
         box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
     }
-    
+
     .change-avatar {
         position: absolute;
         bottom: 0;
@@ -88,48 +88,48 @@ include_once '../components/admin_header.php';
         justify-content: center;
         cursor: pointer;
     }
-    
+
     .info-list {
         list-style: none;
         padding: 0;
         margin: 0;
     }
-    
+
     .info-item {
         padding: 10px 0;
         border-bottom: 1px solid #f1f1f1;
         display: flex;
         align-items: center;
     }
-    
+
     .info-item:last-child {
         border-bottom: none;
     }
-    
+
     .info-label {
         font-weight: bold;
         width: 150px;
         color: #555;
     }
-    
+
     .info-value {
         flex: 1;
     }
-    
+
     .info-icon {
         margin-right: 10px;
         width: 20px;
         text-align: center;
         color: #4e73df;
     }
-    
+
     .stats-row {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
         gap: 15px;
         margin-bottom: 20px;
     }
-    
+
     .stat-card {
         background-color: white;
         border-radius: 8px;
@@ -140,22 +140,22 @@ include_once '../components/admin_header.php';
         display: flex;
         align-items: center;
     }
-    
+
     .stat-info {
         flex: 1;
     }
-    
+
     .stat-title {
         font-size: 0.9rem;
         color: #555;
         margin-bottom: 5px;
     }
-    
+
     .stat-value {
         font-size: 1.5rem;
         font-weight: bold;
     }
-    
+
     .stat-icon {
         width: 50px;
         height: 50px;
@@ -166,37 +166,37 @@ include_once '../components/admin_header.php';
         font-size: 1.5rem;
         margin-right: 15px;
     }
-    
+
     .primary-bg {
         background-color: rgba(78, 115, 223, 0.1);
         color: #4e73df;
     }
-    
+
     .success-bg {
         background-color: rgba(28, 200, 138, 0.1);
         color: #1cc88a;
     }
-    
+
     .warning-bg {
         background-color: rgba(246, 194, 62, 0.1);
         color: #f6c23e;
     }
-    
+
     .danger-bg {
         background-color: rgba(231, 74, 59, 0.1);
         color: #e74a3b;
     }
-    
+
     .custom-file-upload {
         display: none;
     }
-    
+
     .action-buttons {
         display: flex;
         gap: 10px;
         margin-top: 20px;
     }
-    
+
     .chart-container {
         height: 300px;
     }
@@ -243,7 +243,7 @@ include_once '../components/admin_header.php';
                             <div class="info-value"><?php echo htmlspecialchars($admin['phone']); ?></div>
                         </li>
                     </ul>
-                    
+
                     <div class="action-buttons">
                         <a href="../Auth/edit_profile.php" class="btn btn-primary">
                             <i class="fas fa-pencil-alt mr-1"></i> Chỉnh sửa thông tin
@@ -255,7 +255,7 @@ include_once '../components/admin_header.php';
                 </div>
             </div>
         </div>
-        
+
         <!-- Thống kê phòng -->
         <div class="col-md-6 mb-4">
             <div class="profile-card h-100">
@@ -275,7 +275,7 @@ include_once '../components/admin_header.php';
             </div>
         </div>
     </div>
-    
+
     <!-- Thống kê nhanh -->
     <div class="stats-row">
         <div class="stat-card">
@@ -287,7 +287,7 @@ include_once '../components/admin_header.php';
                 <div class="stat-value"><?php echo $approved_rooms; ?></div>
             </div>
         </div>
-        
+
         <div class="stat-card">
             <div class="stat-icon warning-bg">
                 <i class="fas fa-clock"></i>
@@ -297,7 +297,7 @@ include_once '../components/admin_header.php';
                 <div class="stat-value"><?php echo $pending_rooms; ?></div>
             </div>
         </div>
-        
+
         <div class="stat-card">
             <div class="stat-icon danger-bg">
                 <i class="fas fa-times-circle"></i>
@@ -307,7 +307,7 @@ include_once '../components/admin_header.php';
                 <div class="stat-value"><?php echo $cancelled_rooms; ?></div>
             </div>
         </div>
-        
+
         <div class="stat-card">
             <div class="stat-icon success-bg">
                 <i class="fas fa-users"></i>
@@ -318,7 +318,7 @@ include_once '../components/admin_header.php';
             </div>
         </div>
     </div>
-    
+
     <!-- Truy cập nhanh -->
     <div class="row">
         <div class="col-12">

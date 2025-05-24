@@ -28,7 +28,6 @@ if (isset($_GET['delete']) && !empty($_GET['delete'])) {
     mysqli_query($conn, "DELETE FROM motel WHERE id = '$id'");
 
     $_SESSION['success'] = "Đã xóa phòng trọ thành công!";
-    header('Location: manage_rooms.php');
     exit();
 }
 
@@ -184,7 +183,7 @@ include_once('../../components/admin_header.php');
 ?>
 
 <div class="page-header mb-4">
-    <div class="d-flex justify-content-between align-items-center mt-2">
+    <div class="d-flex justify-content-between align-items-center">
         <h2><i class="fas fa-building mr-2"></i> Quản lý phòng trọ</h2>
         <a href="add_room.php" class="btn btn-primary shadow-sm">
             <i class="fas fa-plus-circle mr-2"></i>Thêm phòng trọ mới

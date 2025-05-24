@@ -1,7 +1,8 @@
 <?php
 session_start();
 require_once '../../config/db.php';
-require_once '../../configs/config.php';
+require_once '../../config/config.php';
+require_once '../../utils/haversine.php';
 
 // Kiểm tra đăng nhập admin
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] != 1) {
@@ -15,17 +16,37 @@ if ($room_id <= 0) {
     die("ID phòng không hợp lệ.");
 }
 
-// Lấy thông tin phòng trọ
 $result = mysqli_query($conn, "SELECT * FROM motel WHERE id = $room_id");
 $room = mysqli_fetch_assoc($result);
 if (!$room) {
     die("Không tìm thấy phòng trọ.");
 }
 
+$addressParts = explode(',', $room['address']);
+$address_detail = trim($addressParts[0] ?? '');
+$ward_name = trim($addressParts[1] ?? '');
+$district_name = trim($addressParts[2] ?? '');
+$province_name = trim($addressParts[3] ?? '');
+
+$lat = '';
+$lng = '';
+if (!empty($room['latlng'])) {
+    $latlngParts = explode(',', $room['latlng']);
+    if (count($latlngParts) === 2) {
+        $lat = trim($latlngParts[0]);
+        $lng = trim($latlngParts[1]);
+    }
+}
+
+$utilities_array = [];
+if (!empty($room['utilities'])) {
+    $utilities_array = explode(',', $room['utilities']);
+    $utilities_array = array_map('trim', $utilities_array);
+}
+
 $categories = mysqli_query($conn, "SELECT * FROM categories ORDER BY name");
 $address = $conn->query("SELECT * FROM districts");
 
-// Xử lý cập nhật phòng trọ
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $title = mysqli_real_escape_string($conn, $_POST['title']);
     $description = mysqli_real_escape_string($conn, $_POST['description']);
@@ -46,18 +67,27 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $lng = isset($_POST['lng']) ? mysqli_real_escape_string($conn, $_POST['lng']) : '';
     $latlng = (!empty($lat) && !empty($lng)) ? "$lat,$lng" : '';
 
-    $banner_image = $room['images'];
-    if (isset($_FILES['banner_image']) && $_FILES['banner_image']['error'] == 0) {
-        $upload_dir = PROJECT_ROOT . '/uploads/banner/';
-        if (!is_dir($upload_dir)) mkdir($upload_dir, 0755, true);
-        $file_name = time() . '_' . $_FILES['banner_image']['name'];
-        $target_file = $upload_dir . $file_name;
-        if (move_uploaded_file($_FILES['banner_image']['tmp_name'], $target_file)) {
-            $banner_image = 'uploads/banner/' . $file_name;
+    if (!empty($lat) && !empty($lng)) {
+        $distance = haversine(floatval($lat), floatval($lng), uniLatVinh, unitLngVinh);
+
+        if ($distance > 15) {
+            $error = "Vị trí bạn chọn không nằm trong thành phố Vinh. Vui lòng chọn vị trí trong phạm vi thành phố Vinh!";
         }
     }
 
-    $query = "UPDATE motel SET
+    if (!isset($error)) {
+        $banner_image = $room['images'];
+        if (isset($_FILES['banner_image']) && $_FILES['banner_image']['error'] == 0) {
+            $upload_dir = PROJECT_ROOT . '/uploads/banner/';
+            if (!is_dir($upload_dir)) mkdir($upload_dir, 0755, true);
+            $file_name = time() . '_' . $_FILES['banner_image']['name'];
+            $target_file = $upload_dir . $file_name;
+            if (move_uploaded_file($_FILES['banner_image']['tmp_name'], $target_file)) {
+                $banner_image = 'uploads/banner/' . $file_name;
+            }
+        }
+
+        $query = "UPDATE motel SET
         title = '$title',
         description = '$description',
         price = '$price',
@@ -72,17 +102,61 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         images = '$banner_image'
         WHERE id = $room_id";
 
-    if (mysqli_query($conn, $query)) {
-        $_SESSION['success'] = "Cập nhật phòng trọ thành công!";
-        header('Location: manage_rooms.php');
-        exit();
-    } else {
-        $error = "Lỗi khi cập nhật: " . mysqli_error($conn);
+        if (mysqli_query($conn, $query)) {
+            if (isset($_FILES['additional_images'])) {
+                $upload_dir = PROJECT_ROOT . '/uploads/rooms/';
+
+                if (!is_dir($upload_dir)) {
+                    mkdir($upload_dir, 0755, true);
+                }
+
+                $file_count = count($_FILES['additional_images']['name']);
+
+                for ($i = 0; $i < $file_count; $i++) {
+                    if ($_FILES['additional_images']['error'][$i] == 0) {
+                        $file_name = time() . '_' . $i . '_' . $_FILES['additional_images']['name'][$i];
+                        $target_file = $upload_dir . $file_name;
+
+                        if (move_uploaded_file($_FILES['additional_images']['tmp_name'][$i], $target_file)) {
+                            $image_path = 'uploads/rooms/' . $file_name;
+
+                            $insert_image = "INSERT INTO motel_images (motel_id, image_path, display_order) 
+                                        VALUES ($room_id, '$image_path', $i)";
+                            mysqli_query($conn, $insert_image);
+                        }
+                    }
+                }
+            }
+
+            if (isset($_POST['delete_images']) && is_array($_POST['delete_images'])) {
+                foreach ($_POST['delete_images'] as $image_id) {
+                    $img_query = "SELECT image_path FROM motel_images WHERE id = " . (int)$image_id . " AND motel_id = $room_id";
+                    $img_result = mysqli_query($conn, $img_query);
+
+                    if ($img_result && mysqli_num_rows($img_result) > 0) {
+                        $img_data = mysqli_fetch_assoc($img_result);
+                        $img_path = PROJECT_ROOT . '/' . $img_data['image_path'];
+
+                        if (file_exists($img_path)) {
+                            unlink($img_path);
+                        }
+
+                        mysqli_query($conn, "DELETE FROM motel_images WHERE id = " . (int)$image_id . " AND motel_id = $room_id");
+                    }
+                }
+            }
+
+            $_SESSION['success'] = "Cập nhật phòng trọ thành công!";
+            header('Location: manage_rooms.php');
+            exit();
+        } else {
+            $error = "Lỗi khi cập nhật: " . mysqli_error($conn);
+        }
     }
 }
 
 $page_title = "Sửa phòng trọ";
-include_once '../../components/admin_header.php';
+include_once '../../Components/admin_header.php';
 ?>
 
 
@@ -93,10 +167,20 @@ include_once '../../components/admin_header.php';
 <!-- Leaflet CSS and JS -->
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<!-- Vinh Location Utils -->
+<script src="/assets/admin/js/vinh_location_utils.js"></script>
+<!-- Vinh Location Validator -->
+<script src="/assets/admin/js/vinh_location_validator.js"></script>
+<!-- Vinh Location Integration -->
+<script src="/assets/admin/js/vinh_location_integration.js"></script>
+<!-- Edit Room Form Validation -->
+<script src="/assets/admin/js/edit_room_validation.js"></script>
+<!-- Location Validation JS -->
+<script src="/assets/admin/js/location-validation.js"></script>
 
 <div class="page-header mb-4">
     <div class="d-flex justify-content-between align-items-center">
-        <h2><i class="fas fa-plus-circle mr-2"></i> Thêm phòng trọ mới</h2>
+        <h2><i class="fas fa-edit mr-2"></i> Sửa phòng trọ</h2>
         <a href="manage_rooms.php" class="btn btn-outline-secondary">
             <i class="fas fa-arrow-left mr-1"></i> Quay lại danh sách
         </a>
@@ -279,9 +363,11 @@ include_once '../../components/admin_header.php';
                         <select class="form-control" id="category_id" name="category_id" required>
                             <option value="">-- Chọn danh mục --</option>
                             <?php
-                            // mysqli_data_seek($categories, offset: 0); // Reset pointer to beginning
-                            while ($cat = mysqli_fetch_assoc($categories)): ?>
-                                <option value="<?php echo $cat['id']; ?>"><?php echo $cat['name']; ?></option>
+                            mysqli_data_seek($categories, 0);
+                            while ($cat = mysqli_fetch_assoc($categories)):
+                                $selected = ($cat['id'] == $room['category_id']) ? 'selected' : '';
+                            ?>
+                                <option value="<?php echo $cat['id']; ?>" <?php echo $selected; ?>><?php echo $cat['name']; ?></option>
                             <?php endwhile; ?>
                         </select>
                     </div>
@@ -298,20 +384,31 @@ include_once '../../components/admin_header.php';
                             <select class="form-control" id="ward" name="ward_name" required>
                                 <option value="">-- Chọn Phường/Xã --</option>
                                 <?php
-                                mysqli_data_seek($address, 0); // Reset pointer to beginning
-                                while ($cat = mysqli_fetch_assoc($address)): ?>
-                                    <option value="<?php echo $cat['name']; ?>" data-id="<?php echo $cat['id']; ?>">
+                                mysqli_data_seek($address, 0);
+                                $found_selected_ward = false;
+                                while ($cat = mysqli_fetch_assoc($address)):
+                                    $ward_matches = (
+                                        $cat['name'] == $ward_name ||
+                                        stripos($cat['name'], $ward_name) !== false ||
+                                        stripos($ward_name, $cat['name']) !== false
+                                    );
+                                    $selected = $ward_matches ? 'selected' : '';
+                                    if ($ward_matches) {
+                                        $found_selected_ward = true;
+                                    }
+                                ?>
+                                    <option value="<?php echo $cat['name']; ?>" data-id="<?php echo $cat['id']; ?>" <?php echo $selected; ?>>
                                         <?php echo $cat['name']; ?>
                                     </option>
                                 <?php endwhile; ?>
                             </select>
-                            <input type="hidden" name="district_id" id="district_id">
+                            <input type="hidden" name="district_id" id="district_id" value="<?php echo $room['district_id']; ?>">
                         </div>
                     </div>
                     <div class="col-md-6">
                         <div class="form-group">
                             <label for="address_detail"><i class="fas fa-home text-primary mr-1"></i> Địa chỉ chi tiết</label>
-                            <input type="text" class="form-control" id="address_detail" name="address_detail" placeholder="Ví dụ: Số 123 Đường XYZ" required>
+                            <input type="text" class="form-control" id="address_detail" name="address_detail" value="<?php echo htmlspecialchars($address_detail); ?>" placeholder="Ví dụ: Số 123 Đường XYZ" required>
                         </div>
                     </div>
                 </div>
@@ -338,8 +435,8 @@ include_once '../../components/admin_header.php';
                         </div>
                     </div>
                     <small class="form-text text-muted">Kéo thả điểm trên bản đồ để điều chỉnh vị trí chính xác.</small>
-                    <input type="hidden" id="lat" name="lat">
-                    <input type="hidden" id="lng" name="lng">
+                    <input type="hidden" id="lat" name="lat" value="<?php echo htmlspecialchars($lat); ?>">
+                    <input type="hidden" id="lng" name="lng" value="<?php echo htmlspecialchars($lng); ?>">
                     <div class="position-relative">
                         <div id="map" style="width: 100%; margin-top: 10px;">
                             <div class="map-loading" id="map-loading">
@@ -367,7 +464,7 @@ include_once '../../components/admin_header.php';
                         <div class="input-group-prepend">
                             <span class="input-group-text"><i class="fas fa-phone"></i></span>
                         </div>
-                        <input type="text" class="form-control" id="phone" name="phone" placeholder="Số điện thoại liên hệ" required>
+                        <input type="text" class="form-control" id="phone" name="phone" value="<?php echo htmlspecialchars($room['phone']); ?>" placeholder="Số điện thoại liên hệ" required>
                     </div>
                 </div>
 
@@ -376,49 +473,49 @@ include_once '../../components/admin_header.php';
                     <div class="row">
                         <div class="col-md-3 mb-2">
                             <div class="custom-control custom-checkbox">
-                                <input type="checkbox" class="custom-control-input" id="utility_wifi" name="utility_items[]" value="Wifi">
+                                <input type="checkbox" class="custom-control-input" id="utility_wifi" name="utility_items[]" value="Wifi" <?php echo in_array('Wifi', $utilities_array) ? 'checked' : ''; ?>>
                                 <label class="custom-control-label" for="utility_wifi"><i class="fas fa-wifi mr-1"></i> Wifi</label>
                             </div>
                         </div>
                         <div class="col-md-3 mb-2">
                             <div class="custom-control custom-checkbox">
-                                <input type="checkbox" class="custom-control-input" id="utility_ac" name="utility_items[]" value="Điều hòa">
+                                <input type="checkbox" class="custom-control-input" id="utility_ac" name="utility_items[]" value="Điều hòa" <?php echo in_array('Điều hòa', $utilities_array) ? 'checked' : ''; ?>>
                                 <label class="custom-control-label" for="utility_ac"><i class="fas fa-snowflake mr-1"></i> Điều hòa</label>
                             </div>
                         </div>
                         <div class="col-md-3 mb-2">
                             <div class="custom-control custom-checkbox">
-                                <input type="checkbox" class="custom-control-input" id="utility_water_heater" name="utility_items[]" value="Nóng lạnh">
+                                <input type="checkbox" class="custom-control-input" id="utility_water_heater" name="utility_items[]" value="Nóng lạnh" <?php echo in_array('Nóng lạnh', $utilities_array) ? 'checked' : ''; ?>>
                                 <label class="custom-control-label" for="utility_water_heater"><i class="fas fa-hot-tub mr-1"></i> Nóng lạnh</label>
                             </div>
                         </div>
                         <div class="col-md-3 mb-2">
                             <div class="custom-control custom-checkbox">
-                                <input type="checkbox" class="custom-control-input" id="utility_parking" name="utility_items[]" value="Gửi xe">
+                                <input type="checkbox" class="custom-control-input" id="utility_parking" name="utility_items[]" value="Gửi xe" <?php echo in_array('Gửi xe', $utilities_array) ? 'checked' : ''; ?>>
                                 <label class="custom-control-label" for="utility_parking"><i class="fas fa-motorcycle mr-1"></i> Gửi xe</label>
                             </div>
                         </div>
                         <div class="col-md-3 mb-2">
                             <div class="custom-control custom-checkbox">
-                                <input type="checkbox" class="custom-control-input" id="utility_security" name="utility_items[]" value="Bảo vệ">
+                                <input type="checkbox" class="custom-control-input" id="utility_security" name="utility_items[]" value="Bảo vệ" <?php echo in_array('Bảo vệ', $utilities_array) ? 'checked' : ''; ?>>
                                 <label class="custom-control-label" for="utility_security"><i class="fas fa-shield-alt mr-1"></i> Bảo vệ</label>
                             </div>
                         </div>
                         <div class="col-md-3 mb-2">
                             <div class="custom-control custom-checkbox">
-                                <input type="checkbox" class="custom-control-input" id="utility_wc" name="utility_items[]" value="WC riêng">
+                                <input type="checkbox" class="custom-control-input" id="utility_wc" name="utility_items[]" value="WC riêng" <?php echo in_array('WC riêng', $utilities_array) ? 'checked' : ''; ?>>
                                 <label class="custom-control-label" for="utility_wc"><i class="fas fa-toilet mr-1"></i> WC riêng</label>
                             </div>
                         </div>
                         <div class="col-md-3 mb-2">
                             <div class="custom-control custom-checkbox">
-                                <input type="checkbox" class="custom-control-input" id="utility_kitchen" name="utility_items[]" value="Bếp">
+                                <input type="checkbox" class="custom-control-input" id="utility_kitchen" name="utility_items[]" value="Bếp" <?php echo in_array('Bếp', $utilities_array) ? 'checked' : ''; ?>>
                                 <label class="custom-control-label" for="utility_kitchen"><i class="fas fa-utensils mr-1"></i> Bếp</label>
                             </div>
                         </div>
                         <div class="col-md-3 mb-2">
                             <div class="custom-control custom-checkbox">
-                                <input type="checkbox" class="custom-control-input" id="utility_fridge" name="utility_items[]" value="Tủ lạnh">
+                                <input type="checkbox" class="custom-control-input" id="utility_fridge" name="utility_items[]" value="Tủ lạnh" <?php echo in_array('Tủ lạnh', $utilities_array) ? 'checked' : ''; ?>>
                                 <label class="custom-control-label" for="utility_fridge"><i class="fas fa-temperature-low mr-1"></i> Tủ lạnh</label>
                             </div>
                         </div>
@@ -430,16 +527,61 @@ include_once '../../components/admin_header.php';
             <!-- HÌNH ẢNH -->
             <div class="form-section">
                 <h5 class="section-title"><i class="fas fa-images mr-2"></i>Hình ảnh</h5>
-                <div class="form-group">
-                    <label for="banner_image"><i class="fas fa-image text-primary mr-1"></i> Ảnh banner</label>
-                    <div class="custom-file">
-                        <input type="file" class="custom-file-input" id="banner_image" name="banner_image" accept="image/*">
-                        <label class="custom-file-label" for="banner_image">Chọn ảnh banner...</label>
+
+                <!-- Hiển thị ảnh banner hiện tại -->
+                <?php if (!empty($room['images'])): ?>
+                    <div class="form-group">
+                        <label><i class="fas fa-image text-primary mr-1"></i> Ảnh banner hiện tại</label>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="card mb-3">
+                                    <img src="/<?php echo htmlspecialchars($room['images']); ?>" class="card-img-top" alt="Ảnh banner">
+                                    <div class="card-body">
+                                        <p class="card-text text-muted">Ảnh banner hiện tại</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                </div>
+                <?php endif; ?>
 
                 <div class="form-group">
-                    <label for="additional_images"><i class="fas fa-images text-primary mr-1"></i> Hình ảnh bổ sung</label>
+                    <label for="banner_image"><i class="fas fa-image text-primary mr-1"></i> Thay đổi ảnh banner</label>
+                    <div class="custom-file">
+                        <input type="file" class="custom-file-input" id="banner_image" name="banner_image" accept="image/*">
+                        <label class="custom-file-label" for="banner_image">Chọn ảnh banner mới...</label>
+                    </div>
+                    <small class="form-text text-muted">Để trống nếu không muốn thay đổi ảnh banner.</small>
+                </div>
+
+                <!-- Hiển thị các ảnh bổ sung hiện tại -->
+                <?php
+                $images_query = "SELECT * FROM motel_images WHERE motel_id = $room_id ORDER BY display_order";
+                $images_result = mysqli_query($conn, $images_query);
+                if ($images_result && mysqli_num_rows($images_result) > 0):
+                ?>
+                    <div class="form-group">
+                        <label><i class="fas fa-images text-primary mr-1"></i> Ảnh bổ sung hiện tại</label>
+                        <div class="row">
+                            <?php while ($image = mysqli_fetch_assoc($images_result)): ?>
+                                <div class="col-md-3 mb-3">
+                                    <div class="card">
+                                        <img src="/<?php echo htmlspecialchars($image['image_path']); ?>" class="card-img-top" alt="Ảnh phòng">
+                                        <div class="card-body p-2">
+                                            <div class="custom-control custom-checkbox">
+                                                <input type="checkbox" class="custom-control-input" id="delete_image_<?php echo $image['id']; ?>" name="delete_images[]" value="<?php echo $image['id']; ?>">
+                                                <label class="custom-control-label" for="delete_image_<?php echo $image['id']; ?>">Xóa ảnh này</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            <?php endwhile; ?>
+                        </div>
+                    </div>
+                <?php endif; ?>
+
+                <div class="form-group">
+                    <label for="additional_images"><i class="fas fa-images text-primary mr-1"></i> Thêm hình ảnh bổ sung</label>
                     <div class="custom-file">
                         <input type="file" class="custom-file-input" id="additional_images" name="additional_images[]" multiple accept="image/*">
                         <label class="custom-file-label" for="additional_images">Chọn nhiều hình ảnh...</label>
@@ -453,7 +595,7 @@ include_once '../../components/admin_header.php';
 
             <div class="form-group text-center mt-4">
                 <button type="submit" class="btn btn-primary btn-lg px-5">
-                    <i class="fas fa-plus-circle mr-2"></i>Thêm phòng trọ
+                    <i class="fas fa-save mr-2"></i>Cập nhật phòng trọ
                 </button>
                 <a href="manage_rooms.php" class="btn btn-secondary btn-lg px-5 ml-2">
                     <i class="fas fa-times-circle mr-2"></i>Hủy
@@ -465,7 +607,6 @@ include_once '../../components/admin_header.php';
 
 <script>
     $(document).ready(function() {
-        // Khởi tạo Quill editor
         var quill = new Quill('#editor-container', {
             theme: 'snow',
             placeholder: 'Mô tả chi tiết về phòng trọ...',
@@ -488,18 +629,44 @@ include_once '../../components/admin_header.php';
             }
         });
 
-        // Cập nhật nội dung vào textarea khi submit form
-        $('#roomForm').on('submit', function() {
-            $('#description').val(quill.root.innerHTML);
+        quill.root.innerHTML = <?php echo json_encode($room['description']); ?>;
+
+        $('#roomForm').submit(function(event) {
+            var description = quill.root.innerHTML;
+            $('#description').val(description);
+
+            var lat = $('#lat').val();
+            var lng = $('#lng').val();
+
+            if (lat && lng) {
+                if (!isLocationInVinh(parseFloat(lat), parseFloat(lng))) {
+                    event.preventDefault();
+
+                    $('#location_error').html(
+                        '<div class="alert alert-danger alert-dismissible fade show" role="alert">' +
+                        '<i class="fas fa-exclamation-triangle mr-1"></i>' +
+                        '<strong>Lỗi!</strong> Vị trí bạn chọn không nằm trong thành phố Vinh. ' +
+                        'Vui lòng chọn một vị trí trong phạm vi thành phố Vinh để tiếp tục.' +
+                        '<button type="button" class="close" data-dismiss="alert" aria-label="Close">' +
+                        '<span aria-hidden="true">&times;</span>' +
+                        '</button>' +
+                        '</div>'
+                    ).show();
+
+                    $('html, body').animate({
+                        scrollTop: $('#map-container').offset().top - 100
+                    }, 500);
+
+                    return false;
+                }
+            }
         });
 
-        // Cập nhật district_id khi chọn ward
         $('#ward').change(function() {
             var selectedOption = $(this).find('option:selected');
             $('#district_id').val(selectedOption.data('id'));
         });
 
-        // Cập nhật utilities khi chọn tiện ích
         $('input[name="utility_items[]"]').change(function() {
             var selected = [];
             $('input[name="utility_items[]"]:checked').each(function() {
@@ -508,7 +675,6 @@ include_once '../../components/admin_header.php';
             $('#utilities').val(selected.join(', '));
         });
 
-        // Hàm debounce để giới hạn số lần gọi API
         function debounce(func, wait) {
             let timeout;
             return function executedFunction(...args) {
@@ -525,6 +691,36 @@ include_once '../../components/admin_header.php';
         let map = null;
         let marker = null;
         let pendingCoordinates = null;
+
+        // Hàm xử lý địa chỉ chi tiết
+        function processAddress(response) {
+            if (!response || !response.raw || !response.raw.address) return '';
+
+            var address = response.raw.address;
+            var addressDetail = '';
+
+            if (address.street) {
+                if (address.houseNumber) {
+                    addressDetail = address.houseNumber + ' ' + address.street;
+                } else {
+                    addressDetail = address.street;
+                }
+            } else if (address.streetName) {
+                if (address.houseNumber) {
+                    addressDetail = address.houseNumber + ' ' + address.streetName;
+                } else {
+                    addressDetail = address.streetName;
+                }
+            } else if (address.label) {
+                // Nếu không có thông tin đường phố, trích xuất từ nhãn
+                var labelParts = address.label.split(',');
+                if (labelParts.length > 0) {
+                    addressDetail = labelParts[0].trim();
+                }
+            }
+
+            return addressDetail;
+        }
 
         // Hàm lấy tọa độ từ địa chỉ
         function getCoordinates(showLoading = true) {
@@ -588,7 +784,7 @@ include_once '../../components/admin_header.php';
                                 initMap(18.679585, 105.681335);
                             }
 
-                            console.log("API response error:", response);
+
                         }
                     },
                     error: function(xhr, status, error) {
@@ -601,7 +797,7 @@ include_once '../../components/admin_header.php';
                             initMap(18.679585, 105.681335);
                         }
 
-                        console.log("AJAX Error:", status, error, xhr.responseText);
+
                     }
                 });
             } else {
@@ -650,8 +846,8 @@ include_once '../../components/admin_header.php';
                     success: function(response) {
                         if (response.success) {
                             // Tính khoảng cách đến trung tâm Vinh
-                            var vinhLat = 18.6667;
-                            var vinhLng = 105.6667;
+                            var vinhLat = 18.65782;
+                            var vinhLng = 105.69636;
                             var R = 6371; // Bán kính Trái Đất (km)
                             var dLat = (lat - vinhLat) * Math.PI / 180;
                             var dLon = (lng - vinhLng) * Math.PI / 180;
@@ -677,27 +873,21 @@ include_once '../../components/admin_header.php';
                                 $('#location_error').empty().hide();
 
                                 // Tự động điền thông tin địa chỉ
-                                var address = response.raw.address;
-
-                                // Địa chỉ chi tiết (thường là đường + số nhà)
-                                var addressDetail = '';
-                                if (address.street) {
-                                    addressDetail = address.street;
-                                    if (address.houseNumber) {
-                                        addressDetail += ' ' + address.houseNumber;
-                                    }
+                                var addressDetail = processAddress(response);
+                                if (addressDetail) {
+                                    $('#address_detail').val(addressDetail);
                                 }
-                                $('#address_detail').val(addressDetail);
 
                                 // Tìm và chọn phường từ dropdown
                                 var wardSelect = $('#ward');
-                                var wardName = address.district || '';
+                                var wardName = response.raw.address.district || '';
 
                                 if (wardName) {
                                     // Tìm option gần đúng với tên phường
                                     var found = false;
                                     $("#ward option").each(function() {
-                                        if ($(this).text().indexOf(wardName) !== -1 || wardName.indexOf($(this).text()) !== -1) {
+                                        if ($(this).text().toLowerCase().indexOf(wardName.toLowerCase()) !== -1 ||
+                                            wardName.toLowerCase().indexOf($(this).text().toLowerCase()) !== -1) {
                                             wardSelect.val($(this).val()).trigger('change');
                                             found = true;
                                             return false; // break the loop
@@ -713,6 +903,9 @@ include_once '../../components/admin_header.php';
                                 }
                             }
                         }
+                    },
+                    error: function(xhr, status, error) {
+
                     }
                 });
             });
@@ -720,12 +913,14 @@ include_once '../../components/admin_header.php';
             return marker;
         }
 
-        // Initialize map with coordinates
         function initMap(lat, lng, zoom = 16) {
-            // Hide loading indicator
             $('#map-loading').hide();
 
-            // If map already exists, just update center
+            if (isNaN(lat) || isNaN(lng) || !lat || !lng) {
+                lat = 18.679585;
+                lng = 105.681335;
+            }
+
             if (map) {
                 map.setView([lat, lng], zoom);
                 if (marker) {
@@ -736,10 +931,8 @@ include_once '../../components/admin_header.php';
                 return;
             }
 
-            // Create the map
             map = L.map('map').setView([lat, lng], zoom);
 
-            // Add OpenStreetMap tile layer
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 maxZoom: 19,
                 attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -775,8 +968,8 @@ include_once '../../components/admin_header.php';
                     success: function(response) {
                         if (response.success) {
                             // Kiểm tra xem có nằm trong Vinh không
-                            var vinhLat = 18.6667;
-                            var vinhLng = 105.6667;
+                            var vinhLat = 18.65782;
+                            var vinhLng = 105.69636;
                             var R = 6371; // Bán kính Trái Đất (km)
                             var dLat = (lat - vinhLat) * Math.PI / 180;
                             var dLon = (lng - vinhLng) * Math.PI / 180;
@@ -801,28 +994,22 @@ include_once '../../components/admin_header.php';
                             } else {
                                 $('#location_error').empty().hide();
 
-                                // Tự động điền thông tin địa chỉ
-                                var address = response.raw.address;
-
-                                // Địa chỉ chi tiết (thường là đường + số nhà)
-                                var addressDetail = '';
-                                if (address.street) {
-                                    addressDetail = address.street;
-                                    if (address.houseNumber) {
-                                        addressDetail += ' ' + address.houseNumber;
-                                    }
+                                // Tự động điền thông tin địa chỉ từ kết quả reverse geocoding
+                                var addressDetail = processAddress(response);
+                                if (addressDetail) {
+                                    $('#address_detail').val(addressDetail);
                                 }
-                                $('#address_detail').val(addressDetail);
 
                                 // Tìm và chọn phường từ dropdown
                                 var wardSelect = $('#ward');
-                                var wardName = address.district || '';
+                                var wardName = response.raw.address.district || '';
 
                                 if (wardName) {
                                     // Tìm option gần đúng với tên phường
                                     var found = false;
                                     $("#ward option").each(function() {
-                                        if ($(this).text().indexOf(wardName) !== -1 || wardName.indexOf($(this).text()) !== -1) {
+                                        if ($(this).text().toLowerCase().indexOf(wardName.toLowerCase()) !== -1 ||
+                                            wardName.toLowerCase().indexOf($(this).text().toLowerCase()) !== -1) {
                                             wardSelect.val($(this).val()).trigger('change');
                                             found = true;
                                             return false; // break the loop
@@ -838,6 +1025,9 @@ include_once '../../components/admin_header.php';
                                 }
                             }
                         }
+                    },
+                    error: function(xhr, status, error) {
+
                     }
                 });
             });
@@ -846,50 +1036,81 @@ include_once '../../components/admin_header.php';
             var mapInstructions = L.control({
                 position: 'topleft'
             });
+
             mapInstructions.onAdd = function(map) {
                 var div = L.DomUtil.create('div', 'map-instruction');
                 div.innerHTML = '<i class="fas fa-info-circle mr-1"></i> Click vào bản đồ để chọn vị trí hoặc kéo marker để điều chỉnh';
                 return div;
             };
+
             mapInstructions.addTo(map);
 
-            // Make sure all map components are visible
             setTimeout(function() {
                 map.invalidateSize();
             }, 100);
         }
 
-        // Tạo phiên bản debounced của hàm getCoordinates
         const debouncedGetCoordinates = debounce(getCoordinates, 1000);
 
-        // Gọi hàm lấy tọa độ khi thay đổi phường hoặc địa chỉ
         $('#ward, #address_detail').on('change keyup blur', function() {
             debouncedGetCoordinates();
         });
 
-        // Thêm sự kiện cho nút làm mới tọa độ
         $('#refresh_coordinates').on('click', function() {
             getCoordinates(true);
         });
 
         // Initialize Leaflet map on page load
         $(document).ready(function() {
-            // Default coordinates for Vinh City
-            const defaultLat = 18.679585;
-            const defaultLng = 105.681335;
+            // Get existing coordinates from database (latlng field)
+            var roomLat = $('#lat').val() ? parseFloat($('#lat').val()) : null;
+            var roomLng = $('#lng').val() ? parseFloat($('#lng').val()) : null;
+
+            // Check if we have valid coordinates from database
+            var hasValidCoordinates = roomLat && roomLng && !isNaN(roomLat) && !isNaN(roomLng);
+
+            if (hasValidCoordinates) {
+                // Check if coordinates are within Vinh city
+                if (!isLocationInVinh(roomLat, roomLng)) {
+                    $('#location_error').html(`
+                        <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                            <i class="fas fa-exclamation-triangle mr-1"></i>
+                            <strong>Cảnh báo!</strong> Vị trí hiện tại của phòng trọ không nằm trong thành phố Vinh. 
+                            Vui lòng cập nhật lại vị trí trong phạm vi thành phố Vinh để có thể lưu thay đổi.
+                            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                    `).show();
+
+                    // Use default Vinh coordinates for map display
+                    roomLat = 18.679585;
+                    roomLng = 105.681335;
+                    hasValidCoordinates = false;
+                }
+            } else {
+                // Use default Vinh coordinates if no valid coordinates
+                roomLat = 18.679585;
+                roomLng = 105.681335;
+            }
 
             try {
-                // Initialize map with default coordinates
-                initMap(defaultLat, defaultLng, 13);
+                initMap(roomLat, roomLng, 15);
+
+                // Display coordinates if we have valid ones from database
+                if (hasValidCoordinates) {
+                    var originalLat = parseFloat($('#lat').val());
+                    var originalLng = parseFloat($('#lng').val());
+                    $('#coordinates_display').val('Vĩ độ: ' + originalLat + ', Kinh độ: ' + originalLng);
+                } else {
+                    $('#coordinates_display').val('Chưa có tọa độ. Vui lòng chọn vị trí trên bản đồ hoặc nhập địa chỉ');
+                }
             } catch (error) {
-                console.error("Lỗi khởi tạo bản đồ:", error);
                 $('#coordinates_display').val('Lỗi khi tải bản đồ. Vui lòng làm mới trang.');
                 $('#map-loading').html('<div class="map-error"><i class="fas fa-exclamation-triangle mb-2"></i><br>Không thể tải bản đồ.<br><button class="btn btn-sm btn-primary mt-2" onclick="location.reload()">Tải lại trang</button></div>');
             }
         });
-        // No need for another document ready since we already have one above
 
-        // Hiển thị tên file khi chọn
         $('.custom-file-input').on('change', function() {
             var fileName = '';
             if (this.files && this.files.length > 1) {
@@ -971,14 +1192,40 @@ include_once '../../components/admin_header.php';
         // Cập nhật utilities khi chọn/bỏ chọn
         $('input[name="utility_items[]"]').change(function() {
             updateUtilities();
-        });
-
-        // Form validation trước khi submit
+        }); // Form validation trước khi submit
         $('#roomForm').on('submit', function(e) {
             // Kiểm tra có nhập tọa độ không
             if ($('#lat').val() === '' || $('#lng').val() === '') {
                 if (!confirm('Bạn chưa định vị tọa độ cho phòng trọ. Bạn có muốn tiếp tục không?')) {
                     e.preventDefault();
+                    return false;
+                }
+            }
+
+            // Kiểm tra vị trí có nằm trong Vinh không
+            var lat = parseFloat($('#lat').val());
+            var lng = parseFloat($('#lng').val());
+
+            // Nếu có tọa độ và không nằm trong khu vực Vinh
+            if (!isNaN(lat) && !isNaN(lng)) {
+                if (!isLocationInVinh(lat, lng)) {
+                    alert('Vị trí bạn đã chọn không nằm trong thành phố Vinh. Vui lòng chọn lại vị trí trong phạm vi thành phố Vinh!');
+                    e.preventDefault();
+
+                    // Hiển thị thông báo lỗi
+                    $('#location_error').html('<div class="alert alert-danger alert-dismissible fade show" role="alert">' +
+                        '<i class="fas fa-exclamation-triangle mr-1"></i>' +
+                        '<strong>Lỗi!</strong> Vị trí không nằm trong thành phố Vinh. Vui lòng chọn lại vị trí trong thành phố Vinh.' +
+                        '<button type="button" class="close" data-dismiss="alert" aria-label="Close">' +
+                        '<span aria-hidden="true">&times;</span>' +
+                        '</button>' +
+                        '</div>').show();
+
+                    // Focus vào bản đồ
+                    $('html, body').animate({
+                        scrollTop: $("#map").offset().top - 100
+                    }, 500);
+
                     return false;
                 }
             }
@@ -1034,16 +1281,21 @@ include_once '../../components/admin_header.php';
 
                             // Tự động điền thông tin địa chỉ
                             if (response.address) {
-                                $('#address_detail').val(response.address.address_detail);
+                                // Sử dụng định dạng địa chỉ hợp lý
+                                var addressDetail = response.address.address_detail || '';
+                                if (addressDetail) {
+                                    $('#address_detail').val(addressDetail);
+                                }
 
                                 // Tìm và chọn phường từ dropdown
                                 var wardSelect = $('#ward');
                                 var wardName = response.address.ward_name;
                                 if (wardName) {
-                                    // Tìm option gần đúng với tên phường
+                                    // Tìm option gần đúng với tên phường (cải thiện phương thức)
                                     var found = false;
                                     $("#ward option").each(function() {
-                                        if ($(this).text().indexOf(wardName) !== -1 || wardName.indexOf($(this).text()) !== -1) {
+                                        if ($(this).text().toLowerCase().indexOf(wardName.toLowerCase()) !== -1 ||
+                                            wardName.toLowerCase().indexOf($(this).text().toLowerCase()) !== -1) {
                                             wardSelect.val($(this).val()).trigger('change');
                                             found = true;
                                             return false; // break the loop
@@ -1097,12 +1349,26 @@ include_once '../../components/admin_header.php';
             });
         });
 
-        // Lấy vị trí từ trình duyệt
+        // Xử lý nút lấy vị trí từ trình duyệt
         $('#get_browser_location').on('click', function() {
-            if (navigator.geolocation) {
-                $(this).prop('disabled', true).html('<span class="spinner-border spinner-border-sm mr-1" role="status" aria-hidden="true"></span> Đang tìm vị trí...');
+            // Kiểm tra xem trình duyệt có hỗ trợ geolocation không
+            if (!navigator.geolocation) {
+                $('#location_error').html(`
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <i class="fas fa-exclamation-circle mr-1"></i>
+                        Trình duyệt của bạn không hỗ trợ tính năng lấy vị trí. Vui lòng sử dụng trình duyệt khác.
+                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                `).show();
+                return;
+            }
 
-                navigator.geolocation.getCurrentPosition(function(position) {
+            $(this).prop('disabled', true).html('<span class="spinner-border spinner-border-sm mr-1" role="status" aria-hidden="true"></span> Đang tìm vị trí...');
+
+            navigator.geolocation.getCurrentPosition(
+                function(position) {
                     $('#get_browser_location').prop('disabled', false).html('<i class="fas fa-crosshairs mr-1"></i> Lấy vị trí từ trình duyệt');
                     var lat = position.coords.latitude;
                     var lng = position.coords.longitude;
@@ -1132,11 +1398,8 @@ include_once '../../components/admin_header.php';
                         success: function(response) {
                             if (response.success) {
                                 // Kiểm tra xem có nằm trong Vinh không
-                                // Tọa độ trung tâm thành phố Vinh
-                                var vinhLat = 18.6667;
-                                var vinhLng = 105.6667;
-
-                                // Tính khoảng cách đến trung tâm Vinh (km)
+                                var vinhLat = 18.65782;
+                                var vinhLng = 105.69636;
                                 var R = 6371; // Bán kính Trái Đất (km)
                                 var dLat = (lat - vinhLat) * Math.PI / 180;
                                 var dLon = (lng - vinhLng) * Math.PI / 180;
@@ -1146,7 +1409,7 @@ include_once '../../components/admin_header.php';
                                 var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
                                 var distance = R * c;
 
-                                var isInVinh = distance <= 15; // Kiểm tra khoảng cách <= 15km
+                                var isInVinh = distance <= 15;
 
                                 if (!isInVinh) {
                                     $('#location_error').html(`
@@ -1162,42 +1425,31 @@ include_once '../../components/admin_header.php';
                                     $('#location_error').empty().hide();
 
                                     // Tự động điền thông tin địa chỉ từ kết quả reverse geocoding
-                                    var address = response.raw.address;
-
-                                    // Địa chỉ chi tiết (thường là đường + số nhà)
-                                    var addressDetail = '';
-                                    if (address.street) {
-                                        addressDetail = address.street;
-                                        if (address.houseNumber) {
-                                            addressDetail += ' ' + address.houseNumber;
-                                        }
+                                    var addressDetail = processAddress(response);
+                                    if (addressDetail) {
+                                        $('#address_detail').val(addressDetail);
                                     }
-                                    $('#address_detail').val(addressDetail);
 
                                     // Tìm và chọn phường từ dropdown
                                     var wardSelect = $('#ward');
-                                    var wardName = address.district || '';
+                                    var wardName = response.raw.address.district || '';
 
                                     if (wardName) {
-                                        // Tìm option gần đúng với tên phường
                                         var found = false;
                                         $("#ward option").each(function() {
-                                            if ($(this).text().indexOf(wardName) !== -1 || wardName.indexOf($(this).text()) !== -1) {
+                                            if ($(this).text().toLowerCase().indexOf(wardName.toLowerCase()) !== -1 ||
+                                                wardName.toLowerCase().indexOf($(this).text().toLowerCase()) !== -1) {
                                                 wardSelect.val($(this).val()).trigger('change');
                                                 found = true;
-                                                return false; // break the loop
+                                                return false;
                                             }
                                         });
 
-                                        if (!found) {
-                                            // Nếu không tìm thấy, chọn option đầu tiên
-                                            if ($("#ward option").length > 1) { // Không phải option placeholder
-                                                wardSelect.val($("#ward option:eq(1)").val()).trigger('change');
-                                            }
+                                        if (!found && $("#ward option").length > 1) {
+                                            wardSelect.val($("#ward option:eq(1)").val()).trigger('change');
                                         }
                                     }
 
-                                    // Hiển thị thông báo thành công
                                     $('#location_error').html(`
                                         <div class="alert alert-success alert-dismissible fade show" role="alert">
                                             <i class="fas fa-check-circle mr-1"></i>
@@ -1232,8 +1484,8 @@ include_once '../../components/admin_header.php';
                             `).show();
                         }
                     });
-
-                }, function(error) {
+                },
+                function(error) {
                     $('#get_browser_location').prop('disabled', false).html('<i class="fas fa-crosshairs mr-1"></i> Lấy vị trí từ trình duyệt');
 
                     var errorMsg = 'Không thể lấy vị trí từ trình duyệt.';
@@ -1265,20 +1517,10 @@ include_once '../../components/admin_header.php';
                     enableHighAccuracy: true,
                     timeout: 10000,
                     maximumAge: 0
-                });
-            } else {
-                $('#location_error').html(`
-                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                        <i class="fas fa-exclamation-triangle mr-1"></i>
-                        Trình duyệt không hỗ trợ tính năng lấy vị trí. Vui lòng cập nhật trình duyệt hoặc sử dụng trình duyệt khác.
-                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                            <span aria-hidden="true">&times;</span>
-                        </button>
-                    </div>
-                `).show();
-            }
+                }
+            );
         });
     });
 </script>
 
-<?php include_once '../../components/admin_footer.php'; ?>
+<?php include_once '../../Components/admin_footer.php'; ?>

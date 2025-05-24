@@ -471,7 +471,7 @@ $most_active = mysqli_fetch_assoc($most_active_result);
     <a href="/admin/index.php" class="btn btn-info">
         <i class="fas fa-tachometer-alt mr-1"></i> Quay lại bảng điều khiển
     </a>
-    <a href="pending_rooms.php" class="btn btn-warning ml-2">
+    <a href="/admin/room/pending_rooms.php" class="btn btn-warning ml-2">
         <i class="fas fa-clipboard-check mr-1"></i> Duyệt phòng
         <?php
         $pending_count = mysqli_query($conn, "SELECT COUNT(*) as count FROM motel WHERE approve = 0");
