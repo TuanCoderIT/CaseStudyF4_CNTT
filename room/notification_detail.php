@@ -1,11 +1,21 @@
 <?php
 session_start();
 require_once __DIR__ . '/../config/db.php';
-$user_id = $_SESSION['user_id'] ?? 0;
-$note_id = intval($_GET['id'] ?? 0);
 
+// Kiểm tra đăng nhập
+if (!isset($_SESSION['user_id'])) {
+    header("Location: ../auth/login.php");
+    exit;
+}
+
+$user_id = $_SESSION['user_id'];
+
+// Lấy ID thông báo từ URL trực tiếp
+$note_id = isset($_GET['id']) ? intval($_GET['id']) : 0;
+
+// Truy vấn thông báo từ cơ sở dữ liệu
 $stmt = $conn->prepare("
-    SELECT title, message, created_at 
+    SELECT id, title, message, created_at 
     FROM notifications 
     WHERE id = ? AND user_id = ?
 ");
@@ -13,14 +23,23 @@ $stmt->bind_param('ii', $note_id, $user_id);
 $stmt->execute();
 $result = $stmt->get_result();
 
+// Kiểm tra xem thông báo có tồn tại không
 if ($result->num_rows === 0) {
-    die("Không tìm thấy thông báo.");
+    echo "<script>alert('Không tìm thấy thông báo với ID = " . $note_id . "');</script>";
+    echo "<script>window.location.href = 'notifications.php';</script>";
+    exit;
 }
 
+// Lấy dữ liệu thông báo
 $note = $result->fetch_assoc();
 $stmt->close();
 
-$conn->query("UPDATE notifications SET is_read = 1 WHERE id = $note_id");
+$update_stmt = $conn->prepare("UPDATE notifications SET is_read = 1 WHERE id = ? AND user_id = ?");
+$update_stmt->bind_param('ii', $note_id, $user_id);
+$update_stmt->execute();
+$update_stmt->close();
+
+$notification_detail = $note;
 ?>
 <!DOCTYPE html>
 <html lang="vi">
@@ -39,6 +58,10 @@ $conn->query("UPDATE notifications SET is_read = 1 WHERE id = $note_id");
         body {
             background-color: #f8f9fa;
             min-height: 100vh;
+        }
+
+        .container_1 {
+            margin-top: 7rem !important;
         }
 
         .notification-detail-card {
@@ -117,9 +140,14 @@ $conn->query("UPDATE notifications SET is_read = 1 WHERE id = $note_id");
 </head>
 
 <body>
-    <?php include  __DIR__ . '/../components/header.php'; ?>
+    <?php
+    // Include header
+    include __DIR__ . '/../components/header.php';
 
-    <div class="container">
+    $note = $notification_detail;
+    ?>
+
+    <div class="container container_1">
         <div class="notification-detail-card">
             <div class="notification-header">
                 <h1 class="notification-title">

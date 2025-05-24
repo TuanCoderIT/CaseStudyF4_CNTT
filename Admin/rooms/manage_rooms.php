@@ -28,7 +28,6 @@ if (isset($_GET['delete']) && !empty($_GET['delete'])) {
     mysqli_query($conn, "DELETE FROM motel WHERE id = '$id'");
 
     $_SESSION['success'] = "Đã xóa phòng trọ thành công!";
-    header('Location: manage_rooms.php');
     exit();
 }
 

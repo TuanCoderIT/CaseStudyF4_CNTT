@@ -16,7 +16,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;600;700&display=swap" rel="stylesheet">
 
     <!-- Determine the base path for assets -->
-    ?>
 
     <!-- admin Custom CSS -->
     <link rel="stylesheet" href="/assets/admin/css/admin.css">
@@ -30,7 +29,7 @@
     <div class="admin-sidebar">
         <a class="sidebar-brand d-flex align-items-center" href="/admin/index.php">
             <i class="fas fa-home mr-2"></i>
-            <div>admin Phòng Trọ</div>
+            <div>Admin Phòng Trọ</div>
         </a>
 
         <hr class="sidebar-divider my-0" style="border-color: rgba(255,255,255,0.15)">
@@ -47,6 +46,12 @@
                 <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'manage_rooms.php' ? 'active' : ''; ?>" href="/admin/rooms/manage_rooms.php">
                     <i class="fas fa-fw fa-building"></i>
                     <span>Quản lý phòng trọ</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'manage_deposits.php' ? 'active' : ''; ?>" href="/admin/deposits/manage_deposits.php">
+                    <i class="fas fa-fw fa-building"></i>
+                    <span>Quản lý tiền cọc</span>
                 </a>
             </li>
 
@@ -89,14 +94,17 @@
             <hr class="sidebar-divider d-none d-md-block mt-3 mb-2" style="border-color: rgba(255,255,255,0.15)">
 
             <li class="nav-item">
+
                 <a class="nav-link" href="/" target="_blank">
+
                     <i class="fas fa-fw fa-external-link-alt"></i>
                     <span>Xem trang chủ</span>
                 </a>
             </li>
-
             <li class="nav-item">
+
                 <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'profile.php' ? 'active' : ''; ?>" href="/admin/profile.php">
+
                     <i class="fas fa-fw fa-user-circle"></i>
                     <span>Hồ sơ của tôi</span>
                 </a>
@@ -125,7 +133,9 @@
         $admin = mysqli_fetch_assoc($admin_query);
         ?>
         <div class="user-info">
+
             <a href="/admin/profile.php" class="text-decoration-none" title="Xem hồ sơ">
+
                 <span class="mr-2 d-none d-lg-inline text-gray-600"><?php echo $admin['name']; ?></span>
                 <?php if (!empty($admin['avatar'])): ?>
                     <?php
@@ -143,4 +153,5 @@
     </div>
     Main Content
     <div class="admin-content">
+
         <div class="container-fluid">

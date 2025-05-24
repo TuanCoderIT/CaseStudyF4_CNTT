@@ -50,7 +50,7 @@ include_once '../Components/admin_header.php';
 ?>
 
 <div class="d-sm-flex align-items-center justify-content-between mb-4">
-    <h1 class="h3 mb-0 text-gray-800">Bảng điều khiển</h1>
+    <h1 class="h3 mb-0 mt-2">Bảng điều khiển</h1>
 </div>
 
 <div class="row">
@@ -248,6 +248,7 @@ include_once '../Components/admin_header.php';
                     </div>
                     <div class="col-md-3 col-sm-6 mb-4">
                         <a href="/" target="_blank" class="btn btn-info btn-block">
+
                             <i class="fas fa-external-link-alt fa-2x mb-2"></i><br>
                             Xem trang chủ
                         </a>

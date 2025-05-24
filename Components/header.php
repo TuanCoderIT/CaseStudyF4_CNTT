@@ -160,11 +160,10 @@ $stmt->close();
                             ?>
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end">
-
                             <li><a class="dropdown-item" href="../auth/edit_profile.php"><i class="fas fa-user-edit me-2"></i>Chỉnh sửa hồ sơ</a></li>
-                            <li><a class="dropdown-item" href="my_rooms.php"><i class="fas fa-heart me-2"></i>Danh sách yêu thích</a></li>
-                            <li><a class="dropdown-item" href="my_posted_rooms.php"><i class="fas fa-list me-2"></i>Phòng trọ đã đăng</a></li>
-
+                            <li><a class="dropdown-item" href="/room/my_rooms.php"><i class="fas fa-heart me-2"></i>Danh sách yêu thích</a></li>
+                            <li><a class="dropdown-item" href="/room/my_posted_rooms.php"><i class="fas fa-list me-2"></i>Phòng trọ đã đăng</a></li>
+                            <li><a class="dropdown-item" href="/room/my_bookings.php"><i class="fas fa-bookmark me-2"></i>Phòng đã đặt cọc</a></li>
                             <li>
                                 <hr class="dropdown-divider">
                             </li>
@@ -172,7 +171,6 @@ $stmt->close();
                                 <li><a class="dropdown-item" href="../admin/index.php"><i class="fas fa-cogs me-2"></i>Quản lý admin</a></li>
                             <?php endif; ?>
                             <li><a class="dropdown-item" href="../auth/logout.php"><i class="fas fa-sign-out-alt me-2"></i>Đăng xuất</a></li>
-
                         </ul>
                     </li>
                 </ul>

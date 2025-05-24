@@ -56,7 +56,9 @@ $roomNearVinhUniversity = handleGetRoomByIP($nearest_rooms, uniLatVinh, unitLngV
 $roomNearVinhUniversityTop4 = array_slice($roomNearVinhUniversity, 0, 4);
 
 
+
 if (isset($_SESSION['lat']) && isset($_SESSION['lng'])) {
+
     $latUser = $_SESSION['lat'];
     $lngUser = $_SESSION['lng'];
 } else {
@@ -112,7 +114,7 @@ if (isset($latUser) && isset($lngUser)) {
             <section class="mb-5">
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <h2 class="section-title"><i class="fas fa-fire me-2 text-danger"></i>Phòng trọ xem nhiều nhất</h2>
-                    <a href="search.php?sort=view" class="btn btn-outline-primary btn-sm">Xem tất cả</a>
+                    <a href="/room/search.php?sort=view" class="btn btn-outline-primary btn-sm">Xem tất cả</a>
                 </div>
 
                 <div class="row">
@@ -164,7 +166,7 @@ if (isset($latUser) && isset($lngUser)) {
             <section class="mb-5">
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <h2 class="section-title"><i class="fas fa-clock me-2 text-success"></i>Phòng trọ mới đăng tải</h2>
-                    <a href="search.php?sort=newest" class="btn btn-outline-primary btn-sm">Xem tất cả</a>
+                    <a href="/room/search.php?sort=newest" class="btn btn-outline-primary btn-sm">Xem tất cả</a>
                 </div>
 
                 <div class="row">
@@ -219,7 +221,7 @@ if (isset($latUser) && isset($lngUser)) {
             <section class="mb-5">
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <h2 class="section-title"><i class="fas fa-university me-2 text-primary"></i>Phòng trọ gần trường ĐH Vinh</h2>
-                    <a href="search.php?sort=nearest" class="btn btn-outline-primary btn-sm">Xem tất cả</a>
+                    <a href="/room/search.php?sort=nearest" class="btn btn-outline-primary btn-sm">Xem tất cả</a>
                 </div>
 
                 <div class="row">
@@ -270,7 +272,7 @@ if (isset($latUser) && isset($lngUser)) {
             <section class="mb-5">
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <h2 class="section-title"><i class="fas fa-university me-2 text-primary"></i>Phòng trọ gần bạn</h2>
-                    <a href="search.php?sort=nearest" class="btn btn-outline-primary btn-sm">Xem tất cả</a>
+                    <a href="/room/search.php?sort=nearest" class="btn btn-outline-primary btn-sm">Xem tất cả</a>
                 </div>
 
                 <div class="row">
@@ -331,7 +333,6 @@ if (isset($latUser) && isset($lngUser)) {
                 console.log("Vị trí:", data.raw.position.lat, data.raw.position.lng);
                 console.log(data);
                 if (data.success) {
-                    // alert("Tọa độ của bạn là: " + data.lat + ", " + data.lng);
                     // Lưu tọa độ vào session
                     fetch('/api/location/save_coordinates.php', {
                         method: 'POST',
