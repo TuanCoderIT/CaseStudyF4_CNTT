@@ -105,7 +105,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                             $_SESSION['name'] = $name;
 
                             // Chuyển hướng đến trang chính sau khi đăng ký thành công
-                            header("Location: ..index.php");
+                            header("Location: index.php");
                             exit();
                         } else {
                             $error_message = "Đã xảy ra lỗi khi đăng ký. Vui lòng thử lại sau.";
