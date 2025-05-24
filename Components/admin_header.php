@@ -24,11 +24,14 @@
         || strpos($_SERVER['PHP_SELF'], '/admin/categories/') !== false
         || strpos($_SERVER['PHP_SELF'], '/admin/districts/') !== false
         || strpos($_SERVER['PHP_SELF'], '/admin/api/') !== false
+        || strpos($_SERVER['PHP_SELF'], '/admin/deposits/') !== false
     ) {
         // We are in a subdirectory of admin
         $basePath = "../../";
         $adminPath = "../";
-    } else {
+    }
+    
+    else {
         // We are in the main admin directory
         $basePath = "../";
         $adminPath = "";
@@ -64,6 +67,12 @@
                 <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'manage_rooms.php' ? 'active' : ''; ?>" href="/admin/rooms/manage_rooms.php">
                     <i class="fas fa-fw fa-building"></i>
                     <span>Quản lý phòng trọ</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'manage_deposits.php' ? 'active' : ''; ?>" href="/admin/deposits/manage_deposits.php">
+                    <i class="fas fa-fw fa-building"></i>
+                    <span>Quản lý tiền cọc</span>
                 </a>
             </li>
 
