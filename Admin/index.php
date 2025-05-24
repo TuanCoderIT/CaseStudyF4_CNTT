@@ -4,7 +4,7 @@ require_once '../config/db.php';
 
 // Kiểm tra đăng nhập với quyền admin
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] != 1) {
-    header('Location: ../Auth/login.php?message=Bạn cần đăng nhập với tài khoản admin');
+    header('Location: ../auth/login.php?message=Bạn cần đăng nhập với tài khoản admin');
     exit();
 }
 
@@ -46,7 +46,7 @@ $recent_rooms_query = "SELECT m.*, c.name as category_name, d.name as district_n
 $recent_rooms_result = mysqli_query($conn, $recent_rooms_query);
 
 $page_title = "Bảng điều khiển admin";
-include_once '../components/admin_header.php';
+include_once '../Components/admin_header.php';
 ?>
 
 <div class="d-sm-flex align-items-center justify-content-between mb-4">
@@ -190,7 +190,7 @@ include_once '../components/admin_header.php';
                             <?php while ($room = mysqli_fetch_assoc($recent_rooms_result)): ?>
                                 <tr>
                                     <td>
-                                        <a href="rooms/edit_room.php?id=<?php echo $room['id']; ?>">
+                                        <a href="/admin/rooms/edit_room.php?id=<?php echo $room['id']; ?>">
                                             <?php echo mb_strimwidth($room['title'], 0, 30, "..."); ?>
                                         </a>
                                     </td>
@@ -210,7 +210,7 @@ include_once '../components/admin_header.php';
                 </div>
 
                 <div class="mt-3 text-center">
-                    <a href="rooms/manage_rooms.php" class="btn btn-sm btn-primary">
+                    <a href="admin/rooms/manage_rooms.php" class="btn btn-sm btn-primary">
                         <i class="fas fa-building mr-1"></i> Xem tất cả phòng
                     </a>
                 </div>
@@ -229,25 +229,25 @@ include_once '../components/admin_header.php';
             <div class="card-body">
                 <div class="row text-center">
                     <div class="col-md-3 col-sm-6 mb-4">
-                        <a href="rooms/add_room.php" class="btn btn-primary btn-block">
+                        <a href="admin/rooms/add_room.php" class="btn btn-primary btn-block">
                             <i class="fas fa-plus-circle fa-2x mb-2"></i><br>
                             Thêm phòng mới
                         </a>
                     </div>
                     <div class="col-md-3 col-sm-6 mb-4">
-                        <a href="rooms/pending_rooms.php" class="btn btn-warning btn-block">
+                        <a href="/admin/rooms/pending_rooms.php" class="btn btn-warning btn-block">
                             <i class="fas fa-clipboard-check fa-2x mb-2"></i><br>
                             Duyệt phòng trọ
                         </a>
                     </div>
                     <div class="col-md-3 col-sm-6 mb-4">
-                        <a href="users/manage_users.php" class="btn btn-success btn-block">
+                        <a href="/admin/users/manage_users.php" class="btn btn-success btn-block">
                             <i class="fas fa-users fa-2x mb-2"></i><br>
                             Quản lý người dùng
                         </a>
                     </div>
                     <div class="col-md-3 col-sm-6 mb-4">
-                        <a href="..index.php" target="_blank" class="btn btn-info btn-block">
+                        <a href="/" target="_blank" class="btn btn-info btn-block">
                             <i class="fas fa-external-link-alt fa-2x mb-2"></i><br>
                             Xem trang chủ
                         </a>
@@ -258,4 +258,4 @@ include_once '../components/admin_header.php';
     </div>
 </div>
 
-<?php include_once '../components/admin_footer.php'; ?>
+<?php include_once '../Components/admin_footer.php'; ?>

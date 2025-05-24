@@ -16,23 +16,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;600;700&display=swap" rel="stylesheet">
 
     <!-- Determine the base path for assets -->
-    <?php
-    // Determine admin directory level using the path
-    if (
-        strpos($_SERVER['PHP_SELF'], '/admin/rooms/') !== false
-        || strpos($_SERVER['PHP_SELF'], '/admin/users/') !== false
-        || strpos($_SERVER['PHP_SELF'], '/admin/categories/') !== false
-        || strpos($_SERVER['PHP_SELF'], '/admin/districts/') !== false
-        || strpos($_SERVER['PHP_SELF'], '/admin/api/') !== false
-    ) {
-        // We are in a subdirectory of admin
-        $basePath = "../../";
-        $adminPath = "../";
-    } else {
-        // We are in the main admin directory
-        $basePath = "../";
-        $adminPath = "";
-    }
     ?>
 
     <!-- admin Custom CSS -->
@@ -97,7 +80,7 @@
             </li>
 
             <li class="nav-item">
-                <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'manage_users.php' || basename($_SERVER['PHP_SELF']) == 'user_rooms.php' ? 'active' : ''; ?>" href="<?php echo $adminPath; ?>users/manage_users.php">
+                <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'manage_users.php' || basename($_SERVER['PHP_SELF']) == 'user_rooms.php' ? 'active' : ''; ?>" href="/admin/users/manage_users.php">
                     <i class="fas fa-fw fa-users"></i>
                     <span>Quản lý người dùng</span>
                 </a>
@@ -106,21 +89,21 @@
             <hr class="sidebar-divider d-none d-md-block mt-3 mb-2" style="border-color: rgba(255,255,255,0.15)">
 
             <li class="nav-item">
-                <a class="nav-link" href="<?php echo $basePath; ?>Home/index.php" target="_blank">
+                <a class="nav-link" href="/" target="_blank">
                     <i class="fas fa-fw fa-external-link-alt"></i>
                     <span>Xem trang chủ</span>
                 </a>
             </li>
 
             <li class="nav-item">
-                <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'admin_profile.php' ? 'active' : ''; ?>" href="<?php echo $adminPath; ?>admin_profile.php">
+                <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'profile.php' ? 'active' : ''; ?>" href="/admin/profile.php">
                     <i class="fas fa-fw fa-user-circle"></i>
                     <span>Hồ sơ của tôi</span>
                 </a>
             </li>
 
             <li class="nav-item">
-                <a class="nav-link" href="<?php echo $basePath; ?>auth/logout.php">
+                <a class="nav-link" href="/auth/logout.php">
                     <i class="fas fa-fw fa-sign-out-alt"></i>
                     <span>Đăng xuất</span>
                 </a>
@@ -142,23 +125,22 @@
         $admin = mysqli_fetch_assoc($admin_query);
         ?>
         <div class="user-info">
-            <a href="<?php echo $adminPath; ?>admin_profile.php" class="text-decoration-none" title="Xem hồ sơ">
+            <a href="/admin/profile.php" class="text-decoration-none" title="Xem hồ sơ">
                 <span class="mr-2 d-none d-lg-inline text-gray-600"><?php echo $admin['name']; ?></span>
                 <?php if (!empty($admin['avatar'])): ?>
-                    <img class="user-avatar" src="<?php echo $basePath . $admin['avatar']; ?>" alt="Avatar">
+                    <?php
+                    $avatar_path = $admin['avatar'];
+                    if (strpos($avatar_path, '../') === 0) {
+                        $avatar_path = substr($avatar_path, 3);
+                    }
+                    ?>
+                    <img class="user-avatar" src="/<?php echo htmlspecialchars($avatar_path); ?>" alt="Avatar">
                 <?php else: ?>
-                    <img class="user-avatar" src="<?php echo $basePath; ?>images/default-avatar.jpg" alt="Avatar">
+                    <img class="user-avatar" src="/uploads/avatar/default-avatar.jpg" alt="Avatar">
                 <?php endif; ?>
             </a>
         </div>
     </div>
-    <!-- Main Content -->
+    Main Content
     <div class="admin-content">
         <div class="container-fluid">
-            <div class="row">
-                <div class="col-lg-12">
-                    <h1 class="page-header">
-                        <?php echo isset($page_title) ? $page_title : 'Trang quản trị'; ?>
-                    </h1>
-                </div>
-            </div>
