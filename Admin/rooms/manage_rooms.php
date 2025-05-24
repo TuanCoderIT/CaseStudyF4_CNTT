@@ -184,7 +184,7 @@ include_once('../../components/admin_header.php');
 ?>
 
 <div class="page-header mb-4">
-    <div class="d-flex justify-content-between align-items-center">
+    <div class="d-flex justify-content-between align-items-center mt-2">
         <h2><i class="fas fa-building mr-2"></i> Quản lý phòng trọ</h2>
         <a href="add_room.php" class="btn btn-primary shadow-sm">
             <i class="fas fa-plus-circle mr-2"></i>Thêm phòng trọ mới

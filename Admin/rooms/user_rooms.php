@@ -91,7 +91,7 @@ include_once '../../components/admin_header.php';
 ?>
 
 <div class="page-header mb-4">
-    <div class="d-flex justify-content-between align-items-center">
+    <div class="d-flex justify-content-between align-items-center mt-2">
         <h2><i class="fas fa-user-cog mr-2"></i> Phòng trọ của người dùng: <?php echo $user['name']; ?></h2>
         <a href="../users/manage_users.php" class="btn btn-outline-secondary">
             <i class="fas fa-arrow-left mr-1"></i> Quay lại
@@ -273,7 +273,7 @@ include_once '../../components/admin_header.php';
     <div class="modal-dialog modal-dialog-centered" role="document">
         <div class="modal-content shadow">
             <form method="POST" action="">
-                <div class="modal-header bg-gradient-primary text-white">
+                <div class="modal-header bg-primary text-white">
                     <h5 class="modal-title" id="transferModalLabel">
                         <i class="fas fa-exchange-alt mr-2"></i>Chuyển quyền sở hữu phòng trọ
                     </h5>

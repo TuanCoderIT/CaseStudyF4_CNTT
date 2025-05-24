@@ -70,9 +70,7 @@ $result = $stmt->get_result();
 
     <div class="container admin-container">
         <div class="d-flex justify-content-between align-items-center mb-4">
-            <h1 class="mb-0">
-                <i class="fas fa-home me-2 text-primary"></i>Quản lý phòng trọ
-            </h1>
+            
         </div>
 
         <?php if (isset($_SESSION['success'])): ?>
