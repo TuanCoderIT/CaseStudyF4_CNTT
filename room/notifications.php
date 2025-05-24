@@ -8,14 +8,15 @@ $conn->query("UPDATE notifications SET is_read = 1 WHERE user_id = $user_id");
 
 // Lấy danh sách thông báo
 $stmt = $conn->prepare("
-    SELECT id, title, message, created_at 
-    FROM notifications 
-    WHERE user_id = ? 
+    SELECT id, title, message, created_at, is_read
+    FROM notifications
+    WHERE user_id = ?
     ORDER BY created_at DESC
 ");
 $stmt->bind_param('i', $user_id);
 $stmt->execute();
-$notes = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+$result = $stmt->get_result();
+$notifications = $result->fetch_all(MYSQLI_ASSOC);
 $stmt->close();
 ?>
 <!DOCTYPE html>
@@ -81,30 +82,30 @@ $stmt->close();
             <h3 class="mb-0 text-light">Thông báo của bạn</h3>
         </div>
         <div class="card-body p-0">
-            <?php if (empty($notes)): ?>
+            <?php if (empty($notifications)): ?>
                 <div class="empty-state">
                     <i class="far fa-inbox fa-4x mb-3"></i>
                     <p class="lead">Bạn chưa có thông báo nào.</p>
                 </div>
             <?php else: ?>
                 <ul class="list-group list-group-flush">
-                    <?php foreach ($notes as $note): ?>
+                    <?php foreach ($notifications as $notification): ?>
                         <li class="list-group-item notification-item px-4 py-3">
-                            <a href="notification_detail.php?id=<?= $note['id'] ?>" class="text-decoration-none d-flex justify-content-between">
+                            <a href="notification_detail.php?id=<?= $notification['id'] ?>" class="text-decoration-none d-flex justify-content-between">
                                 <div>
                                     <div class="notification-title">
-                                        <?= htmlspecialchars($note['title'], ENT_QUOTES, 'UTF-8') ?>
+                                        <?= htmlspecialchars($notification['title'], ENT_QUOTES, 'UTF-8') ?>
                                     </div>
                                     <div class="small text-truncate" style="max-width: 600px;">
-                                        <?= nl2br(htmlspecialchars($note['message'], ENT_QUOTES, 'UTF-8')) ?>
+                                        <?= nl2br(htmlspecialchars($notification['message'], ENT_QUOTES, 'UTF-8')) ?>
                                     </div>
                                 </div>
                                 <div class="text-end">
                                     <div class="notification-time">
                                         <i class="far fa-clock me-1"></i>
-                                        <?= date('H:i d/m/Y', strtotime($note['created_at'])) ?>
+                                        <?= date('H:i d/m/Y', strtotime($notification['created_at'])) ?>
                                     </div>
-                                    <?php if (!$note['is_read']): ?>
+                                    <?php if (!$notification['is_read']): ?>
                                         <span class="badge bg-primary mt-1">Mới</span>
                                     <?php endif; ?>
                                 </div>
@@ -114,7 +115,7 @@ $stmt->close();
                 </ul>
             <?php endif; ?>
         </div>
-        <?php if (!empty($notes)): ?>
+        <?php if (!empty($notifications)): ?>
             <div class="card-footer text-center">
                 <a href="/room/notifications.php" class="text-decoration-none">Xem lại trang</a>
             </div>
