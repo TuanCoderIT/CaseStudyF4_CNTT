@@ -12,17 +12,17 @@
 
 body {
   font-family: "Lexend", sans-serif;
-  background: linear-gradient(135deg,
+  /* background: linear-gradient(135deg,
       var(--primary-color),
-      var(--secondary-color));
+      var(--secondary-color)); */
   min-height: 100vh;
-  display: flex;
+  /* display: flex;
   align-items: center;
   justify-content: center;
   margin: 0;
-  padding: 0;
-  animation: gradientBG 15s ease infinite;
-  background-size: 400% 400%;
+  padding: 0; */
+  /* animation: gradientBG 15s ease infinite;
+  background-size: 400% 400%; */
   color: var(--text-color);
 }
 

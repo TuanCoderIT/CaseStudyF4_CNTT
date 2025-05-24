@@ -24,11 +24,14 @@
         || strpos($_SERVER['PHP_SELF'], '/admin/categories/') !== false
         || strpos($_SERVER['PHP_SELF'], '/admin/districts/') !== false
         || strpos($_SERVER['PHP_SELF'], '/admin/api/') !== false
+        || strpos($_SERVER['PHP_SELF'], '/admin/deposits/') !== false
     ) {
         // We are in a subdirectory of admin
         $basePath = "../../";
         $adminPath = "../";
-    } else {
+    }
+    
+    else {
         // We are in the main admin directory
         $basePath = "../";
         $adminPath = "";
@@ -64,6 +67,12 @@
                 <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'manage_rooms.php' ? 'active' : ''; ?>" href="/admin/rooms/manage_rooms.php">
                     <i class="fas fa-fw fa-building"></i>
                     <span>Quản lý phòng trọ</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'manage_deposits.php' ? 'active' : ''; ?>" href="/admin/deposits/manage_deposits.php">
+                    <i class="fas fa-fw fa-building"></i>
+                    <span>Quản lý tiền cọc</span>
                 </a>
             </li>
 
@@ -106,7 +115,7 @@
             <hr class="sidebar-divider d-none d-md-block mt-3 mb-2" style="border-color: rgba(255,255,255,0.15)">
 
             <li class="nav-item">
-                <a class="nav-link" href="<?php echo $basePath; ?>Home/index.php" target="_blank">
+                <a class="nav-link" href="<?php echo $basePath; ?>index.php" target="_blank">
                     <i class="fas fa-fw fa-external-link-alt"></i>
                     <span>Xem trang chủ</span>
                 </a>
