@@ -1,4 +1,5 @@
 /* admin Dashboard Custom Styles */
+@import url("https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&display=swap");
 :root {
   --primary-color: #4e73df;
   --secondary-color: #1cc88a;
@@ -11,8 +12,7 @@
 }
 
 body {
-  font-family: "Nunito", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-    "Helvetica Neue", Arial, sans-serif;
+  font-family: "Lexend", sans-serif;
   background-color: #f8f9fc;
 }
 

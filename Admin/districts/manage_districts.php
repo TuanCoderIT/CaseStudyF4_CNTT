@@ -83,7 +83,7 @@ include_once '../../components/admin_header.php';
 ?>
 
 <div class="page-header mb-4">
-    <div class="d-flex justify-content-between align-items-center">
+    <div class="d-flex justify-content-between align-items-center mt-2">
         <h2><i class="fas fa-map-marker-alt mr-2"></i> Quản lý khu vực</h2>
         <button type="button" class="btn btn-primary shadow-sm" data-toggle="modal" data-target="#addDistrictModal">
             <i class="fas fa-plus-circle mr-2"></i>Thêm khu vực mới
@@ -327,7 +327,7 @@ $most_popular = mysqli_fetch_assoc($most_popular_result);
     <div class="modal-dialog modal-dialog-centered" role="document">
         <div class="modal-content shadow">
             <form method="POST" action="">
-                <div class="modal-header bg-gradient-primary text-white">
+                <div class="modal-header bg-primary text-white">
                     <h5 class="modal-title" id="addDistrictModalLabel">
                         <i class="fas fa-plus-circle mr-2"></i>Thêm khu vực mới
                     </h5>
@@ -365,7 +365,7 @@ $most_popular = mysqli_fetch_assoc($most_popular_result);
     <div class="modal-dialog modal-dialog-centered" role="document">
         <div class="modal-content shadow">
             <form method="POST" action="">
-                <div class="modal-header bg-gradient-primary text-white">
+                <div class="modal-header bg-primary text-white">
                     <h5 class="modal-title" id="editDistrictModalLabel">
                         <i class="fas fa-edit mr-2"></i>Sửa khu vực
                     </h5>

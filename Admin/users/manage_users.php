@@ -139,7 +139,7 @@ include_once '../../components/admin_header.php';
 ?>
 
 <div class="page-header mb-4">
-    <div class="d-flex justify-content-between align-items-center">
+    <div class="d-flex justify-content-between align-items-center mt-2">
         <h2><i class="fas fa-users mr-2"></i> Quản lý người dùng</h2>
     </div>
 </div>
