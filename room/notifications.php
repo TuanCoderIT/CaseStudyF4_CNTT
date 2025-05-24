@@ -38,6 +38,7 @@ $stmt->close();
             border-radius: .75rem;
             overflow: hidden;
             box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1);
+            margin-top: 7rem !important;
         }
 
         .notifications-header {
