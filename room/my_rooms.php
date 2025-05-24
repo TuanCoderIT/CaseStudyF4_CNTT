@@ -97,7 +97,7 @@ $favorite_rooms = $stmt->get_result();
 
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h1 class="section-title"><i class="fas fa-heart me-2 text-danger"></i>Phòng trọ yêu thích</h1>
-                <a href="index.php" class="btn btn-outline-primary">
+                <a href="/" class="btn btn-outline-primary">
                     <i class="fas fa-home me-2"></i>Về trang chủ
                 </a>
             </div>
