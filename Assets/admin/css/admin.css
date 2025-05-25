@@ -258,7 +258,7 @@ body {
   border: 1px solid #d1d3e2;
   border-radius: 0.35rem;
   font-size: 0.9rem;
-  padding: 0.5rem 1rem;
+  /* padding: 0.5rem 1rem; */
   color: #6e707e;
   transition: all 0.3s ease;
 }
@@ -760,7 +760,7 @@ body {
 .form-control {
   border: 2px solid var(--border-color);
   border-radius: 8px;
-  padding: 12px 15px;
+  /* padding: 12px 15px; */
   font-size: 14px;
   transition: all 0.15s ease-in-out;
 }

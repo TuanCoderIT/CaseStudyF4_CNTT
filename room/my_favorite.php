@@ -2,6 +2,17 @@
 // Khởi tạo phiên làm việc
 session_start();
 
+// Function to check if a room has been booked
+function isRoomBooked($conn, $room_id)
+{
+    $query = "SELECT id FROM bookings WHERE motel_id = ? AND status != 'REFUNDED'";
+    $stmt = $conn->prepare($query);
+    $stmt->bind_param("i", $room_id);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    return ($result->num_rows > 0);
+}
+
 // Kiểm tra xem người dùng đã đăng nhập hay chưa
 if (!isset($_SESSION['user_id'])) {
     header('Location: ./auth/login.php');
@@ -114,6 +125,9 @@ $favorite_rooms = $stmt->get_result();
                                     <span class="favorite-badge">
                                         <i class="fas fa-heart"></i>
                                     </span>
+                                    <?php if (isRoomBooked($conn, $room['id'])): ?>
+                                        <span class="booked-tag"><i class="fas fa-lock me-1"></i>Đã có người đặt cọc</span>
+                                    <?php endif; ?>
                                 </div>
                                 <div class="card-body">
                                     <h5 class="card-title">
@@ -162,57 +176,51 @@ $favorite_rooms = $stmt->get_result();
 
     <?php include './components/footer.php' ?>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <<<<<<<< HEAD:my_rooms.php
-        <script src="./assets/main.js">
-        </script>
-        ========
-        <script src="../assets/admin/js/main.js"></script>
-        >>>>>>>> d6352d11d3736a08bd206d9a28a728f1fa6dee7c:my_favorite.php
-        <script>
-            document.addEventListener('DOMContentLoaded', function() {
-                // Hiệu ứng xuất hiện cho các phòng
-                const animatedElements = document.querySelectorAll('.animated-element');
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Hiệu ứng xuất hiện cho các phòng
+            const animatedElements = document.querySelectorAll('.animated-element');
 
-                animatedElements.forEach((element, index) => {
-                    setTimeout(() => {
-                        element.classList.add('animated', 'animate__fadeInUp');
-                    }, index * 100);
-                });
-
-                // Hiệu ứng xóa phòng khỏi yêu thích
-                const deleteButtons = document.querySelectorAll('.btn-danger[title="Xóa khỏi yêu thích"]');
-                deleteButtons.forEach(button => {
-                    button.addEventListener('click', function(e) {
-                        if (confirm('Bạn có chắc muốn xóa phòng này khỏi danh sách yêu thích?')) {
-                            const roomCard = this.closest('.animated-element');
-
-                            // Thêm hiệu ứng biến mất trước khi chuyển hướng
-                            e.preventDefault();
-                            roomCard.classList.add('animate__animated', 'animate__fadeOutRight');
-
-                            // Chờ hiệu ứng hoàn thành rồi mới chuyển hướng
-                            setTimeout(() => {
-                                window.location.href = this.getAttribute('href');
-                            }, 500);
-                        } else {
-                            e.preventDefault(); // Ngăn chặn chuyển hướng nếu không xác nhận
-                        }
-                    });
-                });
-
-                // Tự động ẩn alert sau 5 giây
-                const alertElement = document.querySelector('.alert');
-                if (alertElement) {
-                    setTimeout(() => {
-                        alertElement.classList.remove('animate__fadeIn');
-                        alertElement.classList.add('animate__fadeOut');
-                        setTimeout(() => {
-                            alertElement.remove();
-                        }, 500);
-                    }, 5000);
-                }
+            animatedElements.forEach((element, index) => {
+                setTimeout(() => {
+                    element.classList.add('animated', 'animate__fadeInUp');
+                }, index * 100);
             });
-        </script>
+
+            // Hiệu ứng xóa phòng khỏi yêu thích
+            const deleteButtons = document.querySelectorAll('.btn-danger[title="Xóa khỏi yêu thích"]');
+            deleteButtons.forEach(button => {
+                button.addEventListener('click', function(e) {
+                    if (confirm('Bạn có chắc muốn xóa phòng này khỏi danh sách yêu thích?')) {
+                        const roomCard = this.closest('.animated-element');
+
+                        // Thêm hiệu ứng biến mất trước khi chuyển hướng
+                        e.preventDefault();
+                        roomCard.classList.add('animate__animated', 'animate__fadeOutRight');
+
+                        // Chờ hiệu ứng hoàn thành rồi mới chuyển hướng
+                        setTimeout(() => {
+                            window.location.href = this.getAttribute('href');
+                        }, 500);
+                    } else {
+                        e.preventDefault(); // Ngăn chặn chuyển hướng nếu không xác nhận
+                    }
+                });
+            });
+
+            // Tự động ẩn alert sau 5 giây
+            const alertElement = document.querySelector('.alert');
+            if (alertElement) {
+                setTimeout(() => {
+                    alertElement.classList.remove('animate__fadeIn');
+                    alertElement.classList.add('animate__fadeOut');
+                    setTimeout(() => {
+                        alertElement.remove();
+                    }, 500);
+                }, 5000);
+            }
+        });
+    </script>
 </body>
 
 </html>

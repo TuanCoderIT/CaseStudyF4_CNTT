@@ -42,9 +42,11 @@ body {
 
 /* Header */
 nav {
-  background: linear-gradient(135deg,
-      var(--primary-color),
-      var(--secondary-color));
+  background: linear-gradient(
+    135deg,
+    var(--primary-color),
+    var(--secondary-color)
+  );
   backdrop-filter: blur(20px);
   height: 80px;
   border-radius: 0 0 20px 20px;
@@ -181,20 +183,6 @@ h3 {
   text-align: center;
 }
 
-h3:after {
-  content: "";
-  position: absolute;
-  width: 50px;
-  height: 3px;
-  background: linear-gradient(to right,
-      var(--primary-color),
-      var(--secondary-color));
-  bottom: -10px;
-  left: 50%;
-  transform: translateX(-50%);
-  border-radius: 3px;
-}
-
 .form-control {
   border: none;
   border-radius: 10px;
@@ -229,10 +217,12 @@ h3:after {
   left: 0;
   width: 100%;
   height: 100%;
-  background: linear-gradient(120deg,
-      transparent,
-      rgba(255, 255, 255, 0.2),
-      transparent);
+  background: linear-gradient(
+    120deg,
+    transparent,
+    rgba(255, 255, 255, 0.2),
+    transparent
+  );
   transition: all 0.5s;
   z-index: -1;
   transform: translateX(-100%);
@@ -243,17 +233,21 @@ h3:after {
 }
 
 .btn-primary {
-  background: linear-gradient(45deg,
-      var(--primary-color),
-      var(--secondary-color));
+  background: linear-gradient(
+    45deg,
+    var(--primary-color),
+    var(--secondary-color)
+  );
   border: none;
   box-shadow: 0 5px 15px rgba(71, 118, 230, 0.4);
 }
 
 .btn-primary:hover {
-  background: linear-gradient(45deg,
-      var(--secondary-color),
-      var(--primary-color));
+  background: linear-gradient(
+    45deg,
+    var(--secondary-color),
+    var(--primary-color)
+  );
   transform: translateY(-3px);
   box-shadow: 0 8px 20px rgba(71, 118, 230, 0.6);
 }
@@ -335,9 +329,11 @@ label {
   cursor: pointer;
   display: inline-block;
   padding: 8px 15px;
-  background: linear-gradient(45deg,
-      var(--primary-color),
-      var(--secondary-color));
+  background: linear-gradient(
+    45deg,
+    var(--primary-color),
+    var(--secondary-color)
+  );
   color: white;
   border-radius: 25px;
   font-size: 14px;
@@ -518,9 +514,11 @@ social-links a:hover {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg,
-      var(--primary-color),
-      var(--secondary-color));
+  background: linear-gradient(
+    135deg,
+    var(--primary-color),
+    var(--secondary-color)
+  );
   animation: gradientBG 15s ease infinite;
   background-size: 400% 400%;
 }
@@ -534,9 +532,11 @@ social-links a:hover {
 
 /* Enhanced search container with consistent styling */
 .search-banner {
-  background: linear-gradient(135deg,
-      var(--primary-color),
-      var(--secondary-color));
+  background: linear-gradient(
+    135deg,
+    var(--primary-color),
+    var(--secondary-color)
+  );
   padding: 60px 0 30px;
   margin-bottom: 30px;
   box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
@@ -623,9 +623,11 @@ social-links a:hover {
 }
 
 .contact-btn {
-  background: linear-gradient(135deg,
-      var(--primary-color),
-      var(--secondary-color));
+  background: linear-gradient(
+    135deg,
+    var(--primary-color),
+    var(--secondary-color)
+  );
   border: none;
   padding: 10px 25px;
   transition: all 0.3s;
@@ -895,9 +897,11 @@ room-features-item div div {
 }
 
 .contact-btn {
-  background: linear-gradient(135deg,
-      var(--primary-color),
-      var(--secondary-color));
+  background: linear-gradient(
+    135deg,
+    var(--primary-color),
+    var(--secondary-color)
+  );
   border: none;
   padding: 10px 25px;
   transition: all 0.3s ease;
@@ -927,6 +931,67 @@ room-features-item div div {
   height: 4px;
   background: var(--primary-color);
   border-radius: 2px;
+}
+
+/* Related Rooms Tags Styling */
+.available-tag {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background: linear-gradient(135deg, #28a745, #20c997);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  box-shadow: 0 2px 6px rgba(40, 167, 69, 0.3);
+  z-index: 2;
+  animation: pulse 2s infinite;
+}
+
+.distance-tag {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background-color: rgba(25, 135, 84, 0.85);
+  color: white;
+  padding: 4px 10px;
+  font-size: 12px;
+  border-radius: 4px;
+  z-index: 2;
+  font-weight: 600;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.price-comparison {
+  font-size: 0.85rem;
+  margin-top: 4px;
+  font-weight: 500;
+}
+
+.price-comparison.higher {
+  color: #e74c3c;
+}
+
+.price-comparison.lower {
+  color: #27ae60;
+}
+
+.price-comparison.similar {
+  color: #f39c12;
+}
+
+/* Pulse animation for available tag */
+@keyframes pulse {
+  0% {
+    box-shadow: 0 2px 6px rgba(40, 167, 69, 0.3);
+  }
+  50% {
+    box-shadow: 0 4px 12px rgba(40, 167, 69, 0.6);
+  }
+  100% {
+    box-shadow: 0 2px 6px rgba(40, 167, 69, 0.3);
+  }
 }
 
 /* Mobile Responsiveness */
@@ -1000,16 +1065,18 @@ room-features-item div div {
 .home-body header,
 .login-body header,
 .register-body header,
-.profile-body header {
+.profile_body header {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   width: 100%;
   z-index: 1030;
-  background-image: linear-gradient(135deg,
-      var(--primary-color),
-      var(--secondary-color));
+  background-image: linear-gradient(
+    135deg,
+    var(--primary-color),
+    var(--secondary-color)
+  );
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
   transition: all 0.3s ease;
 }
@@ -1343,9 +1410,11 @@ footer {
 }
 
 .search-pagination .page-item.active .page-link {
-  background-image: linear-gradient(to right,
-      var(--primary-color),
-      var(--secondary-color));
+  background-image: linear-gradient(
+    to right,
+    var(--primary-color),
+    var(--secondary-color)
+  );
   color: white;
 }
 
@@ -1402,9 +1471,11 @@ footer {
   width: 50px;
   height: 50px;
   border-radius: 50%;
-  background-image: linear-gradient(to right,
-      var(--primary-color),
-      var(--secondary-color));
+  background-image: linear-gradient(
+    to right,
+    var(--primary-color),
+    var(--secondary-color)
+  );
   color: white;
   border: none;
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
@@ -1548,9 +1619,11 @@ footer {
 }
 
 .btn-primary {
-  background-image: linear-gradient(to right,
-      var(--primary-color),
-      var(--secondary-color));
+  background-image: linear-gradient(
+    to right,
+    var(--primary-color),
+    var(--secondary-color)
+  );
   border: none;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 }
@@ -1752,8 +1825,6 @@ footer {
   }
 }
 
-/* Hiệu ứng và styles cho tính năng yêu thích */
-
 /* Hiệu ứng pulse cho nút yêu thích */
 .btn-pulse {
   animation: pulse 0.5s;
@@ -1800,7 +1871,6 @@ footer {
 }
 
 @keyframes float {
-
   0%,
   100% {
     transform: translateY(0);
@@ -1965,5 +2035,69 @@ footer {
 
   100% {
     box-shadow: 0 0 0 0 rgba(220, 53, 69, 0);
+  }
+}
+
+/* Add CSS for booked-tag */
+.booked-tag {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background-color: rgba(220, 53, 69, 0.85);
+  color: white;
+  padding: 4px 10px;
+  font-size: 12px;
+  border-radius: 4px;
+  z-index: 3;
+  font-weight: 600;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.room-card:hover .booked-tag {
+  background-color: rgba(220, 53, 69, 0.95);
+}
+
+@media (max-width: 991.98px) {
+  .navbar,
+  .navbar-header,
+  .navbar.navbar-expand,
+  .navbar.navbar-expand-lg,
+  .navbar.navbar-expand-md,
+  .navbar-collapse {
+    background: linear-gradient(90deg, #4776e6 0%, #8e54e9 100%) !important;
+    color: #fff !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+  .navbar .nav-link,
+  .navbar .navbar-brand,
+  .navbar .dropdown-toggle {
+    color: #fff !important;
+  }
+  .navbar .dropdown-menu {
+    background: #fff;
+    color: #333;
+  }
+}
+
+@media (max-width: 767.98px) {
+  /* Adjust modal for smaller screens */
+  .modal-dialog {
+    margin: 10px; /* Add some margin */
+  }
+
+  .modal-content {
+    width: 95%; /* Ensure content fits within screen */
+    margin: 0 auto; /* Center the modal content */
+  }
+
+  /* Ensure modal and backdrop have correct z-index */
+  .modal {
+    z-index: 1050; /* Bootstrap default is 1050, ensure it's not lower */
+  }
+
+  .modal-backdrop {
+    z-index: 1049; /* Set backdrop z-index lower than modal */
   }
 }

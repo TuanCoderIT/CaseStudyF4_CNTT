@@ -249,14 +249,64 @@ $stmt->close();
         }
 
         .btn {
-            border-radius: 30px;
+            border-radius: 10px;
             padding: 0.6rem 1.2rem;
             font-weight: 500;
             transition: all 0.3s ease;
+            border: none;
+            font-size: 0.85rem;
+            letter-spacing: 0.3px;
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 0.5rem;
+            text-decoration: none;
+        }
+
+        .btn-purple {
+            background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+            color: white;
+        }
+
+        .btn-purple:hover {
+            background: linear-gradient(45deg, var(--secondary-color), var(--primary-color));
+            transform: translateY(-2px);
+            box-shadow: var(--hover-shadow);
+            color: white;
+        }
+
+        .btn-refund {
+            background: linear-gradient(45deg, var(--accent-color), #ff6b9d);
+            color: white;
+        }
+
+        .btn-refund:hover {
+            background: linear-gradient(45deg, #ff6b9d, var(--accent-color));
+            transform: translateY(-2px);
+            box-shadow: var(--hover-shadow);
+            color: white;
+        }
+
+        .btn-info {
+            background: linear-gradient(45deg, var(--info-color), #4361ee);
+            color: white;
+        }
+
+        .btn-info:hover {
+            background: linear-gradient(45deg, #4361ee, var(--info-color));
+            transform: translateY(-2px);
+            box-shadow: var(--hover-shadow);
+            color: white;
+        }
+
+        border-radius: 30px;
+        padding: 0.6rem 1.2rem;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
         }
 
         .btn-sm {
@@ -412,43 +462,47 @@ $stmt->close();
                 </a>
             </div>
         <?php else: ?>
-            <div class="row g-4">
-                <?php foreach ($bookings as $b):
-                    $map = [
-                        'PENDING'          => ['warning', 'Chờ thanh toán'],
-                        'SUCCESS'          => ['success', 'Đã đặt cọc'],
-                        'FAILED'           => ['danger', 'Đặt cọc thất bại'],
-                        'REFUND_REQUESTED' => ['info', 'Đã yêu cầu hoàn tiền'],
-                        'REFUNDED'         => ['secondary', 'Đã hoàn tiền'],
-                        'RELEASED'         => ['primary', 'Đã giải ngân'],
-                    ];
-                    [$cls, $label] = $map[$b['status']] ?? ['dark', $b['status']];
-                    // chọn ảnh thumbnail (lấy file đầu tiên trong images comma-separated)
-                    $thumb = explode(',', $b['images'])[0] ?? 'placeholder.jpg';
+            <div class="row g-4"> <?php foreach ($bookings as $b):
+                                        $map = [
+                                            'PENDING'             => ['warning', 'Chờ thanh toán'],
+                                            'SUCCESS'             => ['success', 'Đã đặt cọc'],
+                                            'FAILED'              => ['danger', 'Đặt cọc thất bại'],
+                                            'REFUND_REQUESTED'    => ['info', 'Đã yêu cầu hoàn tiền'],
+                                            'REFUNDED'            => ['secondary', 'Đã hoàn tiền'],
+                                            'RELEASED'            => ['primary', 'Đã giải ngân'],
+                                            'AWAITING_CONFIRMATION' => ['info', 'Chờ xác nhận'],
+                                            'CONFIRMED_RENTAL'    => ['success', 'Đã xác nhận thuê'],
+                                            'AUTO_REFUNDED'       => ['warning', 'Tự động hoàn tiền'],
+                                        ];
+                                        [$cls, $label] = $map[$b['status']] ?? ['dark', $b['status']];
+                                        // chọn ảnh thumbnail (lấy file đầu tiên trong images comma-separated)
+                                        $thumb = explode(',', $b['images'])[0] ?? 'placeholder.jpg';
 
-                    // Tính ngày từ khi đặt cọc
-                    $booked_date = new DateTime($b['booked_at']);
-                    $now = new DateTime();
-                    $days_since = $now->diff($booked_date)->days;
-                    $days_text = $days_since > 0 ? "($days_since ngày trước)" : "(Hôm nay)";
-                ?>
+                                        // Tính ngày từ khi đặt cọc
+                                        $booked_date = new DateTime($b['booked_at']);
+                                        $now = new DateTime();
+                                        $days_since = $now->diff($booked_date)->days;
+                                        $days_text = $days_since > 0 ? "($days_since ngày trước)" : "(Hôm nay)";
+                                    ?>
                     <div class="col-md-6 col-lg-4">
                         <div class="booking-card">
                             <div class="card-img-container">
                                 <img src="../<?= htmlspecialchars(trim($thumb), ENT_QUOTES) ?>"
                                     class="booking-thumb" alt="Ảnh phòng trọ">
                                 <span class="badge bg-<?= $cls ?> status-badge">
-                                    <?php
-                                    // Icon cho từng loại trạng thái
-                                    $statusIcons = [
-                                        'PENDING' => 'fa-clock',
-                                        'SUCCESS' => 'fa-check-circle',
-                                        'FAILED' => 'fa-times',
-                                        'REFUND_REQUESTED' => 'fa-rotate-left',
-                                        'REFUNDED' => 'fa-undo-alt',
-                                        'RELEASED' => 'fa-money-bill-transfer'
-                                    ];
-                                    $icon = $statusIcons[$b['status']] ?? 'fa-info-circle';
+                                    <?php                                    // Icon cho từng loại trạng thái
+                                        $statusIcons = [
+                                            'PENDING' => 'fa-clock',
+                                            'SUCCESS' => 'fa-check-circle',
+                                            'FAILED' => 'fa-times',
+                                            'REFUND_REQUESTED' => 'fa-rotate-left',
+                                            'REFUNDED' => 'fa-undo-alt',
+                                            'RELEASED' => 'fa-money-bill-transfer',
+                                            'AWAITING_CONFIRMATION' => 'fa-handshake',
+                                            'CONFIRMED_RENTAL' => 'fa-house-circle-check',
+                                            'AUTO_REFUNDED' => 'fa-clock-rotate-left'
+                                        ];
+                                        $icon = $statusIcons[$b['status']] ?? 'fa-info-circle';
                                     ?>
                                     <i class="fas <?= $icon ?> me-1"></i> <?= $label ?>
                                 </span>
@@ -485,7 +539,6 @@ $stmt->close();
                                     <i class="far fa-calendar-alt"></i>
                                     <span>Đặt ngày: <?= date('d/m/Y H:i', strtotime($b['booked_at'])) ?> <?= $days_text ?></span>
                                 </div>
-
                                 <div class="button-group">
                                     <a href="booking_detail.php?bookingId=<?= $b['booking_id'] ?>"
                                         class="btn btn-sm btn-purple flex-fill">
@@ -499,6 +552,11 @@ $stmt->close();
                                                 <i class="fas fa-undo-alt"></i> Yêu cầu hoàn tiền
                                             </button>
                                         </form>
+                                    <?php elseif ($b['status'] === 'AWAITING_CONFIRMATION'): ?>
+                                        <a href="confirmation.php?booking_id=<?= $b['booking_id'] ?>"
+                                            class="btn btn-sm btn-info flex-fill">
+                                            <i class="fas fa-handshake"></i> Xác nhận thuê
+                                        </a>
                                     <?php endif; ?>
                                 </div>
                             </div>

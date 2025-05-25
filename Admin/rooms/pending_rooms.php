@@ -136,7 +136,7 @@ include_once '../../components/admin_header.php';
                             <div class="row">
                                 <div class="col-md-5">
                                     <?php if (!empty($room['images'])): ?>
-                                        <img src="../<?php echo $room['images']; ?>" class="img-fluid img-thumbnail" alt="<?php echo $room['title']; ?>">
+                                        <img src="/<?php echo $room['images']; ?>" class="img-fluid img-thumbnail" alt="<?php echo $room['title']; ?>">
                                     <?php else: ?>
                                         <div class="text-center p-3 bg-light">Không có ảnh</div>
                                     <?php endif; ?>

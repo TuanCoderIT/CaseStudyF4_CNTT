@@ -95,7 +95,14 @@ if ($action === 'refund') {
     $update_stmt = $mysqli->prepare($update_sql);
     $update_stmt->bind_param("i", $booking_id);
 
-    if ($update_stmt->execute()) {       
+    if ($update_stmt->execute()) {
+        // Cập nhật trạng thái phòng đã cho thuê
+        $update_motel_sql = "UPDATE motel SET isExist = 0 WHERE id = ?";
+        $update_motel_stmt = $mysqli->prepare($update_motel_sql);
+        $update_motel_stmt->bind_param("i", $booking['motel_id']);
+        $update_motel_stmt->execute();
+        $update_motel_stmt->close();
+
         $renter_title = "Xác nhận giải ngân tiền cọc";
         $renter_message = "Bạn đã xác nhận giải ngân tiền cọc cho phòng \"" . htmlspecialchars($motel_title) . "\". Cảm ơn bạn đã sử dụng dịch vụ của chúng tôi.";
 

@@ -2,6 +2,17 @@
 // Khởi tạo phiên làm việc
 session_start();
 
+// Function to check if a room has been booked
+function isRoomBooked($conn, $room_id)
+{
+    $query = "SELECT id FROM bookings WHERE motel_id = ? AND status in ('RELEASED', 'SUCCESS')";
+    $stmt = $conn->prepare($query);
+    $stmt->bind_param("i", $room_id);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    return ($result->num_rows > 0);
+}
+
 // Kiểm tra xem người dùng đã đăng nhập hay chưa
 if (!isset($_SESSION['user_id'])) {
     header('Location: ./auth/login.php');
@@ -129,6 +140,17 @@ if ($result->num_rows == 0) {
 
 $room = $result->fetch_assoc();
 
+// Kiểm tra xem phòng đã có người đặt cọc chưa
+$booking_query = "SELECT id FROM bookings WHERE motel_id = ? AND status in ('SUCCESS', 'RELEASED')";
+$booking_stmt = $conn->prepare($booking_query);
+$booking_stmt->bind_param("i", $room_id);
+$booking_stmt->execute();
+$booking_result = $booking_stmt->get_result();
+$is_booked = ($booking_result->num_rows > 0);
+
+// Kiểm tra tiền cọc
+$requires_deposit = isset($room['default_deposit']) && $room['default_deposit'] > 0;
+
 // Lấy ảnh banner (ảnh đại diện)
 $images = [];
 if (!empty($room['images'])) {
@@ -155,24 +177,56 @@ if (!empty($room['utilities'])) {
 // Định dạng giá thành
 $formatted_price = number_format($room['price']) . ' đ/tháng';
 
-// Truy vấn phòng trọ tương tự (cùng quận, loại phòng tương tự, mức giá tương tự)
-$similar_rooms = null;
-$sql_similar = "SELECT m.*, u.name as owner_name, u.avatar as owner_avatar 
-                FROM motel m 
-                LEFT JOIN users u ON m.user_id = u.id 
-                WHERE m.id != ? AND m.approve = 1
-                AND m.district_id = ?
-                AND m.price BETWEEN ? AND ? 
-                ORDER BY m.created_at DESC 
-                LIMIT 3";
+// Truy vấn phòng trọ liên quan dựa trên khoảng cách và có giá tương tự
+$related_rooms = null;
+if (!empty($room['latlng'])) {
+    // Lấy tọa độ của phòng hiện tại
+    $current_latlng = splitAndTrim($room['latlng']);
+    $current_lat = $current_latlng[0];
+    $current_lng = $current_latlng[1];
 
-$min_price = $room['price'] * 0.7; // Giảm 30%
-$max_price = $room['price'] * 1.3; // Tăng 30%
+    // Truy vấn các phòng có tọa độ và loại trừ các phòng đã đặt cọc thành công hoặc đã giải ngân
+    $sql_related = "SELECT m.*, u.name as owner_name 
+                    FROM motel m 
+                    LEFT JOIN users u ON m.user_id = u.id 
+                    WHERE m.id != ? AND m.approve = 1 
+                    AND m.latlng IS NOT NULL AND m.latlng != ''
+                    AND NOT EXISTS (
+                        SELECT 1 FROM bookings b 
+                        WHERE b.motel_id = m.id 
+                        AND b.status IN ('SUCCESS', 'RELEASED')
+                    )
+                    AND m.price BETWEEN ? AND ?
+                    ORDER BY m.created_at DESC";
 
-$stmt_similar = $conn->prepare($sql_similar);
-$stmt_similar->bind_param("iidd", $room_id, $room['district_id'], $min_price, $max_price);
-$stmt_similar->execute();
-$similar_rooms = $stmt_similar->get_result();
+    // Tính giá chênh lệch 1-2 triệu thay vì phần trăm
+
+    $stmt_related = $conn->prepare($sql_related);
+    // Calculate price range values in variables
+    $min_price = $room['price'] * 0.5;
+    $max_price = $room['price'] * 1.5;
+    $stmt_related->bind_param("idd", $room_id, $min_price, $max_price);
+    $stmt_related->execute();
+    $related_rooms_result = $stmt_related->get_result();
+    // Tính khoảng cách và sắp xếp các phòng theo khoảng cách tăng dần
+    $rooms_with_distance = array();
+    while ($related_room = $related_rooms_result->fetch_assoc()) {
+        if (!empty($related_room['latlng'])) {
+            $related_latlng = splitAndTrim($related_room['latlng']);
+            $distance = haversine($current_lat, $current_lng, $related_latlng[0], $related_latlng[1]);
+            $related_room['distance'] = $distance;
+            $rooms_with_distance[] = $related_room;
+        }
+    }
+
+    // Sắp xếp mảng theo khoảng cách tăng dần
+    usort($rooms_with_distance, function ($a, $b) {
+        return $a['distance'] <=> $b['distance'];
+    });
+
+    // Chỉ lấy 4 phòng gần nhất
+    $rooms_with_distance = array_slice($rooms_with_distance, 0, 4);
+}
 ?>
 
 <!DOCTYPE html>
@@ -372,10 +426,20 @@ $similar_rooms = $stmt_similar->get_result();
                                         <i class="far fa-heart me-2"></i>Yêu thích
                                     </a>
                                 <?php endif; ?>
-                                <button type="button" class="btn btn-success btn-sm flex-grow-1" data-bs-toggle="modal"
-                                    data-bs-target="#depositModal">
-                                    <i class="fas fa-wallet me-2"></i>Đặt cọc
-                                </button>
+                                <?php if ($requires_deposit && !$is_booked): ?>
+                                    <button type="button" class="btn btn-success btn-sm flex-grow-1" data-bs-toggle="modal"
+                                        data-bs-target="#depositModal">
+                                        <i class="fas fa-wallet me-2"></i>Đặt cọc
+                                    </button>
+                                <?php elseif ($is_booked): ?>
+                                    <button type="button" class="btn btn-secondary btn-sm flex-grow-1" disabled>
+                                        <i class="fas fa-lock me-2"></i>Đã có người đặt cọc
+                                    </button>
+                                <?php elseif (!$requires_deposit): ?>
+                                    <button type="button" class="btn btn-info btn-sm flex-grow-1" disabled>
+                                        <i class="fas fa-info-circle me-2"></i>Không cần đặt cọc
+                                    </button>
+                                <?php endif; ?>
                             </div>
                         </div>
                     </div>
@@ -388,57 +452,63 @@ $similar_rooms = $stmt_similar->get_result();
                     </div>
                 </div>
             </div>
-
-            <!-- Phòng trọ tương tự -->
-            <?php if ($similar_rooms->num_rows > 0): ?>
-
-                <div class="mt-5">
-                    <h3 class="similar-rooms-title">Phòng trọ tương tự</h3>
-                    <div class="row">
-                        <?php while ($similar = $similar_rooms->fetch_assoc()): ?>
-                            <div class="col-md-4 mb-4">
-                                <div class="card room-card h-100">
+            <section class="mb-5 mt-5">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2 class="section-title"><i class="fas fa-map-marker-alt me-2 text-danger"></i>Phòng trọ liên quan gần đây</h2>
+                    <small class="text-muted">(Sắp xếp theo khoảng cách gần nhất)</small>
+                </div>
+                <div class="row">
+                    <?php if (!empty($rooms_with_distance)): ?>
+                        <?php foreach ($rooms_with_distance as $related): ?>
+                            <div class="col-md-3 mb-4">
+                                <div class="card room-card four-col h-100">
                                     <div class="room-image">
-                                        <img src="/<?php echo $similar['images']; ?>" class="card-img-top"
-                                            alt="<?php echo $similar['title']; ?>">
-                                        <span class="price-tag"><?php echo number_format($similar['price']); ?> đ/tháng</span>
+                                        <img src="/<?php echo $related['images']; ?>" class="card-img-top" alt="<?php echo $related['title']; ?>">
+                                        <span class="price-tag"><?php echo number_format($related['price']); ?> đ/tháng</span>
+                                        <?php if (isset($related['distance'])): ?>
+                                            <span class="distance-tag"><i class="fas fa-map-marker-alt me-1"></i><?php echo number_format($related['distance'], 1); ?> km</span>
+                                        <?php endif; ?>
+                                        <?php if (isRoomBooked($conn, $related['id'])): ?>
+                                            <span class="booked-tag"><i class="fas fa-lock me-1"></i>Đã có người đặt cọc</span>
+                                        <?php endif; ?>
                                     </div>
                                     <div class="card-body">
                                         <h5 class="card-title">
-                                            <a
-                                                href="room_detail.php?id=<?php echo $similar['id']; ?>"><?php echo $similar['title']; ?></a>
+                                            <a href="/room/room_detail.php?id=<?php echo $related['id']; ?>"><?php echo $related['title']; ?></a>
                                         </h5>
-                                        <p class="card-text address"><i
-                                                class="fas fa-map-marker-alt me-2"></i><?php echo $similar['address']; ?></p>
+                                        <p class="card-text address"><i class="fas fa-map-marker-alt me-2"></i><?php echo $related['address']; ?></p>
                                         <div class="room-info">
-                                            <span><i class="fas fa-expand me-1"></i><?php echo $similar['area']; ?> m²</span>
-                                            <?php if (!empty($similar['utilities'])): ?>
-                                                <span><i class="fas fa-bolt me-1"></i>
-                                                    <?php
-                                                    $sim_utilities = explode(',', $similar['utilities']);
-                                                    echo count($sim_utilities) . ' tiện ích';
-                                                    ?>
-                                                </span>
-                                            <?php endif; ?>
+                                            <span><i class="fas fa-expand me-1"></i><?php echo $related['area']; ?> m²</span>
+                                            <span><i class="fas fa-bolt me-1"></i>
+                                                <?php
+                                                $utilities = explode(',', $related['utilities']);
+                                                echo count($utilities) . ' tiện ích';
+                                                ?>
+                                            </span>
                                         </div>
                                     </div>
                                     <div class="card-footer">
-                                        <small class="text-muted">Đăng bởi: <?php echo $similar['owner_name']; ?></small>
+                                        <small class="text-muted">Đăng bởi: <?php echo $related['owner_name']; ?></small>
                                         <small class="text-muted float-end">
                                             <i class="far fa-clock me-1"></i>
                                             <?php
-                                            $date = new DateTime($similar['created_at']);
+                                            $date = new DateTime($related['created_at']);
                                             echo $date->format('d/m/Y');
                                             ?>
                                         </small>
                                     </div>
                                 </div>
                             </div>
-                        <?php endwhile; ?>
-                    </div>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <div class="col-12">
+                            <div class="alert alert-info">Không tìm thấy phòng trọ liên quan gần khu vực này.</div>
+                        </div>
+                    <?php endif; ?>
                 </div>
-            <?php endif; ?>
+            </section>
         </div>
+
     </section>
 
     <?php include '../components/footer.php' ?>
@@ -460,7 +530,7 @@ $similar_rooms = $stmt_similar->get_result();
                             <span class="fw-bold fs-5">
                                 <?php
                                 // Nếu có default_deposit thì hiển thị, nếu không thì tính 50% giá thuê
-                                $deposit_amount = !empty($room['default_deposit']) ? $room['default_deposit'] : round($room['price'] * 0.5);
+                                $deposit_amount = isset($room['default_deposit']) ? $room['default_deposit'] : round($room['price'] * 0.5);
                                 echo number_format($deposit_amount) . ' đ';
                                 ?>
                             </span>
@@ -500,6 +570,7 @@ $similar_rooms = $stmt_similar->get_result();
         <input type="hidden" name="motel_id" value="<?= $room['id'] ?>">
         <input type="hidden" name="deposit_amount" value="<?= $deposit_amount ?>">
     </form>
+
     <script>
         function processPayment() {
             const method = document.querySelector('input[name="paymentMethod"]:checked').value;
