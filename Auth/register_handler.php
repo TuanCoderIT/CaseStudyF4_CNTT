@@ -55,7 +55,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
                     if (isset($_FILES['avatar']) && $_FILES['avatar']['error'] == 0) {
                         // Thư mục lưu trữ ảnh
-                        $upload_dir = '../images/';
+                        $upload_dir = '../uploads/avatar/';
 
                         // Đảm bảo thư mục tồn tại
                         if (!file_exists($upload_dir)) {
@@ -65,7 +65,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                         // Tạo tên file duy nhất để tránh trùng lặp
                         $file_extension = pathinfo($_FILES['avatar']['name'], PATHINFO_EXTENSION);
                         $avatar_filename = 'avatar_' . time() . '_' . rand(1000, 9999) . '.' . $file_extension;
-                        $avatar_path = 'images/' . $avatar_filename;
+                        $avatar_path = 'uploads/avatar/' . $avatar_filename;
                         $upload_path = $upload_dir . $avatar_filename;
 
                         // Các định dạng ảnh được phép
@@ -105,7 +105,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                             $_SESSION['name'] = $name;
 
                             // Chuyển hướng đến trang chính sau khi đăng ký thành công
-                            header("Location: index.php");
+                            header("Location: ../");
                             exit();
                         } else {
                             $error_message = "Đã xảy ra lỗi khi đăng ký. Vui lòng thử lại sau.";

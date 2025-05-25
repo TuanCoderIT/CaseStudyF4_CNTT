@@ -25,13 +25,13 @@
                     <div class="row mt-4">
                         <div class="col-12 text-center">
                             <div class="btn-group" role="group">
-                                <a href="search.php?sort=view" class="btn btn-light btn-lg">
+                                <a href="/room/search.php?sort=view" class="btn btn-light btn-lg">
                                     <i class="fas fa-fire text-danger me-2"></i>Xem nhiều nhất
                                 </a>
-                                <a href="search.php?sort=newest" class="btn btn-light btn-lg">
+                                <a href="/room/search.php?sort=newest" class="btn btn-light btn-lg">
                                     <i class="fas fa-clock text-success me-2"></i>Mới đăng tải
                                 </a>
-                                <a href="search.php?sort=nearest" class="btn btn-light btn-lg">
+                                <a href="/room/search.php?sort=nearest" class="btn btn-light btn-lg">
                                     <i class="fas fa-university text-primary me-2"></i>Gần trường ĐH Vinh
                                 </a>
                             </div>

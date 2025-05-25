@@ -2,6 +2,17 @@
 // Khởi tạo phiên làm việc
 session_start();
 
+// Function to check if a room has been booked
+function isRoomBooked($conn, $room_id)
+{
+    $query = "SELECT id FROM bookings WHERE motel_id = ? AND status != 'REFUNDED'";
+    $stmt = $conn->prepare($query);
+    $stmt->bind_param("i", $room_id);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    return ($result->num_rows > 0);
+}
+
 // Kiểm tra xem người dùng đã đăng nhập hay chưa
 if (!isset($_SESSION['user_id'])) {
     header('Location: ./auth/login.php');
@@ -133,7 +144,7 @@ $sql = "
     LEFT JOIN users u ON m.user_id = u.id 
     LEFT JOIN categories c ON m.category_id = c.id
     LEFT JOIN districts d ON m.district_id = d.id
-    WHERE $where_clause 
+    WHERE $where_clause && m.isExist = 1
     $sort_sql
 ";
 
@@ -371,6 +382,9 @@ if ($sort == 'nearyou') {
                                         <img src="/<?php echo $room['images']; ?>" class="card-img-top" alt="<?php echo $room['title']; ?>">
                                         <span class="price-tag"><?php echo number_format($room['price']); ?> đ/tháng</span>
                                         <span class="view-count"><i class="fas fa-eye me-1"></i><?php echo number_format($room['count_view']); ?></span>
+                                        <?php if (isRoomBooked($conn, $room['id'])): ?>
+                                            <span class="booked-tag"><i class="fas fa-lock me-1"></i>Đã có người đặt cọc</span>
+                                        <?php endif; ?>
                                     </div>
                                     <div class="card-body">
                                         <h5 class="card-title">

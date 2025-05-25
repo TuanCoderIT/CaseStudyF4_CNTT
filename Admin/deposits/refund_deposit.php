@@ -30,7 +30,7 @@ $sql = "SELECT b.*,
         JOIN motel m ON b.motel_id = m.id
         JOIN users u ON b.user_id = u.id
         JOIN users o ON m.user_id = o.id
-        WHERE b.id = ? AND b.status = 'REFUND_REQUESTED'";
+        WHERE b.id = ? AND b.status = 'SUCCESS'";
 
 $stmt = $conn->prepare($sql);
 $stmt->bind_param("i", $booking_id);

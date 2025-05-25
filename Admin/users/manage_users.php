@@ -298,7 +298,7 @@ $most_active = mysqli_fetch_assoc($most_active_result);
     <div class="card-header bg-gradient-primary text-white d-flex justify-content-between align-items-center">
         <h5 class="m-0 font-weight-bold"><i class="fas fa-user-friends mr-2"></i>Danh sách người dùng</h5>
         <div>
-            <a href="add_user.php" class="btn btn-sm btn-light">
+            <a href="add_user.php" class="btn btn-primary" data-toggle="tooltip" title="Thêm người dùng mới">
                 <i class="fas fa-user-plus mr-1"></i> Thêm người dùng mới
             </a>
             <span class="badge badge-light badge-pill ml-2">

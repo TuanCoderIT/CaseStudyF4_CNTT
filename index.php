@@ -15,12 +15,23 @@ require_once('./utils/haversine.php');
 // Khởi tạo mảng favorite_rooms từ CSDL
 require_once('./config/favorites.php');
 
+// Function to check if a room has been booked
+function isRoomBooked($conn, $room_id)
+{
+    $query = "SELECT id FROM bookings WHERE motel_id = ? AND status = 'SUCCESS'";
+    $stmt = $conn->prepare($query);
+    $stmt->bind_param("i", $room_id);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    return ($result->num_rows > 0);
+}
+
 // Lấy danh sách phòng trọ xem nhiều nhất
 $stmt_most_viewed = $conn->prepare("
     SELECT m.*, u.name as owner_name 
     FROM motel m 
     LEFT JOIN users u ON m.user_id = u.id 
-    WHERE m.approve = 1 
+    WHERE m.approve = 1 && m.isExist = 1
     ORDER BY m.count_view DESC 
     LIMIT 4
 ");
@@ -32,7 +43,7 @@ $stmt_newest = $conn->prepare("
     SELECT m.*, u.name as owner_name 
     FROM motel m 
     LEFT JOIN users u ON m.user_id = u.id 
-    WHERE m.approve = 1 
+    WHERE m.approve = 1 && m.isExist = 1
     ORDER BY m.created_at DESC 
     LIMIT 4
 ");
@@ -45,7 +56,7 @@ $stmt_nearest = $conn->prepare("
     SELECT m.*, u.name as owner_name 
     FROM motel m 
     LEFT JOIN users u ON m.user_id = u.id 
-    WHERE m.approve = 1 
+    WHERE m.approve = 1 && m.isExist = 1
 ");
 $stmt_nearest->execute();
 $nearest_rooms = $stmt_nearest->get_result();
@@ -54,8 +65,6 @@ $nearest_rooms = $stmt_nearest->get_result();
 $roomNearVinhUniversity = handleGetRoomByIP($nearest_rooms, uniLatVinh, unitLngVinh);
 
 $roomNearVinhUniversityTop4 = array_slice($roomNearVinhUniversity, 0, 4);
-
-
 
 if (isset($_SESSION['lat']) && isset($_SESSION['lng'])) {
 
@@ -71,7 +80,7 @@ if (isset($latUser) && isset($lngUser)) {
     SELECT m.*, u.name as owner_name 
     FROM motel m 
     LEFT JOIN users u ON m.user_id = u.id 
-    WHERE m.approve = 1 
+    WHERE m.approve = 1 && m.isExist = 1
 ");
     $stmt->execute();
     $rooms = $stmt->get_result();
@@ -125,6 +134,9 @@ if (isset($latUser) && isset($lngUser)) {
                                         <img src="/<?php echo $room['images']; ?>" class="card-img-top" alt="<?php echo $room['title']; ?>">
                                         <span class="price-tag"><?php echo number_format($room['price']); ?> đ/tháng</span>
                                         <span class="view-count"><i class="fas fa-eye me-1"></i><?php echo number_format($room['count_view']); ?></span>
+                                        <?php if (isRoomBooked($conn, $room['id'])): ?>
+                                            <span class="booked-tag"><i class="fas fa-lock me-1"></i>Đã có người đặt cọc</span>
+                                        <?php endif; ?>
                                     </div>
                                     <div class="card-body">
                                         <h5 class="card-title">
@@ -177,6 +189,9 @@ if (isset($latUser) && isset($lngUser)) {
                                         <img src="/<?php echo htmlspecialchars($room['images']); ?>" class="card-img-top" alt="<?php echo htmlspecialchars($room['title']); ?>">
                                         <span class="price-tag"><?php echo number_format($room['price']); ?> đ/tháng</span>
                                         <span class="new-tag">Mới</span>
+                                        <?php if (isRoomBooked($conn, $room['id'])): ?>
+                                            <span class="booked-tag"><i class="fas fa-lock me-1"></i>Đã có người đặt cọc</span>
+                                        <?php endif; ?>
                                     </div>
                                     <div class="card-body">
                                         <h5 class="card-title">
@@ -232,6 +247,9 @@ if (isset($latUser) && isset($lngUser)) {
                                         <img src="/<?php echo $room['images']; ?>" class="card-img-top" alt="<?php echo $room['title']; ?>">
                                         <span class="price-tag"><?php echo number_format($room['price']); ?> đ/tháng</span>
                                         <span class="distance-tag"><i class="fas fa-walking me-1"></i><?php echo $room['latlng']; ?> km</span>
+                                        <?php if (isRoomBooked($conn, $room['id'])): ?>
+                                            <span class="booked-tag"><i class="fas fa-lock me-1"></i>Đã có người đặt cọc</span>
+                                        <?php endif; ?>
                                     </div>
                                     <div class="card-body">
                                         <h5 class="card-title">
@@ -283,6 +301,9 @@ if (isset($latUser) && isset($lngUser)) {
                                         <img src="/<?php echo $room['images']; ?>" class="card-img-top" alt="<?php echo $room['title']; ?>">
                                         <span class="price-tag"><?php echo number_format($room['price']); ?> đ/tháng</span>
                                         <span class="distance-tag"><i class="fas fa-walking me-1"></i><?php echo $room['latlng']; ?> km</span>
+                                        <?php if (isRoomBooked($conn, $room['id'])): ?>
+                                            <span class="booked-tag"><i class="fas fa-lock me-1"></i>Đã có người đặt cọc</span>
+                                        <?php endif; ?>
                                     </div>
                                     <div class="card-body">
                                         <h5 class="card-title">

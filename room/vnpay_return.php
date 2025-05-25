@@ -2,7 +2,7 @@
 session_start();
 
 // 1. Kết nối DB
-require_once __DIR__ . '/config/db.php';
+require_once '../config/db.php';
 
 // 2. Khóa bí mật (hash secret) do VNPAY cấp
 $vnp_HashSecret = "FZJ7KT64QMGB48NTW0HQG1DBKPTLG8N6";
@@ -116,13 +116,53 @@ if ($newStatus === 'SUCCESS') {
         }
     }
     $notifyStmt->close();
-    echo "<h3>✅ Thanh toán thành công!</h3>";
-    echo "<p>Booking ID: {$txnRef}<br>" .
-        "Phòng: " . htmlspecialchars($info['motel_title'], ENT_QUOTES, 'UTF-8') . "<br>" .
-        "Số tiền: " . number_format($amount) . "₫<br>" .
-        "Ngân hàng: {$bankCode}</p>";
-    echo "<p><a href='/index.php'>Quay về trang chủ</a></p>";
     $conn->close();
+
+    // Chuẩn bị dữ liệu cho modal
+    $motelTitle = htmlspecialchars($info['motel_title'], ENT_QUOTES, 'UTF-8');
+    $amountStr = number_format($amount) . "₫";
+    $depositsUrl = "/room/my_bookings.php"; // Đổi lại nếu bạn dùng url khác
+
+    echo <<<HTML
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Đặt cọc thành công</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { background: #f8f9fa; }
+    </style>
+</head>
+<body>
+    <!-- Modal -->
+    <div class="modal fade show" id="successModal" tabindex="-1" aria-labelledby="successModalLabel" aria-modal="true" style="display: block; background: rgba(0,0,0,0.3);">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header bg-success text-white">
+            <h5 class="modal-title" id="successModalLabel"><i class="fas fa-check-circle me-2"></i>Đặt cọc thành công!</h5>
+          </div>
+          <div class="modal-body">
+            <p>Bạn đã đặt cọc thành công phòng <strong>{$motelTitle}</strong>.</p>
+            <p>Số tiền: <span class="fw-bold text-success">{$amountStr}</span></p>
+            <p>Cảm ơn bạn đã sử dụng dịch vụ!</p>
+          </div>
+          <div class="modal-footer">
+            <a href="{$depositsUrl}" class="btn btn-primary">Xem danh sách phòng đã đặt cọc</a>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+      // Tự động focus vào nút khi modal hiện
+      document.querySelector('.btn-primary').focus();
+    </script>
+</body>
+</html>
+HTML;
+    exit;
 } else {
     echo "<h3>❌ Thanh toán thất bại!</h3>";
     echo "<p>Mã lỗi VNPAY: {$responseCode}<br>Trạng thái: {$transactionStatus}</p>";
