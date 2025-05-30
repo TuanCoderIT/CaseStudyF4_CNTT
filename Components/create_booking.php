@@ -1,33 +1,60 @@
-    <?php
-    session_start();
+<?php
+session_start();
 
-    // 1. Kết nối DB
-    require_once __DIR__ . '/../config/db.php';
+// 1. Kết nối DB
+require_once __DIR__ . '/../config/db.php';
 
 
-    $user_id = $_SESSION['user_id'];
-    $motelId      = $_POST['motel_id']      ?? null;
-    $depositAmount = $_POST['deposit_amount']    ?? null;
-    if (!$user_id || !$motelId || !$depositAmount) {
-        die("Thiếu thông tin cần thiết để đặt cọc.");
-    }
-    $stmt = $conn->prepare("SELECT user_id FROM motel WHERE id = ?");
-    $stmt->bind_param('i', $motelId);
+$user_id = $_SESSION['user_id'];
+$motelId = $_POST['motel_id'] ?? $_GET['booking_id'] ?? null;
+$depositAmount = $_POST['deposit_amount'] ?? null;
+$isRetry = isset($_GET['retry']) && $_GET['retry'] == 1;
+$bookingId = $_GET['booking_id'] ?? null;
+
+// Nếu là thanh toán lại, lấy thông tin từ booking cũ
+if ($isRetry && $bookingId) {
+    $stmt = $conn->prepare("SELECT motel_id, deposit_amount FROM bookings WHERE id = ? AND user_id = ? AND (status = 'PENDING' OR status = 'FAILED')");
+    $stmt->bind_param('ii', $bookingId, $user_id);
     $stmt->execute();
-    $stmt->bind_result($ownerId);
+    $stmt->bind_result($motelId, $depositAmount);
     $stmt->fetch();
     $stmt->close();
 
-    if ($ownerId === $user_id) {
-        // Chủ trọ tự đặt cọc phòng mình
-        $redirectUrl  = '/index.php';
+    // Nếu không tìm thấy booking hoặc không thuộc về người dùng
+    if (!$motelId || !$depositAmount) {
+        $redirectUrl = '/room/my_bookings.php';
         $redirectTime = 3;
         echo "<div class='alert alert-danger fade show' role='alert'>
-                <strong>⚠ Lỗi:</strong> Bạn không thể đặt cọc phòng của chính mình!
+                <strong>⚠ Lỗi:</strong> Không tìm thấy thông tin đặt phòng cần thanh toán lại!
             </div>
             <meta http-equiv='refresh' content='{$redirectTime};url={$redirectUrl}'>";
         exit;
     }
+} else if (!$user_id || !$motelId || !$depositAmount) {
+    die("Thiếu thông tin cần thiết để đặt cọc.");
+}
+
+// Lấy thông tin chủ phòng
+$stmt = $conn->prepare("SELECT user_id FROM motel WHERE id = ?");
+$stmt->bind_param('i', $motelId);
+$stmt->execute();
+$stmt->bind_result($ownerId);
+$stmt->fetch();
+$stmt->close();
+
+if ($ownerId === $user_id) {
+    // Chủ trọ tự đặt cọc phòng mình
+    $redirectUrl  = '/';
+    $redirectTime = 3;
+    echo "<div class='alert alert-danger fade show' role='alert'>
+            <strong>⚠ Lỗi:</strong> Bạn không thể đặt cọc phòng của chính mình!
+        </div>
+        <meta http-equiv='refresh' content='{$redirectTime};url={$redirectUrl}'>";
+    exit;
+}
+
+// Nếu không phải thanh toán lại, kiểm tra các điều kiện
+if (!$isRetry) {
     // Kiểm tra xem user đã đặt cọc phòng này chưa
     $sqlCheck = "
         SELECT COUNT(*) AS cnt 
@@ -143,44 +170,64 @@
     $_SESSION['booking_id'] = $bookingId;
 
     $stmt->close();
+} else {
+    // Nếu là thanh toán lại, cập nhật trạng thái booking là PENDING
+    $stmt = $conn->prepare("UPDATE bookings SET status = 'PENDING' WHERE id = ? AND user_id = ?");
+    $stmt->bind_param('ii', $bookingId, $user_id);
+    $stmt->execute();
+    $stmt->close();
 
-    // 4. Xây dựng URL VNPay
-    date_default_timezone_set('Asia/Ho_Chi_Minh');
+    $_SESSION['booking_id'] = $bookingId;
+}
 
-    $vnp_TmnCode   = "3B838ZBS";
-    $vnp_HashSecret = "FZJ7KT64QMGB48NTW0HQG1DBKPTLG8N6";
-    $vnp_Url       = "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html";
+// 4. Xây dựng URL VNPay
+date_default_timezone_set('Asia/Ho_Chi_Minh');
 
-    $inputData = [
-        "vnp_Version"        => "2.1.0",
-        "vnp_TmnCode"        => $vnp_TmnCode,
-        "vnp_Amount"         => $depositAmount *  100,
-        "vnp_Command"        => "pay",
-        "vnp_CreateDate"     => date('YmdHis'),
-        "vnp_CurrCode"       => "VND",
-        "vnp_IpAddr"         => $_SERVER['REMOTE_ADDR'],
-        "vnp_Locale"         => "vn",
-        "vnp_OrderInfo"      => "Dat coc phong $motelId, booking $bookingId",
-        "vnp_OrderType"      => "other",
-        "vnp_ReturnUrl"      => "http://localhost/room/vnpay_return.php",
-        "vnp_TxnRef"         => $bookingId
-    ];
+$vnp_TmnCode   = "3B838ZBS";
+$vnp_HashSecret = "FZJ7KT64QMGB48NTW0HQG1DBKPTLG8N6";
+$vnp_Url       = "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html";
 
-    // Sắp xếp và ghép query/hash
-    ksort($inputData);
-    $hashData = '';
-    $query    = '';
-    foreach ($inputData as $key => $value) {
-        $hashData .= urlencode($key) . '=' . urlencode($value) . '&';
-        $query    .= urlencode($key) . '=' . urlencode($value) . '&';
-    }
-    $hashData = rtrim($hashData, '&');
-    $query    = rtrim($query, '&');
+$inputData = [
+    "vnp_Version"        => "2.1.0",
+    "vnp_TmnCode"        => $vnp_TmnCode,
+    "vnp_Amount"         => $depositAmount *  100,
+    "vnp_Command"        => "pay",
+    "vnp_CreateDate"     => date('YmdHis'),
+    "vnp_CurrCode"       => "VND",
+    "vnp_IpAddr"         => $_SERVER['REMOTE_ADDR'],
+    "vnp_Locale"         => "vn",
+    "vnp_OrderInfo"      => "Dat coc phong $motelId, booking $bookingId",
+    "vnp_OrderType"      => "other",
+    "vnp_ReturnUrl"      => (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://" . $_SERVER['HTTP_HOST'] . "/room/vnpay_return.php",
+    "vnp_TxnRef"         => $bookingId
+];
 
-    // Tạo secure hash
-    $vnp_SecureHash = hash_hmac('sha512', $hashData, $vnp_HashSecret);
+// Thêm bankCode nếu được chỉ định
+if (isset($_POST['bankCode']) && !empty($_POST['bankCode'])) {
+    $inputData["vnp_BankCode"] = $_POST['bankCode'];
+}
 
-    // Redirect
-    $redirectUrl = $vnp_Url . '?' . $query . '&vnp_SecureHash=' . $vnp_SecureHash;
-    header('Location: ' . $redirectUrl);
-    exit;
+// Thêm thông tin tên ngân hàng nếu có
+if (isset($_POST['bankName']) && !empty($_POST['bankName'])) {
+    // Lưu tên ngân hàng vào session để sử dụng sau này
+    $_SESSION['booking_bank_name'] = $_POST['bankName'];
+}
+
+// Sắp xếp và ghép query/hash
+ksort($inputData);
+$hashData = '';
+$query    = '';
+foreach ($inputData as $key => $value) {
+    $hashData .= urlencode($key) . '=' . urlencode($value) . '&';
+    $query    .= urlencode($key) . '=' . urlencode($value) . '&';
+}
+$hashData = rtrim($hashData, '&');
+$query    = rtrim($query, '&');
+
+// Tạo secure hash
+$vnp_SecureHash = hash_hmac('sha512', $hashData, $vnp_HashSecret);
+
+// Redirect
+$redirectUrl = $vnp_Url . '?' . $query . '&vnp_SecureHash=' . $vnp_SecureHash;
+header('Location: ' . $redirectUrl);
+exit;

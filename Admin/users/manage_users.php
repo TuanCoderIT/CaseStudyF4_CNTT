@@ -116,7 +116,7 @@ $pagination_params = !empty($params) ? '&' . implode('&', $params) : '';
 $query = "SELECT u.*, COUNT(m.id) as room_count 
           FROM users u 
           LEFT JOIN motel m ON u.id = m.user_id 
-          GROUP BY u.id
+          GROUP BY u.id, u.role, u.name, u.email, u.username, u.phone
           $where_clause
           ORDER BY u.id
           LIMIT $start, $limit";
@@ -124,10 +124,10 @@ $result = mysqli_query($conn, $query);
 
 // Đếm tổng số người dùng để tính số trang (sử dụng các bộ lọc tương tự)
 $count_query = "SELECT COUNT(*) as count FROM (
-                SELECT u.id, COUNT(m.id) as room_count 
+                SELECT u.id, u.role, u.name, u.email, u.username, u.phone, COUNT(m.id) as room_count 
                 FROM users u 
                 LEFT JOIN motel m ON u.id = m.user_id 
-                GROUP BY u.id
+                GROUP BY u.id, u.role, u.name, u.email, u.username, u.phone
                 $where_clause
                 ) as filtered_users";
 $count_result = mysqli_query($conn, $count_query);
@@ -171,8 +171,10 @@ include_once '../../components/admin_header.php';
 <?php endif; ?>
 
 <?php
-// Lấy tổng số người dùng
-$total_users = $count_data['count'];
+// Lấy tổng số người dùng từ database thay vì từ kết quả đã được lọc
+$total_users_query = mysqli_query($conn, "SELECT COUNT(*) as count FROM users");
+$total_users_data = mysqli_fetch_assoc($total_users_query);
+$total_users = $total_users_data['count'];
 
 // Lấy tổng số admin
 $admin_query = mysqli_query($conn, "SELECT COUNT(*) as count FROM users WHERE role = 1");
@@ -180,7 +182,9 @@ $admin_data = mysqli_fetch_assoc($admin_query);
 $total_admins = $admin_data['count'];
 
 // Lấy tổng số người dùng thường
-$normal_users = $total_users - $total_admins;
+$normal_users_query = mysqli_query($conn, "SELECT COUNT(*) as count FROM users WHERE role != 1");
+$normal_users_data = mysqli_fetch_assoc($normal_users_query);
+$normal_users = $normal_users_data['count'];
 
 // Lấy người dùng có nhiều phòng nhất
 $most_active_query = "SELECT u.name, COUNT(m.id) as room_count 

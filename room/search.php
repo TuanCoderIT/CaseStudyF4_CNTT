@@ -5,7 +5,7 @@ session_start();
 // Function to check if a room has been booked
 function isRoomBooked($conn, $room_id)
 {
-    $query = "SELECT id FROM bookings WHERE motel_id = ? AND status != 'REFUNDED'";
+    $query = "SELECT id FROM bookings WHERE motel_id = ? AND status in ('SUCCESS', 'REFUNDED')";
     $stmt = $conn->prepare($query);
     $stmt->bind_param("i", $room_id);
     $stmt->execute();
@@ -129,9 +129,10 @@ if (isset($_GET['area_min']) && !empty($_GET['area_min']) && isset($_GET['area_m
 
 // Tìm kiếm theo từ khóa (địa chỉ hoặc tiêu đề)
 if (isset($_GET['keyword']) && !empty($_GET['keyword'])) {
+    $keyword = $_GET['keyword'];
     $where_conditions[] = "(m.title LIKE ? OR m.address LIKE ?)";
-    $params[] = "%{$_GET['keyword']}%";
-    $params[] = "%{$_GET['keyword']}%";
+    $params[] = "%{$keyword}%";
+    $params[] = "%{$keyword}%";
     $param_types .= "ss";
 }
 
@@ -179,6 +180,14 @@ if ($sort == 'nearyou') {
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="./assets/style.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/nouislider@14.7.0/distribute/nouislider.min.css">
+    <style>
+        .highlight-keyword {
+            background-color: rgba(255, 255, 0, 0.4);
+            font-weight: bold;
+            padding: 0 2px;
+            border-radius: 2px;
+        }
+    </style>
 </head>
 
 <body class="search-body">
@@ -388,9 +397,33 @@ if ($sort == 'nearyou') {
                                     </div>
                                     <div class="card-body">
                                         <h5 class="card-title">
-                                            <a href="room_detail.php?id=<?php echo $room['id']; ?>"><?php echo $room['title']; ?></a>
+                                            <a href="room_detail.php?id=<?php echo $room['id']; ?>">
+                                                <?php
+                                                if (isset($_GET['keyword']) && !empty($_GET['keyword'])) {
+                                                    $keyword = htmlspecialchars($_GET['keyword']);
+                                                    $title = htmlspecialchars($room['title']);
+                                                    // Highlight the matched keyword in the title
+                                                    $highlighted_title = preg_replace('/(' . preg_quote($keyword, '/') . ')/i', '<span class="highlight-keyword">$1</span>', $title);
+                                                    echo $highlighted_title;
+                                                } else {
+                                                    echo htmlspecialchars($room['title']);
+                                                }
+                                                ?>
+                                            </a>
                                         </h5>
-                                        <p class="card-text address"><i class="fas fa-map-marker-alt me-2"></i><?php echo $room['address']; ?></p>
+                                        <p class="card-text address"><i class="fas fa-map-marker-alt me-2"></i>
+                                            <?php
+                                            if (isset($_GET['keyword']) && !empty($_GET['keyword'])) {
+                                                $keyword = htmlspecialchars($_GET['keyword']);
+                                                $address = htmlspecialchars($room['address']);
+                                                // Highlight the matched keyword in the address
+                                                $highlighted_address = preg_replace('/(' . preg_quote($keyword, '/') . ')/i', '<span class="highlight-keyword">$1</span>', $address);
+                                                echo $highlighted_address;
+                                            } else {
+                                                echo htmlspecialchars($room['address']);
+                                            }
+                                            ?>
+                                        </p>
                                         <div class="room-info">
                                             <span><i class="fas fa-expand me-1"></i><?php echo $room['area']; ?> m²</span>
                                             <span><i class="fas fa-bolt me-1"></i>

@@ -39,3 +39,10 @@
         </div>
     </div>
 </footer>
+
+<!-- Nhúng chatbot vào trang -->
+<?php include_once __DIR__ . '/chatbot.php'; ?>
+
+</body>
+
+</html>

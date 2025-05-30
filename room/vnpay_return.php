@@ -39,22 +39,32 @@ if ($computedHash !== $vnp_SecureHash) {
 $txnRef            = intval($_GET['vnp_TxnRef']);      // booking id
 $responseCode      = $_GET['vnp_ResponseCode'];        // mã kết quả VNPAY
 $transactionStatus = $_GET['vnp_TransactionStatus'];    // trạng thái giao dịch
-$bankCode          = $_GET['vnp_BankCode'];            // ngân hàng
+$bankCode          = $_GET['vnp_BankCode'] ?? '';      // ngân hàng
 $transactionNo     = $_GET['vnp_TransactionNo'];       // mã giao dịch VNPAY
 $amount            = ($_GET['vnp_Amount'] ?? 0) / 100;  // giá trị thực tế
+
+// Lấy tên ngân hàng từ session nếu có
+$bankName = isset($_SESSION['booking_bank_name']) ? $_SESSION['booking_bank_name'] : '';
 
 // 8. Xác định status mới
 $newStatus = ($responseCode === "00" && $transactionStatus === "00") ? 'SUCCESS' : 'FAILED';
 
-// 9. Cập nhật DB với đúng cột hiện có
+// 9. Cập nhật DB với đúng cột hiện có và thêm thông tin ngân hàng
 $sql = "UPDATE bookings 
         SET status = ?, 
-            vnp_transaction_id = ?
+            vnp_transaction_id = ?,
+            bank_code = ?,
+            bank_name = ?
         WHERE id = ?";
 $stmt = $conn->prepare($sql);
-$stmt->bind_param('ssi', $newStatus, $transactionNo, $txnRef);
+$stmt->bind_param('ssssi', $newStatus, $transactionNo, $bankCode, $bankName, $txnRef);
 $stmt->execute();
 $stmt->close();
+
+// Xóa thông tin ngân hàng khỏi session sau khi đã lưu
+if (isset($_SESSION['booking_bank_name'])) {
+    unset($_SESSION['booking_bank_name']);
+}
 
 // 9. Hiển thị kết quả hoặc redirect
 if ($newStatus === 'SUCCESS') {

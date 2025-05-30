@@ -51,7 +51,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     $error_message = "Email đã được sử dụng. Vui lòng sử dụng email khác.";
                 } else {
                     // Xử lý upload ảnh đại diện nếu có
-                    $avatar_path = 'images/default_avatar.png'; // Đường dẫn mặc định
+                    $avatar_path = 'uploads/avatar/default_avatar.png'; // Đường dẫn mặc định
 
                     if (isset($_FILES['avatar']) && $_FILES['avatar']['error'] == 0) {
                         // Thư mục lưu trữ ảnh

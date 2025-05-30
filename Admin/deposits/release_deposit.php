@@ -151,7 +151,7 @@ function formatCurrency($amount)
                             <ol class="breadcrumb">
                                 <li class="breadcrumb-item"><a href="../index.php">Dashboard</a></li>
                                 <li class="breadcrumb-item"><a href="manage_deposits.php">Quản lý tiền cọc</a></li>
-                                <li class="breadcrumb-item"><a href="view_deposit.php?id=<?= $booking_id ?>">Chi tiết tiền cọc #<?= $booking_id ?></a></li>
+                                <li class="breadcrumb-item"><a href="deposit_detail.php?id=<?= $booking_id ?>">Chi tiết tiền cọc #<?= $booking_id ?></a></li>
                                 <li class="breadcrumb-item active">Giải ngân tiền cọc</li>
                             </ol>
                         </nav>
@@ -166,7 +166,7 @@ function formatCurrency($amount)
                         <div class="d-flex justify-content-between">
                             <p class="mb-0">Thông báo đã được gửi đến người thuê và chủ trọ.</p>
                             <div>
-                                <a href="view_deposit.php?id=<?= $booking_id ?>" class="btn btn-sm btn-outline-success me-2">Xem chi tiết</a>
+                                <a href="deposit_detail.php?id=<?= $booking_id ?>" class="btn btn-sm btn-outline-success me-2">Xem chi tiết</a>
                                 <a href="manage_deposits.php" class="btn btn-sm btn-outline-primary">Quay lại danh sách</a>
                             </div>
                         </div>
@@ -232,7 +232,7 @@ function formatCurrency($amount)
                                 </div>
 
                                 <div class="d-flex justify-content-end gap-2">
-                                    <a href="view_deposit.php?id=<?= $booking_id ?>" class="btn btn-outline-secondary">Hủy bỏ</a>
+                                    <a href="deposit_detail.php?id=<?= $booking_id ?>" class="btn btn-outline-secondary">Hủy bỏ</a>
                                     <button type="submit" name="confirm_release" class="btn btn-success">
                                         <i class="fas fa-check-circle me-2"></i>Xác nhận giải ngân
                                     </button>

@@ -566,7 +566,7 @@ if (!empty($room['latlng'])) {
             </div>
         </div>
     </div>
-    <form id="bookingForm" action="../components/create_booking.php" method="POST" style="display:none">
+    <form id="bookingForm" action="/components/create_booking.php" method="POST" style="display:none">
         <input type="hidden" name="motel_id" value="<?= $room['id'] ?>">
         <input type="hidden" name="deposit_amount" value="<?= $deposit_amount ?>">
     </form>

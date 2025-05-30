@@ -678,7 +678,7 @@ include('../components/header.php');
                                                     <i class="fas fa-lock me-1"></i>Đã giải ngân
                                                 </span>
                                             <?php endif; ?>
-                                            <a href="#" class="btn btn-sm btn-danger flex-grow-1 action-btn" data-bs-toggle="modal" data-bs-target="#deleteModal<?php echo $room['id']; ?>">
+                                            <a href="#" class="btn btn-sm btn-danger flex-grow-1 action-btn show-delete-modal" data-modal-id="deleteModal<?php echo $room['id']; ?>">
                                                 <i class="fas fa-trash-alt me-1"></i>Xóa
                                             </a>
                                         <?php endif; ?>
@@ -687,7 +687,7 @@ include('../components/header.php');
                             </div>
 
                             <!-- Modal Xác nhận xóa -->
-                            <div class="modal fade" id="deleteModal<?php echo $room['id']; ?>" tabindex="-1" aria-labelledby="deleteModalLabel<?php echo $room['id']; ?>" aria-hidden="true">
+                            <div class="modal fade" id="deleteModal<?php echo $room['id']; ?>" tabindex="-1" aria-labelledby="deleteModalLabel<?php echo $room['id']; ?>" aria-hidden="true" data-bs-backdrop="static">
                                 <div class="modal-dialog">
                                     <div class="modal-content">
                                         <div class="modal-header">
@@ -987,6 +987,63 @@ include('../components/header.php');
     .col:nth-child(6) {
         animation-delay: 0.5s;
     }
+
+    /* Fix cho modal backdrop */
+    .modal-open {
+        overflow: auto !important;
+        padding-right: 0 !important;
+    }
+
+    body {
+        overflow: auto !important;
+        padding-right: 0 !important;
+    }
+
+    /* Tùy chỉnh modal */
+    .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 1050;
+        overflow: auto;
+        padding-right: 0 !important;
+        opacity: 0;
+        transition: opacity 0.15s linear;
+    }
+
+    .modal.show {
+        display: block;
+        opacity: 1;
+    }
+
+    .modal-dialog {
+        margin: 1.75rem auto;
+        transition: transform 0.3s ease-out;
+        transform: translate(0, -50px);
+    }
+
+    .modal.show .modal-dialog {
+        transform: translate(0, 0);
+    }
+
+    .modal-backdrop {
+        display: none !important;
+    }
+
+    .modal-content {
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+        border: none;
+    }
+
+    /* Đảm bảo nút đóng modal hoạt động đúng */
+    .modal .btn-close:focus,
+    .modal .btn[data-bs-dismiss="modal"]:focus {
+        box-shadow: none;
+    }
 </style>
 
 <!-- Bootstrap 5 JS và Popper JS -->
@@ -1013,6 +1070,62 @@ include('../components/header.php');
         const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
         tooltipTriggerList.map(function(tooltipTriggerEl) {
             return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+
+        // Xóa bất kỳ backdrop nào còn sót lại từ trước
+        document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+        document.body.classList.remove('modal-open');
+        document.body.style.overflow = '';
+        document.body.style.paddingRight = '';
+
+        // Xử lý tự quản lý modal hoàn toàn
+        document.querySelectorAll('.show-delete-modal').forEach(button => {
+            button.addEventListener('click', function(e) {
+                e.preventDefault();
+
+                // Lấy ID modal từ data attribute
+                const modalId = this.getAttribute('data-modal-id');
+                const modal = document.getElementById(modalId);
+
+                if (modal) {
+                    // Hiển thị modal với style thủ công
+                    modal.style.display = 'block';
+
+                    // Thêm độ trễ nhỏ để animation hiển thị mượt mà
+                    setTimeout(() => {
+                        modal.classList.add('show');
+                    }, 10);
+
+                    // Xử lý các nút đóng trong modal
+                    modal.querySelectorAll('.btn-close, .btn[data-bs-dismiss="modal"]').forEach(closeBtn => {
+                        closeBtn.addEventListener('click', function() {
+                            closeModal(modal);
+                        });
+                    });
+
+                    // Đóng modal khi click vào nền
+                    modal.addEventListener('click', function(event) {
+                        if (event.target === modal) {
+                            closeModal(modal);
+                        }
+                    });
+                }
+            });
+        });
+
+        // Hàm đóng modal
+        function closeModal(modal) {
+            modal.style.display = 'none';
+            modal.classList.remove('show');
+        }
+
+        // Xử lý phím Esc để đóng modal
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                document.querySelectorAll('.modal.show').forEach(modal => {
+                    closeModal(modal);
+                });
+            }
         });
     });
 </script>

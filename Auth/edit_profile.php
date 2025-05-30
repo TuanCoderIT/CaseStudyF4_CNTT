@@ -31,6 +31,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $username = $_POST['username'];
     $email = $_POST['email'];
     $phone = $_POST['phone'];
+    $bank_name = $_POST['bank_name'] ?? null;
+    $bank_code = $_POST['bank_code'] ?? null;
 
     // Kiểm tra xem username có bị trùng không (trừ username hiện tại của người dùng)
     $stmt = $conn->prepare("SELECT id FROM users WHERE username = ? AND id != ?");
@@ -101,8 +103,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Nếu không có lỗi, tiến hành cập nhật thông tin vào CSDL
             if (empty($error_message)) {
                 // Cập nhật thông tin người dùng
-                $stmt = $conn->prepare("UPDATE users SET name = ?, username = ?, email = ?, phone = ?, avatar = ? WHERE id = ?");
-                $stmt->bind_param("sssssi", $name, $username, $email, $phone, $avatar_path, $user_id);
+                $stmt = $conn->prepare("UPDATE users SET name = ?, username = ?, email = ?, phone = ?, avatar = ?, bank_name = ?, bank_code = ? WHERE id = ?");
+                $stmt->bind_param("sssssssi", $name, $username, $email, $phone, $avatar_path, $bank_name, $bank_code, $user_id);
 
                 if ($stmt->execute()) {
                     $success_message = "Cập nhật thông tin thành công!";
@@ -196,12 +198,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <div class="container">
         <div class="row justify-content-center">
             <div class="col-md-6 form-container">
-                <h3 class="text-center mb-4">Chỉnh sửa thông tin tài khoản</h3>                <?php if (!empty($success_message)): ?>
+                <h3 class="text-center mb-4">Chỉnh sửa thông tin tài khoản</h3> <?php if (!empty($success_message)): ?>
                     <div class="alert alert-success" role="alert">
                         <i class="fas fa-check-circle me-2"></i><?php echo $success_message; ?>
                     </div>
                 <?php endif; ?>
-                
+
                 <?php if (!empty($error_message)): ?>
                     <div class="alert alert-danger" role="alert">
                         <i class="fas fa-exclamation-circle me-2"></i><?php echo $error_message; ?>
@@ -220,7 +222,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 onchange="previewImage(this)">
                         </div>
                     </div>
-                    
+
                     <div class="mb-3">
                         <label><i class="fas fa-user-circle me-2"></i>Họ tên</label>
                         <div class="input-group">
@@ -262,28 +264,97 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 value="<?php echo htmlspecialchars($user['phone']); ?>"
                                 required>
                         </div>
-                    </div>                    <div class="d-grid gap-2">
+                    </div>
+
+                    <!-- Thông tin ngân hàng -->
+                    <div class="mb-3">
+                        <label><i class="fas fa-university me-2"></i>Ngân hàng</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-university"></i></span>
+                            <select class="form-select" name="bank_name">
+                                <option value="" <?php echo empty($user['bank_name']) ? 'selected' : ''; ?>>-- Chọn ngân hàng --</option>
+                                <option value="Vietcombank" <?php echo $user['bank_name'] == 'Vietcombank' ? 'selected' : ''; ?>>Vietcombank</option>
+                                <option value="VietinBank" <?php echo $user['bank_name'] == 'VietinBank' ? 'selected' : ''; ?>>VietinBank</option>
+                                <option value="BIDV" <?php echo $user['bank_name'] == 'BIDV' ? 'selected' : ''; ?>>BIDV</option>
+                                <option value="Agribank" <?php echo $user['bank_name'] == 'Agribank' ? 'selected' : ''; ?>>Agribank</option>
+                                <option value="MBBank" <?php echo $user['bank_name'] == 'MBBank' ? 'selected' : ''; ?>>MB Bank</option>
+                                <option value="Techcombank" <?php echo $user['bank_name'] == 'Techcombank' ? 'selected' : ''; ?>>Techcombank</option>
+                                <option value="ACB" <?php echo $user['bank_name'] == 'ACB' ? 'selected' : ''; ?>>ACB</option>
+                                <option value="TPBank" <?php echo $user['bank_name'] == 'TPBank' ? 'selected' : ''; ?>>TPBank</option>
+                                <option value="VPBank" <?php echo $user['bank_name'] == 'VPBank' ? 'selected' : ''; ?>>VPBank</option>
+                                <option value="HDBank" <?php echo $user['bank_name'] == 'HDBank' ? 'selected' : ''; ?>>HDBank</option>
+                                <option value="SacomBank" <?php echo $user['bank_name'] == 'SacomBank' ? 'selected' : ''; ?>>SacomBank</option>
+                                <option value="OCB" <?php echo $user['bank_name'] == 'OCB' ? 'selected' : ''; ?>>OCB</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label><i class="fas fa-credit-card me-2"></i>Mã ngân hàng (Bank code)</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-credit-card"></i></span>
+                            <input type="text" class="form-control" name="bank_code"
+                                placeholder="Mã ngân hàng"
+                                value="<?php echo htmlspecialchars($user['bank_code'] ?? ''); ?>">
+                            <div class="form-text">Mã ngân hàng sẽ được sử dụng cho các giao dịch thanh toán.</div>
+                        </div>
+                    </div>
+
+                    <div class="d-grid gap-2">
                         <button type="submit" class="btn btn-primary btn-update">Cập nhật thông tin</button>
+                        <a href="change_password.php" class="btn btn-outline-warning">
+                            <i class="fas fa-key me-2"></i>Đổi mật khẩu
+                        </a>
                         <a href="../index.php" class="btn btn-outline-secondary">Quay lại trang chủ</a>
                     </div>
                 </form>
             </div>
         </div>
     </div>
-                </div>
-            </div>
-            <script>
-                function previewImage(input) {
-                    if (input.files && input.files[0]) {
-                        var reader = new FileReader();
-                        reader.onload = function(e) {
-                            document.getElementById('avatar-preview').src = e.target.result;
-                        }
-                        reader.readAsDataURL(input.files[0]);
-                    }
+    </div>
+    </div>
+    <script>
+        function previewImage(input) {
+            if (input.files && input.files[0]) {
+                var reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('avatar-preview').src = e.target.result;
                 }
-            </script>
-            <script src="../assets/main.js"></script>
-            <script src="../assets/admin/js/main.js"></script>
-        </body>
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        // Automatically update bank code when bank is selected
+        document.addEventListener('DOMContentLoaded', function() {
+            const bankSelect = document.querySelector('select[name="bank_name"]');
+            const bankCodeInput = document.querySelector('input[name="bank_code"]');
+
+            // Bank code mapping
+            const bankCodes = {
+                'Vietcombank': 'VCB',
+                'VietinBank': 'CTG',
+                'BIDV': 'BIDV',
+                'Agribank': 'AGR',
+                'MBBank': 'MB',
+                'Techcombank': 'TCB',
+                'ACB': 'ACB',
+                'TPBank': 'TPB',
+                'VPBank': 'VPB',
+                'HDBank': 'HDB',
+                'SacomBank': 'STB',
+                'OCB': 'OCB'
+            };
+
+            bankSelect.addEventListener('change', function() {
+                const selectedBank = this.value;
+                if (selectedBank && bankCodes[selectedBank]) {
+                    bankCodeInput.value = bankCodes[selectedBank];
+                }
+            });
+        });
+    </script>
+    <script src="../assets/main.js"></script>
+    <script src="../assets/admin/js/main.js"></script>
+</body>
+
 </html>
