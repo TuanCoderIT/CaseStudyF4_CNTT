@@ -53,10 +53,32 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $price = (int)$_POST['price'];
     $default_deposit = isset($_POST['default_deposit']) ? (int)$_POST['default_deposit'] : 0;
     $area = (int)$_POST['area'];
-    $address_detail = mysqli_real_escape_string($conn, $_POST['address_detail']);
-    $ward_name = mysqli_real_escape_string($conn, $_POST['ward_name']);
-    $district_name = mysqli_real_escape_string($conn, $_POST['district_name']);
-    $province_name = mysqli_real_escape_string($conn, $_POST['province_name']);
+
+    // First check if we have a hidden field value
+    if (isset($_POST['address_detail_hidden']) && !empty(trim($_POST['address_detail_hidden']))) {
+        $address_detail = mysqli_real_escape_string($conn, $_POST['address_detail_hidden']);
+    }
+    // Then try the visible field
+    else if (isset($_POST['address_detail']) && !empty(trim($_POST['address_detail']))) {
+        $address_detail = mysqli_real_escape_string($conn, $_POST['address_detail']);
+    }
+    // If both are empty, use a default or the previous value
+    else {
+        $address_detail = !empty($address_detail) ? $address_detail : "Không có địa chỉ chi tiết";
+    }
+
+    // Get ward name from input or fallback to the original value
+    $ward_name = isset($_POST['ward_name']) && !empty($_POST['ward_name'])
+        ? mysqli_real_escape_string($conn, $_POST['ward_name'])
+        : $ward_name;
+
+    // Always use "Thành phố Vinh" for district name
+    $district_name = "Thành phố Vinh";
+
+    // Always use "Nghệ An" for province name
+    $province_name = "Nghệ An";
+
+    // Format the full address with the detailed address - ensure no double commas
     $address = "$address_detail, $ward_name, $district_name, $province_name";
     $phone = mysqli_real_escape_string($conn, $_POST['phone']);
     $category_id = (int)$_POST['category_id'];
@@ -76,6 +98,18 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     }
 
     if (!isset($error)) {
+        // Debug address information
+        if (isset($_GET['debug_address']) && $_GET['debug_address'] == 1) {
+            echo "<div style='background: #f8f9fa; border-left: 4px solid #4e73df; padding: 15px; margin: 15px 0;'>";
+            echo "<h5>Debug Address Information:</h5>";
+            echo "<p><strong>Address Detail:</strong> " . htmlspecialchars($address_detail) . "</p>";
+            echo "<p><strong>Ward:</strong> " . htmlspecialchars($ward_name) . "</p>";
+            echo "<p><strong>District:</strong> " . htmlspecialchars($district_name) . "</p>";
+            echo "<p><strong>Province:</strong> " . htmlspecialchars($province_name) . "</p>";
+            echo "<p><strong>Full Address:</strong> " . htmlspecialchars($address) . "</p>";
+            echo "</div>";
+        }
+
         $banner_image = $room['images'];
         if (isset($_FILES['banner_image']) && $_FILES['banner_image']['error'] == 0) {
             $upload_dir = PROJECT_ROOT . '/uploads/banner/';
@@ -409,8 +443,16 @@ include_once '../../Components/admin_header.php';
                         <div class="form-group">
                             <label for="address_detail"><i class="fas fa-home text-primary mr-1"></i> Địa chỉ chi tiết</label>
                             <input type="text" class="form-control" id="address_detail" name="address_detail" value="<?php echo htmlspecialchars($address_detail); ?>" placeholder="Ví dụ: Số 123 Đường XYZ" required>
+                            <input type="hidden" id="address_detail_hidden" name="address_detail_hidden" value="<?php echo htmlspecialchars($address_detail); ?>">
                         </div>
                     </div>
+                </div>
+
+                <!-- Notification for address detail -->
+                <div class="alert alert-info mb-3" role="alert">
+                    <i class="fas fa-info-circle mr-1"></i>
+                    <strong>Lưu ý:</strong> Vui lòng kiểm tra địa chỉ chi tiết trước khi lưu. Địa chỉ sẽ được lưu theo định dạng:
+                    <code id="address_preview"></code>
                 </div>
 
                 <div class="form-group">
@@ -593,6 +635,9 @@ include_once '../../Components/admin_header.php';
             <input type="hidden" name="district_name" value="Thành phố Vinh">
             <input type="hidden" name="province_name" value="Nghệ An">
 
+            <!-- Hidden field to ensure address_detail is properly processed in form submission -->
+            <input type="hidden" name="address_detail" id="address_detail_hidden" value="<?php echo htmlspecialchars($address_detail); ?>">
+
             <div class="form-group text-center mt-4">
                 <button type="submit" class="btn btn-primary btn-lg px-5">
                     <i class="fas fa-save mr-2"></i>Cập nhật phòng trọ
@@ -607,6 +652,13 @@ include_once '../../Components/admin_header.php';
 
 <script>
     $(document).ready(function() {
+        // Save the initial address value for later
+        var initialAddressDetail = $('#address_detail').val();
+        if (initialAddressDetail) {
+            localStorage.setItem('edit_room_address_detail', initialAddressDetail);
+            console.log("Initial address detail saved: " + initialAddressDetail);
+        }
+
         var quill = new Quill('#editor-container', {
             theme: 'snow',
             placeholder: 'Mô tả chi tiết về phòng trọ...',
@@ -630,10 +682,38 @@ include_once '../../Components/admin_header.php';
         });
 
         quill.root.innerHTML = <?php echo json_encode($room['description']); ?>;
-
         $('#roomForm').submit(function(event) {
             var description = quill.root.innerHTML;
             $('#description').val(description);
+
+            // Get the address detail value
+            var addressDetailValue = $('#address_detail').val();
+
+            // If no address detail is present, try to restore from localStorage
+            if (!addressDetailValue || addressDetailValue.trim() === '') {
+                var storedAddress = localStorage.getItem('edit_room_address_detail');
+                if (storedAddress) {
+                    addressDetailValue = storedAddress;
+                    $('#address_detail').val(addressDetailValue);
+                    console.log("Address detail restored from localStorage on form submit: " + addressDetailValue);
+                }
+            }
+
+            // Log to console for debugging
+            console.log("Submitting form with address detail: " + addressDetailValue);
+
+            // Update hidden field with the current address detail
+            $('#address_detail_hidden').val(addressDetailValue);
+
+            // Only show confirmation if address is empty
+            if (!addressDetailValue || addressDetailValue.trim() === '') {
+                var confirmMessage = "Address detail is empty. Are you sure you want to continue without a detailed address?";
+                if (!confirm(confirmMessage)) {
+                    event.preventDefault();
+                    $('#address_detail').focus();
+                    return false;
+                }
+            }
 
             var lat = $('#lat').val();
             var lng = $('#lng').val();
@@ -666,6 +746,45 @@ include_once '../../Components/admin_header.php';
             var selectedOption = $(this).find('option:selected');
             $('#district_id').val(selectedOption.data('id'));
         });
+
+        // Function to update address preview
+        function updateAddressPreview() {
+            var addressDetail = $('#address_detail').val() || '';
+            var ward = $('#ward').val() || '';
+            var previewText = addressDetail + (addressDetail ? ', ' : '') +
+                ward + (ward ? ', ' : '') +
+                'Thành phố Vinh, Nghệ An';
+            $('#address_preview').text(previewText);
+        }
+
+        // Track changes to address_detail and update hidden field
+        $('#address_detail').on('input change blur', function() {
+            var currentValue = $(this).val();
+            $('#address_detail_hidden').val(currentValue);
+            // Store in localStorage as a backup
+            if (currentValue) {
+                localStorage.setItem('edit_room_address_detail', currentValue);
+                console.log("Saved address detail to localStorage: " + currentValue);
+            }
+            // Update the address preview
+            updateAddressPreview();
+        });
+
+        // Update when ward changes too
+        $('#ward').on('change', function() {
+            updateAddressPreview();
+        });
+
+        // Initialize address preview
+        updateAddressPreview();
+
+        // Restore from localStorage if available (helps preserve through page refreshes)
+        var savedAddress = localStorage.getItem('edit_room_address_detail');
+        if (!$('#address_detail').val() && savedAddress) {
+            $('#address_detail').val(savedAddress);
+            $('#address_detail_hidden').val(savedAddress);
+            console.log("Restored address detail from localStorage: " + savedAddress);
+        }
 
         $('input[name="utility_items[]"]').change(function() {
             var selected = [];
@@ -720,12 +839,16 @@ include_once '../../Components/admin_header.php';
             }
 
             return addressDetail;
-        }
-
-        // Hàm lấy tọa độ từ địa chỉ
+        } // Hàm lấy tọa độ từ địa chỉ
         function getCoordinates(showLoading = true) {
             var ward = $('#ward').val();
             var addressDetail = $('#address_detail').val();
+
+            // Log the address detail for debugging
+            console.log("Current address detail: " + addressDetail);
+
+            // Always update the hidden field with the current value
+            $('#address_detail_hidden').val(addressDetail);
 
             if (ward && addressDetail) {
                 if (showLoading) {
@@ -872,11 +995,12 @@ include_once '../../Components/admin_header.php';
                             } else {
                                 $('#location_error').empty().hide();
 
-                                // Tự động điền thông tin địa chỉ
-                                var addressDetail = processAddress(response);
-                                if (addressDetail) {
-                                    $('#address_detail').val(addressDetail);
-                                }
+                                // Do not automatically overwrite the address detail from the reverse geocoding
+                                // This keeps the user's entered address exactly as they typed it
+                                // var addressDetail = processAddress(response);
+                                // if (addressDetail) {
+                                //     $('#address_detail').val(addressDetail);
+                                // }
 
                                 // Tìm và chọn phường từ dropdown
                                 var wardSelect = $('#ward');
@@ -994,11 +1118,11 @@ include_once '../../Components/admin_header.php';
                             } else {
                                 $('#location_error').empty().hide();
 
-                                // Tự động điền thông tin địa chỉ từ kết quả reverse geocoding
-                                var addressDetail = processAddress(response);
-                                if (addressDetail) {
-                                    $('#address_detail').val(addressDetail);
-                                }
+                                // Do not automatically overwrite user's entered address detail
+                                // var addressDetail = processAddress(response);
+                                // if (addressDetail) {
+                                //     $('#address_detail').val(addressDetail);
+                                // }
 
                                 // Tìm và chọn phường từ dropdown
                                 var wardSelect = $('#ward');
@@ -1424,11 +1548,11 @@ include_once '../../Components/admin_header.php';
                                 } else {
                                     $('#location_error').empty().hide();
 
-                                    // Tự động điền thông tin địa chỉ từ kết quả reverse geocoding
-                                    var addressDetail = processAddress(response);
-                                    if (addressDetail) {
-                                        $('#address_detail').val(addressDetail);
-                                    }
+                                    // Do not automatically replace user's entered address detail
+                                    // var addressDetail = processAddress(response);
+                                    // if (addressDetail) {
+                                    //     $('#address_detail').val(addressDetail);
+                                    // }
 
                                     // Tìm và chọn phường từ dropdown
                                     var wardSelect = $('#ward');

@@ -246,7 +246,7 @@ if (isset($latUser) && isset($lngUser)) {
                                     <div class="room-image">
                                         <img src="/<?php echo $room['images']; ?>" class="card-img-top" alt="<?php echo $room['title']; ?>">
                                         <span class="price-tag"><?php echo number_format($room['price']); ?> đ/tháng</span>
-                                        <span class="distance-tag"><i class="fas fa-walking me-1"></i><?php echo $room['latlng']; ?> km</span>
+                                        <span class="distance-tag"><i class="fas fa-walking me-1"></i><?php echo $room['distance']; ?> km</span>
                                         <?php if (isRoomBooked($conn, $room['id'])): ?>
                                             <span class="booked-tag"><i class="fas fa-lock me-1"></i>Đã có người đặt cọc</span>
                                         <?php endif; ?>
@@ -300,7 +300,7 @@ if (isset($latUser) && isset($lngUser)) {
                                     <div class="room-image">
                                         <img src="/<?php echo $room['images']; ?>" class="card-img-top" alt="<?php echo $room['title']; ?>">
                                         <span class="price-tag"><?php echo number_format($room['price']); ?> đ/tháng</span>
-                                        <span class="distance-tag"><i class="fas fa-walking me-1"></i><?php echo $room['latlng']; ?> km</span>
+                                        <span class="distance-tag"><i class="fas fa-walking me-1"></i><?php echo $room['distance']; ?> km</span>
                                         <?php if (isRoomBooked($conn, $room['id'])): ?>
                                             <span class="booked-tag"><i class="fas fa-lock me-1"></i>Đã có người đặt cọc</span>
                                         <?php endif; ?>

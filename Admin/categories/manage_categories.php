@@ -29,6 +29,8 @@ if (isset($_POST['add_category'])) {
 // Xử lý xóa danh mục
 if (isset($_GET['delete']) && !empty($_GET['delete'])) {
     $id = mysqli_real_escape_string($conn, $_GET['delete']);
+    $page = isset($_GET['page']) ? intval($_GET['page']) : 1;
+    $search = isset($_GET['search']) ? urlencode($_GET['search']) : '';
 
     // Kiểm tra xem danh mục có đang được sử dụng không
     $check_query = "SELECT COUNT(*) as count FROM motel WHERE category_id = '$id'";
@@ -46,7 +48,13 @@ if (isset($_GET['delete']) && !empty($_GET['delete'])) {
         }
     }
 
-    header('Location: manage_categories.php');
+    // Tạo URL redirect với các tham số
+    $redirect_url = "manage_categories.php?page=$page";
+    if (!empty($search)) {
+        $redirect_url .= "&search=$search";
+    }
+
+    header("Location: $redirect_url");
     exit();
 }
 
@@ -54,6 +62,8 @@ if (isset($_GET['delete']) && !empty($_GET['delete'])) {
 if (isset($_POST['update_category'])) {
     $id = mysqli_real_escape_string($conn, $_POST['category_id']);
     $name = mysqli_real_escape_string($conn, $_POST['category_name']);
+    $current_page = isset($_POST['current_page']) ? intval($_POST['current_page']) : 1;
+    $search = isset($_POST['search']) ? $_POST['search'] : '';
 
     if (!empty($name)) {
         $query = "UPDATE categories SET name = '$name' WHERE id = '$id'";
@@ -66,17 +76,100 @@ if (isset($_POST['update_category'])) {
         $_SESSION['error'] = "Tên danh mục không được để trống!";
     }
 
-    header('Location: manage_categories.php');
+    // Tạo URL redirect với các tham số
+    $redirect_url = "manage_categories.php?page=$current_page";
+    if (!empty($search)) {
+        $redirect_url .= "&search=" . urlencode($search);
+    }
+
+    header("Location: $redirect_url");
     exit();
 }
 
-// Lấy danh sách danh mục
+// Thiết lập phân trang
+$records_per_page = 10; // Số bản ghi trên mỗi trang
+$page = isset($_GET['page']) ? intval($_GET['page']) : 1;
+if ($page < 1) $page = 1;
+$offset = ($page - 1) * $records_per_page;
+
+// Xử lý tìm kiếm
+$search = isset($_GET['search']) ? trim($_GET['search']) : '';
+$search_condition = '';
+if (!empty($search)) {
+    $search_esc = mysqli_real_escape_string($conn, $search);
+    $search_condition = "WHERE c.name LIKE '%$search_esc%'";
+}
+
+// Đếm tổng số bản ghi để tính số trang
+$count_query = "SELECT COUNT(*) as total FROM categories c $search_condition";
+$count_result = mysqli_query($conn, $count_query);
+
+if (!$count_result) {
+    $error_message = "Lỗi truy vấn: " . mysqli_error($conn);
+    $total_records = 0;
+    $total_pages = 1;
+} else {
+    $total_records = mysqli_fetch_assoc($count_result)['total'];
+    $total_pages = ceil($total_records / $records_per_page);
+}
+
+// Đảm bảo page không vượt quá tổng số trang
+if ($page > $total_pages && $total_pages > 0) {
+    $page = $total_pages;
+    $offset = ($page - 1) * $records_per_page;
+}
+
+// Lấy danh sách danh mục với phân trang
 $query = "SELECT c.*, COUNT(m.id) as room_count 
           FROM categories c 
-          LEFT JOIN motel m ON c.id = m.category_id 
+          LEFT JOIN motel m ON c.id = m.category_id AND m.isExist = 1
+          $search_condition
           GROUP BY c.id
-          ORDER BY c.name";
+          ORDER BY c.name
+          LIMIT $offset, $records_per_page";
 $result = mysqli_query($conn, $query);
+
+if (!$result) {
+    $error_message = "Lỗi truy vấn: " . mysqli_error($conn);
+}
+
+// Lấy tất cả dữ liệu (không phân trang) để hiển thị thống kê
+$stats_query = "SELECT c.*, COUNT(m.id) as room_count 
+               FROM categories c 
+               LEFT JOIN motel m ON c.id = m.category_id AND m.isExist = 1
+               GROUP BY c.id";
+$stats_result = mysqli_query($conn, $stats_query);
+$total_categories = mysqli_num_rows($stats_result);
+
+// Lấy tổng số phòng đã phân loại
+$total_categorized_rooms_query = "SELECT COUNT(*) as count FROM motel WHERE category_id IS NOT NULL AND category_id > 0 AND isExist = 1";
+$total_categorized_rooms_result = mysqli_query($conn, $total_categorized_rooms_query);
+$total_categorized_rooms = mysqli_fetch_assoc($total_categorized_rooms_result)['count'];
+
+// Lấy tổng số phòng chưa phân loại
+$total_uncategorized_rooms_query = "SELECT COUNT(*) as count FROM motel WHERE (category_id IS NULL OR category_id = 0) AND isExist = 1";
+$total_uncategorized_rooms_result = mysqli_query($conn, $total_uncategorized_rooms_query);
+$total_uncategorized_rooms = mysqli_fetch_assoc($total_uncategorized_rooms_result)['count'];
+
+// Đếm số danh mục chưa có phòng nào
+$empty_categories_query = "SELECT COUNT(*) as count FROM categories c 
+                         LEFT JOIN motel m ON c.id = m.category_id AND m.isExist = 1
+                         WHERE m.id IS NULL";
+$empty_categories_result = mysqli_query($conn, $empty_categories_query);
+$empty_categories = mysqli_fetch_assoc($empty_categories_result)['count'];
+
+// Cập nhật số phòng "chưa phân loại" để bao gồm cả số danh mục trống
+$total_uncategorized = $total_uncategorized_rooms + $empty_categories;
+
+// Lấy danh mục phổ biến nhất
+$most_popular_query = "SELECT c.name, COUNT(m.id) as room_count 
+                      FROM categories c 
+                      INNER JOIN motel m ON c.id = m.category_id AND m.isExist = 1
+                      GROUP BY c.id 
+                      ORDER BY room_count DESC 
+                      LIMIT 1";
+$most_popular_result = mysqli_query($conn, $most_popular_query);
+$most_popular = mysqli_fetch_assoc($most_popular_result);
 
 $page_title = "Quản lý danh mục";
 include_once '../../components/admin_header.php';
@@ -90,6 +183,63 @@ include_once '../../components/admin_header.php';
         </button>
     </div>
 </div>
+
+<!-- Form tìm kiếm -->
+<div class="card mb-4 shadow-sm">
+    <div class="card-body">
+        <form method="GET" action="" class="row align-items-center">
+            <div class="col-md-6 col-lg-8">
+                <div class="input-group">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text bg-white"><i class="fas fa-search text-primary"></i></span>
+                    </div>
+                    <input type="text" class="form-control" name="search" placeholder="Tìm kiếm danh mục..." value="<?php echo htmlspecialchars($search); ?>">
+                    <div class="input-group-append">
+                        <button type="submit" class="btn btn-primary">Tìm kiếm</button>
+                        <?php if (!empty($search)): ?>
+                            <a href="manage_categories.php" class="btn btn-outline-secondary">Hủy tìm kiếm</a>
+                        <?php endif; ?>
+                    </div>
+                </div>
+                <?php if (!empty($search)): ?>
+                    <div class="mt-2 text-muted small">
+                        <i class="fas fa-info-circle"></i> Đang tìm kiếm: <strong><?php echo htmlspecialchars($search); ?></strong>
+                        (<?php echo $total_records; ?> kết quả)
+                    </div>
+                <?php endif; ?>
+            </div>
+            <div class="col-md-6 col-lg-4 mt-3 mt-md-0 text-right">
+                <button type="button" class="btn btn-success" data-toggle="modal" data-target="#addCategoryModal">
+                    <i class="fas fa-plus-circle mr-1"></i> Thêm danh mục
+                </button>
+                <a href="/admin/index.php" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left mr-1"></i> Quay lại
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<?php if (isset($error_message)): ?>
+    <div class="alert alert-danger alert-dismissible fade show">
+        <i class="fas fa-exclamation-circle mr-2"></i>
+        <?php echo $error_message; ?>
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+<?php endif; ?>
+
+<?php if (!empty($search)): ?>
+    <div class="alert alert-info">
+        <i class="fas fa-search mr-2"></i>
+        Kết quả tìm kiếm cho: <strong><?php echo htmlspecialchars($search); ?></strong>
+        <span class="badge badge-pill badge-primary ml-2"><?php echo $total_records; ?> kết quả</span>
+        <a href="manage_categories.php" class="btn btn-sm btn-outline-secondary ml-2">
+            <i class="fas fa-times mr-1"></i> Xóa bộ lọc
+        </a>
+    </div>
+<?php endif; ?>
 
 <?php if (isset($_SESSION['success'])): ?>
     <div class="alert alert-success alert-dismissible fade show">
@@ -127,31 +277,6 @@ include_once '../../components/admin_header.php';
     </div>
 <?php endif; ?>
 
-<?php
-// Lấy tổng số danh mục
-$total_categories = mysqli_num_rows($result);
-
-// Lấy tổng số phòng đã phân loại
-$total_categorized_rooms_query = "SELECT COUNT(*) as count FROM motel WHERE category_id IS NOT NULL AND category_id > 0";
-$total_categorized_rooms_result = mysqli_query($conn, $total_categorized_rooms_query);
-$total_categorized_rooms = mysqli_fetch_assoc($total_categorized_rooms_result)['count'];
-
-// Lấy tổng số phòng chưa phân loại
-$total_uncategorized_rooms_query = "SELECT COUNT(*) as count FROM motel WHERE category_id IS NULL OR category_id = 0";
-$total_uncategorized_rooms_result = mysqli_query($conn, $total_uncategorized_rooms_query);
-$total_uncategorized_rooms = mysqli_fetch_assoc($total_uncategorized_rooms_result)['count'];
-
-// Lấy danh mục phổ biến nhất
-$most_popular_query = "SELECT c.name, COUNT(m.id) as room_count 
-                      FROM categories c 
-                      INNER JOIN motel m ON c.id = m.category_id 
-                      GROUP BY c.id 
-                      ORDER BY room_count DESC 
-                      LIMIT 1";
-$most_popular_result = mysqli_query($conn, $most_popular_query);
-$most_popular = mysqli_fetch_assoc($most_popular_result);
-?>
-
 <div class="row mb-4">
     <!-- Tổng số danh mục -->
     <div class="col-xl-3 col-md-6 mb-4">
@@ -180,7 +305,7 @@ $most_popular = mysqli_fetch_assoc($most_popular_result);
         <div class="card stat-card stat-card-warning h-100">
             <div class="card-body">
                 <div class="card-title">Chưa phân loại</div>
-                <div class="card-value"><?php echo $total_uncategorized_rooms; ?></div>
+                <div class="card-value"><?php echo $total_uncategorized; ?></div>
                 <i class="fas fa-question-circle fa-2x card-icon"></i>
             </div>
         </div>
@@ -208,9 +333,14 @@ $most_popular = mysqli_fetch_assoc($most_popular_result);
 <div class="card shadow-sm">
     <div class="card-header bg-gradient-primary text-white d-flex justify-content-between align-items-center">
         <h5 class="m-0 font-weight-bold"><i class="fas fa-folder mr-2"></i>Danh sách danh mục</h5>
-        <span class="badge badge-light badge-pill">
-            <?php echo mysqli_num_rows($result); ?> danh mục
-        </span>
+        <div class="d-flex align-items-center">
+            <span class="badge badge-light badge-pill mr-2">
+                <?php echo $total_records; ?> danh mục
+            </span>
+            <span class="badge badge-light badge-pill">
+                Trang <?php echo $page; ?>/<?php echo max(1, $total_pages); ?>
+            </span>
+        </div>
     </div>
     <div class="card-body">
         <div class="table-responsive">
@@ -228,24 +358,40 @@ $most_popular = mysqli_fetch_assoc($most_popular_result);
                     <?php if (mysqli_num_rows($result) > 0): ?>
                         <?php
                         // Lấy tổng số phòng trọ
-                        $total_rooms_query = mysqli_query($conn, "SELECT COUNT(*) as total FROM motel");
+                        $total_rooms_query = mysqli_query($conn, "SELECT COUNT(*) as total FROM motel WHERE isExist = 1");
                         $total_rooms = mysqli_fetch_assoc($total_rooms_query)['total'];
 
                         while ($category = mysqli_fetch_assoc($result)):
                             // Tính phần trăm
                             $percent = ($total_rooms > 0) ? round(($category['room_count'] / $total_rooms) * 100) : 0;
+
+                            // Xác định màu của progress bar dựa trên số lượng phòng
+                            if ($category['room_count'] == 0) {
+                                $progress_color = 'bg-secondary';
+                            } elseif ($percent < 10) {
+                                $progress_color = 'bg-info';
+                            } elseif ($percent < 25) {
+                                $progress_color = 'bg-primary';
+                            } elseif ($percent < 50) {
+                                $progress_color = 'bg-warning';
+                            } else {
+                                $progress_color = 'bg-success';
+                            }
                         ?>
                             <tr>
                                 <td class="text-center"><?php echo $category['id']; ?></td>
                                 <td>
-                                    <span class="font-weight-bold"><?php echo $category['name']; ?></span>
+                                    <div class="d-flex align-items-center">
+                                        <i class="fas fa-folder text-primary mr-2"></i>
+                                        <span class="font-weight-bold"><?php echo $category['name']; ?></span>
+                                    </div>
                                 </td>
                                 <td class="text-center">
                                     <span class="badge badge-pill badge-primary"><?php echo $category['room_count']; ?></span>
                                 </td>
                                 <td>
                                     <div class="progress" style="height: 20px;">
-                                        <div class="progress-bar bg-info" role="progressbar" style="width: <?php echo $percent; ?>%;"
+                                        <div class="progress-bar <?php echo $progress_color; ?>" role="progressbar" style="width: <?php echo $percent; ?>%;"
                                             aria-valuenow="<?php echo $percent; ?>" aria-valuemin="0" aria-valuemax="100">
                                             <?php echo $percent; ?>%
                                         </div>
@@ -262,7 +408,7 @@ $most_popular = mysqli_fetch_assoc($most_popular_result);
                                     </button>
 
                                     <?php if ($category['room_count'] == 0): ?>
-                                        <a href="?delete=<?php echo $category['id']; ?>"
+                                        <a href="?delete=<?php echo $category['id']; ?>&page=<?php echo $page; ?><?php echo !empty($search) ? '&search=' . urlencode($search) : ''; ?>"
                                             class="btn btn-sm btn-outline-danger"
                                             onclick="return confirm('Bạn có chắc muốn xóa danh mục này?')">
                                             <i class="fas fa-trash"></i> Xóa
@@ -290,6 +436,73 @@ $most_popular = mysqli_fetch_assoc($most_popular_result);
                 </tbody>
             </table>
         </div>
+
+        <?php if ($total_pages > 1): ?>
+            <div class="mt-4">
+                <nav aria-label="Phân trang">
+                    <ul class="pagination justify-content-center">
+                        <?php if ($page > 1): ?>
+                            <li class="page-item">
+                                <a class="page-link" href="?page=1<?php echo !empty($search) ? '&search=' . urlencode($search) : ''; ?>" aria-label="Trang đầu">
+                                    <i class="fas fa-angle-double-left"></i>
+                                </a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page=<?php echo ($page - 1); ?><?php echo !empty($search) ? '&search=' . urlencode($search) : ''; ?>" aria-label="Trang trước">
+                                    <i class="fas fa-angle-left"></i>
+                                </a>
+                            </li>
+                        <?php else: ?>
+                            <li class="page-item disabled">
+                                <span class="page-link"><i class="fas fa-angle-double-left"></i></span>
+                            </li>
+                            <li class="page-item disabled">
+                                <span class="page-link"><i class="fas fa-angle-left"></i></span>
+                            </li>
+                        <?php endif; ?>
+
+                        <?php
+                        // Hiển thị tối đa 5 trang
+                        $start_page = max(1, $page - 2);
+                        $end_page = min($total_pages, $start_page + 4);
+
+                        if ($end_page - $start_page < 4) {
+                            $start_page = max(1, $end_page - 4);
+                        }
+
+                        for ($i = $start_page; $i <= $end_page; $i++):
+                        ?>
+                            <li class="page-item <?php echo ($i == $page) ? 'active' : ''; ?>">
+                                <a class="page-link" href="?page=<?php echo $i; ?><?php echo !empty($search) ? '&search=' . urlencode($search) : ''; ?>"><?php echo $i; ?></a>
+                            </li>
+                        <?php endfor; ?>
+
+                        <?php if ($page < $total_pages): ?>
+                            <li class="page-item">
+                                <a class="page-link" href="?page=<?php echo ($page + 1); ?><?php echo !empty($search) ? '&search=' . urlencode($search) : ''; ?>" aria-label="Trang sau">
+                                    <i class="fas fa-angle-right"></i>
+                                </a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page=<?php echo $total_pages; ?><?php echo !empty($search) ? '&search=' . urlencode($search) : ''; ?>" aria-label="Trang cuối">
+                                    <i class="fas fa-angle-double-right"></i>
+                                </a>
+                            </li>
+                        <?php else: ?>
+                            <li class="page-item disabled">
+                                <span class="page-link"><i class="fas fa-angle-right"></i></span>
+                            </li>
+                            <li class="page-item disabled">
+                                <span class="page-link"><i class="fas fa-angle-double-right"></i></span>
+                            </li>
+                        <?php endif; ?>
+                    </ul>
+                </nav>
+                <div class="text-center text-muted small">
+                    Hiển thị <?php echo min($records_per_page, mysqli_num_rows($result)); ?> trên tổng số <?php echo $total_records; ?> danh mục
+                </div>
+            </div>
+        <?php endif; ?>
     </div>
 </div>
 
@@ -300,7 +513,6 @@ $most_popular = mysqli_fetch_assoc($most_popular_result);
     <a href="/admin/index.php" class="btn btn-info">
         <i class="fas fa-tachometer-alt mr-1"></i> Quay lại bảng điều khiển
     </a>
-</div>
 </div>
 
 <!-- Modal thêm danh mục -->
@@ -346,6 +558,10 @@ $most_popular = mysqli_fetch_assoc($most_popular_result);
     <div class="modal-dialog modal-dialog-centered" role="document">
         <div class="modal-content shadow">
             <form method="POST" action="">
+                <input type="hidden" name="current_page" value="<?php echo $page; ?>">
+                <?php if (!empty($search)): ?>
+                    <input type="hidden" name="search" value="<?php echo htmlspecialchars($search); ?>">
+                <?php endif; ?>
                 <div class="modal-header bg-primary text-white">
                     <h5 class="modal-title" id="editCategoryModalLabel">
                         <i class="fas fa-edit mr-2"></i>Sửa danh mục
@@ -390,11 +606,16 @@ $most_popular = mysqli_fetch_assoc($most_popular_result);
             var button = $(event.relatedTarget);
             var id = button.data('id');
             var name = button.data('name');
+            var roomCount = button.data('roomcount');
 
             var modal = $(this);
             modal.find('#edit_category_id').val(id);
             modal.find('#edit_category_name').val(name);
+            modal.find('#edit_category_room_count').text(roomCount);
         });
+
+        // Kích hoạt tooltips
+        $('[data-toggle="tooltip"]').tooltip();
     });
 </script>
 

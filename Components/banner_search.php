@@ -5,7 +5,7 @@
             <div class="col-lg-10 mx-auto">
                 <div class="search-container">
                     <h1 class="text-center mb-4">Tìm phòng trọ phù hợp với bạn</h1>
-                    <form action="search.php" method="GET" class="search-form">
+                    <form action="/room/search.php" method="GET" class="search-form">
                         <div class="row g-3">
                             <div class="col-md-10">
                                 <div class="input-group">

@@ -11,16 +11,44 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] != 1) {
 // Xử lý duyệt phòng trọ
 if (isset($_GET['approve']) && !empty($_GET['approve'])) {
     $id = mysqli_real_escape_string($conn, $_GET['approve']);
+
+    // Lấy thông tin phòng trọ và người đăng
+    $room_query = mysqli_query($conn, "SELECT m.*, u.id as user_id, u.name as user_name, m.title 
+                                      FROM motel m 
+                                      JOIN users u ON m.user_id = u.id 
+                                      WHERE m.id = '$id'");
+    $room_data = mysqli_fetch_assoc($room_query);
+
+    // Cập nhật trạng thái phòng trọ
     mysqli_query($conn, "UPDATE motel SET approve = 1 WHERE id = '$id'");
+
+    // Tạo thông báo cho chủ phòng trọ
+    if (!empty($room_data)) {
+        $user_id = $room_data['user_id'];
+        $room_title = $room_data['title'];
+        $notification_title = "Phòng trọ đã được phê duyệt";
+        $notification_message = "Phòng trọ \"$room_title\" của bạn đã được phê duyệt và hiển thị công khai trên hệ thống.";
+
+        mysqli_query($conn, "INSERT INTO notifications (user_id, title, message) 
+                           VALUES ('$user_id', '$notification_title', '$notification_message')");
+    }
 
     $_SESSION['success'] = "Đã duyệt phòng trọ thành công!";
     header('Location: pending_rooms.php');
     exit();
 }
 
-// Xử lý từ chối/xóa phòng trọ
-if (isset($_GET['delete']) && !empty($_GET['delete'])) {
-    $id = mysqli_real_escape_string($conn, $_GET['delete']);
+// Xử lý từ chối có lý do
+if (isset($_POST['reject_with_reason']) && isset($_POST['room_id']) && !empty($_POST['room_id'])) {
+    $id = mysqli_real_escape_string($conn, $_POST['room_id']);
+    $reason = mysqli_real_escape_string($conn, $_POST['reject_reason']);
+
+    // Lấy thông tin phòng trọ và người đăng trước khi xóa
+    $room_query = mysqli_query($conn, "SELECT m.*, u.id as user_id, u.name as user_name, m.title 
+                                      FROM motel m 
+                                      JOIN users u ON m.user_id = u.id 
+                                      WHERE m.id = '$id'");
+    $room_data = mysqli_fetch_assoc($room_query);
 
     // Lấy thông tin ảnh để xóa file
     $get_image = mysqli_query($conn, "SELECT images FROM motel WHERE id = '$id'");
@@ -35,6 +63,58 @@ if (isset($_GET['delete']) && !empty($_GET['delete'])) {
 
     // Xóa phòng trọ
     mysqli_query($conn, "DELETE FROM motel WHERE id = '$id'");
+
+    // Tạo thông báo cho chủ phòng trọ về việc từ chối
+    if (!empty($room_data)) {
+        $user_id = $room_data['user_id'];
+        $room_title = $room_data['title'];
+        $notification_title = "Phòng trọ không được phê duyệt";
+        $notification_message = "Phòng trọ \"$room_title\" của bạn không được phê duyệt. Lý do: $reason";
+
+        mysqli_query($conn, "INSERT INTO notifications (user_id, title, message) 
+                           VALUES ('$user_id', '$notification_title', '$notification_message')");
+    }
+
+    $_SESSION['success'] = "Đã từ chối phòng trọ với lý do đã cung cấp!";
+    header('Location: pending_rooms.php');
+    exit();
+}
+
+// Xử lý từ chối/xóa phòng trọ (không có lý do)
+if (isset($_GET['delete']) && !empty($_GET['delete'])) {
+    $id = mysqli_real_escape_string($conn, $_GET['delete']);
+
+    // Lấy thông tin phòng trọ và người đăng trước khi xóa
+    $room_query = mysqli_query($conn, "SELECT m.*, u.id as user_id, u.name as user_name, m.title 
+                                      FROM motel m 
+                                      JOIN users u ON m.user_id = u.id 
+                                      WHERE m.id = '$id'");
+    $room_data = mysqli_fetch_assoc($room_query);
+
+    // Lấy thông tin ảnh để xóa file
+    $get_image = mysqli_query($conn, "SELECT images FROM motel WHERE id = '$id'");
+    $image_data = mysqli_fetch_assoc($get_image);
+
+    if (!empty($image_data['images'])) {
+        $image_path = '../' . $image_data['images'];
+        if (file_exists($image_path)) {
+            unlink($image_path);
+        }
+    }
+
+    // Xóa phòng trọ
+    mysqli_query($conn, "DELETE FROM motel WHERE id = '$id'");
+
+    // Tạo thông báo cho chủ phòng trọ về việc từ chối
+    if (!empty($room_data)) {
+        $user_id = $room_data['user_id'];
+        $room_title = $room_data['title'];
+        $notification_title = "Phòng trọ không được phê duyệt";
+        $notification_message = "Phòng trọ \"$room_title\" của bạn không đáp ứng tiêu chuẩn của hệ thống và đã bị từ chối. Vui lòng liên hệ admin để biết thêm chi tiết.";
+
+        mysqli_query($conn, "INSERT INTO notifications (user_id, title, message) 
+                           VALUES ('$user_id', '$notification_title', '$notification_message')");
+    }
 
     $_SESSION['success'] = "Đã từ chối và xóa phòng trọ!";
     header('Location: pending_rooms.php');
@@ -173,8 +253,11 @@ include_once '../../components/admin_header.php';
                                 <a href="?approve=<?php echo $room['id']; ?>" class="btn btn-success" onclick="return confirm('Bạn có chắc muốn duyệt phòng trọ này?')">
                                     <i class="fas fa-check"></i> Duyệt
                                 </a>
-                                <a href="?delete=<?php echo $room['id']; ?>" class="btn btn-danger" onclick="return confirm('Bạn có chắc muốn từ chối và xóa phòng trọ này?')">
-                                    <i class="fas fa-times"></i> Từ chối
+                                <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#rejectModal" data-room-id="<?php echo $room['id']; ?>">
+                                    <i class="fas fa-times"></i> Từ chối với lý do
+                                </button>
+                                <a href="?delete=<?php echo $room['id']; ?>" class="btn btn-outline-danger" onclick="return confirm('Bạn có chắc muốn từ chối và xóa phòng trọ này không cần cung cấp lý do?')">
+                                    <i class="fas fa-ban"></i> Từ chối trực tiếp
                                 </a>
                             </div>
                             <a href="edit_room.php?id=<?php echo $room['id']; ?>" class="btn btn-info">
@@ -195,6 +278,31 @@ include_once '../../components/admin_header.php';
 
     <div class="mt-4">
         <a href="../index.php" class="btn btn-secondary">Quay lại</a>
+    </div>
+</div>
+
+<!-- Modal từ chối phòng trọ -->
+<div class="modal fade" id="rejectModal" tabindex="-1" aria-labelledby="rejectModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="rejectModalLabel">Từ chối phòng trọ</h5>
+                <button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form action="" method="post">
+                <div class="modal-body">
+                    <input type="hidden" name="room_id" id="rejectRoomId">
+                    <div class="form-group">
+                        <label for="rejectReason">Lý do từ chối:</label>
+                        <textarea class="form-control" id="rejectReason" name="reject_reason" rows="3" required placeholder="Nhập lý do từ chối phòng trọ này..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Hủy</button>
+                    <button type="submit" name="reject_with_reason" class="btn btn-danger">Từ chối</button>
+                </div>
+            </form>
+        </div>
     </div>
 </div>
 
@@ -246,6 +354,22 @@ include_once '../../components/admin_header.php';
         }
         if (filterPendingDistrict) {
             filterPendingDistrict.addEventListener('change', filterPendingRooms);
+        }
+
+        // Xử lý modal từ chối phòng trọ
+        const rejectModal = document.getElementById('rejectModal');
+        if (rejectModal) {
+            rejectModal.addEventListener('show.bs.modal', function(event) {
+                // Lấy ID phòng từ nút "Từ chối"
+                const button = event.relatedTarget;
+                const roomId = button.getAttribute('data-room-id');
+
+                // Đặt ID phòng vào form
+                const roomIdInput = document.getElementById('rejectRoomId');
+                if (roomIdInput) {
+                    roomIdInput.value = roomId;
+                }
+            });
         }
 
         // Hiệu ứng fadeIn cho các phòng

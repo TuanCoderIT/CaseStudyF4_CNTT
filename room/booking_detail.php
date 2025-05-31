@@ -63,16 +63,6 @@ if (isset($_SESSION['flash_message'])) {
 
 $isRenter = ($user_id == $booking['user_id']);
 
-$motelImage = '';
-if (!empty($booking['motel_images'])) {
-    // Kiểm tra nếu đường dẫn đã bắt đầu bằng http hoặc https
-    if (strpos($booking['motel_images'], 'http') === 0) {
-        $motelImage = $booking['motel_images'];
-    } else {
-        // Nếu là đường dẫn tương đối, thêm đường dẫn đúng
-        $motelImage = '../uploads/' . basename($booking['motel_images']);
-    }
-}
 ?>
 
 <!DOCTYPE html>
@@ -196,8 +186,8 @@ if (!empty($booking['motel_images'])) {
                     <!-- Motel Information Column -->
                     <div class="col-md-5">
                         <div class="mb-4">
-                            <?php if (!empty($motelImage)): ?>
-                                <img src="<?php echo htmlspecialchars($motelImage); ?>" class="img-fluid rounded booking-image w-100" alt="Room Image">
+                            <?php if (!empty($booking['motel_images'])): ?>
+                                <img src="/<?php echo $booking['motel_images'] ?>" class="img-fluid rounded booking-image w-100" alt="Room Image">
                             <?php else: ?>
                                 <div class="bg-light rounded booking-image d-flex align-items-center justify-content-center">
                                     <p class="text-muted">No image available</p>
@@ -280,6 +270,19 @@ if (!empty($booking['motel_images'])) {
                                 <strong><i class="fas fa-receipt me-2"></i>Mã giao dịch:</strong>
                                 <span class="text-monospace"><?php echo htmlspecialchars($booking['vnp_transaction_id']); ?></span>
                             </div>
+
+                            <?php if (!empty($booking['bank_code']) || !empty($booking['bank_name'])): ?>
+                                <div class="detail-row">
+                                    <strong><i class="fas fa-university me-2"></i>Ngân hàng thanh toán:</strong>
+                                    <span>
+                                        <?php if (!empty($booking['bank_name'])): ?>
+                                            <?php echo htmlspecialchars($booking['bank_name']); ?>
+                                        <?php elseif (!empty($booking['bank_code'])): ?>
+                                            <?php echo htmlspecialchars($booking['bank_code']); ?>
+                                        <?php endif; ?>
+                                    </span>
+                                </div>
+                            <?php endif; ?>
                         <?php endif; ?>
 
                         <!-- Status-specific information and actions -->
@@ -323,9 +326,19 @@ if (!empty($booking['motel_images'])) {
                                     <div class="alert alert-info">
                                         <i class="fas fa-spinner me-2"></i>Đang chờ xác nhận thanh toán
                                     </div>
+                                    <div class="mt-3">
+                                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#retryPaymentModal">
+                                            <i class="fas fa-sync-alt me-2"></i>Thanh toán lại
+                                        </button>
+                                    </div>
                                 <?php elseif ($booking['status'] == 'FAILED'): ?>
                                     <div class="alert alert-danger">
                                         <i class="fas fa-times-circle me-2"></i>Đặt cọc thất bại
+                                    </div>
+                                    <div class="mt-3">
+                                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#retryPaymentModal">
+                                            <i class="fas fa-sync-alt me-2"></i>Thử thanh toán lại
+                                        </button>
                                     </div>
                                 <?php endif; ?>
                             <?php else: ?>
@@ -350,6 +363,42 @@ if (!empty($booking['motel_images'])) {
                             <?php endif; ?>
                         </div>
                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal xác nhận thanh toán lại -->
+    <div class="modal fade" id="retryPaymentModal" tabindex="-1" aria-labelledby="retryPaymentModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="retryPaymentModalLabel">
+                        <i class="fas fa-credit-card me-2 text-primary"></i>Xác nhận thanh toán lại
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Bạn có chắc chắn muốn thanh toán lại cho đặt phòng này?</p>
+
+                    <div class="alert alert-info">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span><i class="fas fa-info-circle me-2"></i>Số tiền cọc:</span>
+                            <span class="fw-bold fs-5"><?php echo number_format($booking['deposit_amount']); ?> VNĐ</span>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <span>Phòng:</span>
+                            <span><?php echo htmlspecialchars($booking['motel_title']); ?></span>
+                        </div>
+                    </div>
+
+                    <p class="text-muted small">Bạn sẽ được chuyển đến trang thanh toán VNPay để hoàn tất giao dịch.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <a href="/components/create_booking.php?retry=1&booking_id=<?php echo $booking_id; ?>" class="btn btn-primary">
+                        <i class="fas fa-check me-2"></i>Tiếp tục thanh toán
+                    </a>
                 </div>
             </div>
         </div>

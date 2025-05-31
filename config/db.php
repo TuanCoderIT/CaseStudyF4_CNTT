@@ -1,9 +1,9 @@
 <?php
 // Thông tin kết nối đến cơ sở dữ liệu
-$host = '103.97.126.29';       // Host CSDL
-$username = 'yoxdhlgk_root';        // Tên đăng nhập MySQL (mặc định là 'root')
-$password = 'admin123';            // Mật khẩu MySQL (mặc định là trống cho XAMPP)
-$database = 'yoxdhlgk_Case_Study';  // Tên CSDL
+$host = '103.97.126.29';  // localhost     // Host CSDL
+$username = 'yoxdhlgk_root';  // root      // Tên đăng nhập MySQL (mặc định là 'root')
+$password = 'admin123';      // ""       // Mật khẩu MySQL (mặc định là trống cho XAMPP)
+$database = 'yoxdhlgk_Case_Study';  // casestudy // Tên CSDL
 $port = '3306';
 
 // Tạo kết nối đến MySQL

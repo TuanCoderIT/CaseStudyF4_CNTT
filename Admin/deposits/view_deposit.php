@@ -448,6 +448,28 @@ function formatDate($dateString)
                                 </div>
                             </div>
                         </div>
+
+                        <div class="card mb-4">
+                            <div class="card-header bg-primary text-white">
+                                <h5 class="mb-0"><i class="fas fa-money-bill me-2"></i>Thông tin thanh toán</h5>
+                            </div>
+                            <div class="card-body">
+                                <p><strong>Tiền đặt cọc:</strong> <?= formatCurrency($booking['deposit_amount']) ?></p>
+                                <p><strong>Phí hoa hồng:</strong> <?= $booking['commission_pct'] ?>% (<?= formatCurrency($booking['deposit_amount'] * $booking['commission_pct'] / 100) ?>)</p>
+                                <?php if (!empty($booking['vnp_transaction_id'])): ?>
+                                    <p><strong>Mã giao dịch:</strong> <?= htmlspecialchars($booking['vnp_transaction_id']) ?></p>
+                                <?php endif; ?>
+                                <?php if (!empty($booking['bank_code']) || !empty($booking['bank_name'])): ?>
+                                    <p><strong>Ngân hàng thanh toán:</strong>
+                                        <?php if (!empty($booking['bank_name'])): ?>
+                                            <?= htmlspecialchars($booking['bank_name']) ?>
+                                        <?php elseif (!empty($booking['bank_code'])): ?>
+                                            <?= htmlspecialchars($booking['bank_code']) ?>
+                                        <?php endif; ?>
+                                    </p>
+                                <?php endif; ?>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </main>

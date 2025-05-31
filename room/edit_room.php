@@ -83,6 +83,13 @@ if (!empty($room['latlng'])) {
     }
 }
 
+$addressParts = explode(',', $room['address']);
+$address_detail = trim($addressParts[0] ?? '');
+$ward_name = trim($addressParts[1] ?? '');
+$district_name = trim($addressParts[2] ?? '');
+$province_name = trim($addressParts[3] ?? '');
+
+
 // Danh sách quận/huyện
 $districts = mysqli_query($conn, "SELECT * FROM districts ORDER BY name");
 
@@ -583,7 +590,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                                         <div class="col-md-6 mb-3">
                                             <label for="address_detail" class="form-label">Địa chỉ chi tiết <span class="text-danger">*</span></label>
-                                            <input type="text" class="form-control" id="address_detail" name="address_detail" value="<?php echo isset($room['address_detail']) ? htmlspecialchars($room['address_detail']) : ''; ?>" placeholder="Số nhà, tên đường..." required>
+                                            <input type="text" class="form-control" id="address_detail" name="address_detail" value="<?php echo isset($address_detail) ? htmlspecialchars($address_detail) : ''; ?>" placeholder="Số nhà, tên đường..." required>
                                             <div class="invalid-feedback">Vui lòng nhập địa chỉ chi tiết.</div>
                                         </div>
                                     </div>
