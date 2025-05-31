@@ -43,21 +43,19 @@ $bankCode          = $_GET['vnp_BankCode'] ?? '';      // ngân hàng
 $transactionNo     = $_GET['vnp_TransactionNo'];       // mã giao dịch VNPAY
 $amount            = ($_GET['vnp_Amount'] ?? 0) / 100;  // giá trị thực tế
 
-// Lấy tên ngân hàng từ session nếu có
-$bankName = isset($_SESSION['booking_bank_name']) ? $_SESSION['booking_bank_name'] : '';
+
 
 // 8. Xác định status mới
 $newStatus = ($responseCode === "00" && $transactionStatus === "00") ? 'SUCCESS' : 'FAILED';
-
+$requestRefundAt = date('Y-m-d H:i:s');
 // 9. Cập nhật DB với đúng cột hiện có và thêm thông tin ngân hàng
 $sql = "UPDATE bookings 
         SET status = ?, 
             vnp_transaction_id = ?,
-            bank_code = ?,
-            bank_name = ?
+            request_refund_at =?
         WHERE id = ?";
 $stmt = $conn->prepare($sql);
-$stmt->bind_param('ssssi', $newStatus, $transactionNo, $bankCode, $bankName, $txnRef);
+$stmt->bind_param('sssi', $newStatus, $transactionNo, $requestRefundAt, $txnRef);
 $stmt->execute();
 $stmt->close();
 

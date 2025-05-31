@@ -1,106 +1,198 @@
-# Hướng dẫn thiết lập và sử dụng Chatbot PhòngTrọ
+# HƯỚNG DẪN SỬ DỤNG CHATBOT TÌM KIẾM PHÒNG TRỌ
 
-## Giới thiệu
+Dưới đây là danh sách các loại truy vấn tìm kiếm mà người dùng có thể sử dụng để tìm phòng trọ dựa trên cơ sở dữ liệu hiện có:
 
-Chatbot PhòngTrọ là một trợ lý ảo được tích hợp vào website PhòngTrọ, cho phép người dùng tương tác và tìm kiếm thông tin về phòng trọ thông qua giao diện chat. Chatbot sử dụng Google Gemini API để xử lý ngôn ngữ tự nhiên và kết nối với cơ sở dữ liệu của website để truy xuất thông tin phòng trọ.
+## TÌM KIẾM THEO GIÁ
 
-## Thiết lập
+- **Phòng giá rẻ**
 
-### 1. Đăng ký API key Google Gemini
+  - "Cho tôi xem phòng trọ giá rẻ"
+  - "Phòng trọ dưới 2 triệu"
+  - "Phòng trọ dưới 1.5 triệu"
+  - "Có phòng nào rẻ không?"
+  - "Phòng tiết kiệm nhất"
+  - "Phòng trọ có giá thấp nhất"
 
-1. Truy cập [Google AI Studio](https://ai.google.dev/)
-2. Đăng ký tài khoản Google (nếu chưa có)
-3. Tạo một API key mới
-4. Sao chép API key
+- **Phòng theo khoảng giá**
 
-### 2. Cấu hình Chatbot
+  - "Phòng từ 1 triệu đến 3 triệu"
+  - "Phòng trọ giá từ 2-5 triệu"
+  - "Phòng trọ tầm giá 2 triệu"
 
-1. Mở file `components/chatbot_api.php`
-2. Tìm dòng: `$api_key = 'YOUR_GEMINI_API_KEY';`
-3. Thay thế `YOUR_GEMINI_API_KEY` bằng API key bạn đã tạo ở bước trên
-4. Lưu file
+- **Phòng cao cấp**
+  - "Phòng trọ cao cấp"
+  - "Phòng trọ trên 5 triệu"
+  - "Phòng trọ chất lượng cao"
 
-## Tính năng
+## TÌM KIẾM THEO DIỆN TÍCH
 
-Chatbot có thể trả lời các loại câu hỏi sau:
+- **Phòng rộng**
+  - "Phòng trọ diện tích lớn"
+  - "Phòng trọ trên 30m2"
+  - "Phòng trọ rộng rãi"
+- **Phòng nhỏ**
 
-### 1. Tìm kiếm phòng trọ xem nhiều nhất
+  - "Phòng trọ nhỏ"
+  - "Phòng trọ mini"
+  - "Phòng trọ dưới 20m2"
 
-Các cách hỏi:
+- **Theo khoảng diện tích**
+  - "Phòng trọ từ 20-30m2"
+  - "Phòng có diện tích vừa phải"
 
-- "Cho tôi xem top 3 phòng trọ được xem nhiều nhất"
-- "Phòng trọ nào phổ biến nhất?"
-- "Top 5 phòng trọ xem nhiều nhất"
+## TÌM KIẾM THEO KHU VỰC
 
-### 2. Tìm kiếm phòng trọ giá rẻ
+- **Theo quận/huyện**
 
-Các cách hỏi:
+  - "Phòng trọ ở quận Bến Thủy"
+  - "Phòng trọ tại Hà Huy Tập"
+  - "Phòng ở Quang Trung"
+  - "Phòng gần Hưng Bình"
+  - "Phòng trọ khu vực Trung Đô"
 
-- "Cho tôi xem phòng trọ giá dưới 2 triệu"
-- "Có phòng trọ nào rẻ không?"
-- "Phòng trọ dưới 1.5 triệu"
+- **Gần trường học**
 
-### 3. Tìm kiếm phòng trọ gần Đại học Vinh
+  - "Phòng trọ gần Đại học Vinh"
+  - "Phòng gần trường đại học"
+  - "Phòng trọ cho sinh viên gần trường"
+  - "Phòng trọ cách Đại học Vinh không quá 3km"
 
-Các cách hỏi:
+- **Gần trung tâm**
+  - "Phòng trọ trung tâm thành phố"
+  - "Phòng gần trung tâm Vinh"
 
-- "Phòng trọ gần Đại học Vinh"
-- "Có phòng nào gần trường đại học không?"
+## TÌM KIẾM THEO THỜI GIAN ĐĂNG
 
-### 4. Các câu hỏi chung về website
+- **Phòng mới đăng**
 
-Chatbot cũng có thể trả lời các câu hỏi chung về website PhòngTrọ, ví dụ:
+  - "Phòng trọ mới đăng"
+  - "Phòng trọ đăng trong ngày hôm nay"
+  - "Phòng vừa đăng gần đây"
+  - "Phòng trọ mới nhất"
 
-- "Làm thế nào để đăng tin phòng trọ?"
-- "Làm sao để đặt phòng?"
-- "Cách tìm kiếm phòng trọ trên website?"
+- **Theo khoảng thời gian**
+  - "Phòng trọ đăng trong tuần này"
+  - "Phòng trọ đăng trong tháng này"
+  - "Phòng trọ đăng 7 ngày qua"
 
-## Tùy chỉnh thêm
+## TÌM KIẾM THEO LOẠI PHÒNG
 
-### Thêm ý định mới
+- **Theo danh mục**
 
-Để thêm các loại câu hỏi mới mà chatbot có thể xử lý:
+  - "Phòng trọ thường"
+  - "Chung cư mini"
+  - "Phòng ở ghép"
+  - "Căn hộ studio"
+  - "Phòng trọ cao cấp"
+  - "Nhà nguyên căn"
+  - "Ký túc xá"
 
-1. Mở file `components/chatbot_api.php`
-2. Tìm mảng `$keywords` và thêm từ khóa mới và ý định tương ứng:
-   ```php
-   $keywords = [
-       // Thêm từ khóa mới
-       'từ khóa của bạn' => 'tên_ý_định',
-   ];
-   ```
-3. Thêm case xử lý cho ý định mới trong switch-case:
-   ```php
-   switch ($intent) {
-       // Thêm case mới
-       case 'tên_ý_định':
-           // Xử lý ý định
-           break;
-   }
-   ```
+- **Theo đặc điểm phòng**
+  - "Phòng trọ khép kín"
+  - "Phòng trọ có gác lửng"
+  - "Phòng trọ chung vệ sinh"
+  - "Căn hộ dịch vụ"
 
-### Tùy chỉnh giao diện
+## TÌM KIẾM THEO TIỆN ÍCH
 
-Để tùy chỉnh giao diện chatbot:
+- **Tiện ích cơ bản**
 
-1. Mở file `components/chatbot.php`
-2. Chỉnh sửa CSS trong thẻ `<style>` để thay đổi màu sắc, kích thước và vị trí của chatbot
+  - "Phòng trọ có wifi"
+  - "Phòng có điều hòa"
+  - "Phòng có nóng lạnh"
+  - "Phòng có máy giặt"
+  - "Phòng có tủ lạnh"
+  - "Phòng có ban công"
+  - "Phòng có WC riêng"
+  - "Phòng có bếp"
 
-## Gỡ lỗi
+- **Nhiều tiện ích**
+  - "Phòng trọ đầy đủ tiện nghi"
+  - "Phòng trọ có cả wifi và điều hòa"
+  - "Phòng có đầy đủ nội thất"
 
-Nếu chatbot không hoạt động:
+## TÌM KIẾM THEO LƯỢT XEM VÀ YÊU THÍCH
 
-1. Kiểm tra console của trình duyệt để xem lỗi JavaScript
-2. Kiểm tra logs của server PHP
-3. Đảm bảo API key của Gemini hợp lệ và còn quota
-4. Kiểm tra kết nối đến cơ sở dữ liệu
+- **Phòng phổ biến**
 
-## Lưu ý
+  - "Phòng trọ xem nhiều nhất"
+  - "Top phòng trọ được xem nhiều"
+  - "Phòng trọ nổi bật nhất"
+  - "Phòng trọ hot nhất"
 
-- API key Gemini có giới hạn về số lượng yêu cầu. Hãy đảm bảo rằng bạn không vượt quá giới hạn này.
-- Chatbot chỉ có thể truy xuất dữ liệu đã có trong cơ sở dữ liệu.
-- Đối với một số câu hỏi phức tạp, chatbot có thể cần được cấu hình thêm để xử lý chính xác.
+- **Phòng được yêu thích**
+  - "Phòng trọ được yêu thích nhiều"
+  - "Top phòng trọ có nhiều lượt thích"
+  - "Phòng trọ được nhiều người thích nhất"
 
----
+## TÌM KIẾM KẾT HỢP NHIỀU TIÊU CHÍ
 
-Với bất kỳ câu hỏi hoặc vấn đề nào, vui lòng liên hệ với người quản trị website.
+- **Kết hợp giá và khu vực**
+
+  - "Phòng trọ dưới 2 triệu ở Bến Thủy"
+  - "Phòng rẻ gần Đại học Vinh"
+  - "Phòng giá tốt khu vực Trung Đô"
+
+- **Kết hợp giá và tiện ích**
+
+  - "Phòng dưới 3 triệu có điều hòa"
+  - "Phòng giá rẻ có wifi"
+  - "Phòng rẻ đầy đủ tiện nghi"
+
+- **Kết hợp khu vực và tiện ích**
+
+  - "Phòng trọ gần đại học có điều hòa"
+  - "Phòng ở Quang Trung có WC riêng"
+  - "Phòng trọ khu vực Bến Thủy có wifi"
+
+- **Kết hợp nhiều yếu tố**
+  - "Phòng trọ dưới 2 triệu, gần đại học, có điều hòa"
+  - "Phòng rộng rãi, giá rẻ, đầy đủ tiện nghi"
+  - "Phòng mới đăng, giá dưới 3 triệu, khu vực trung tâm"
+
+## TÌM KIẾM VỀ TÌNH TRẠNG PHÒNG
+
+- **Tình trạng phòng**
+  - "Phòng còn trống không?"
+  - "Phòng trọ còn chỗ ở không?"
+  - "Phòng hiện có sẵn"
+  - "Phòng trống mới"
+
+## TÌM KIẾM THÔNG TIN CÁ NHÂN
+
+- **Đặt phòng**
+
+  - "Xem lịch sử đặt phòng của tôi"
+  - "Tôi đã đặt những phòng nào?"
+  - "Đặt phòng của tôi"
+
+- **Phòng yêu thích**
+
+  - "Xem phòng tôi đã thích"
+  - "Phòng trọ yêu thích của tôi"
+  - "Danh sách phòng đã lưu"
+
+- **Thông báo**
+  - "Xem thông báo của tôi"
+  - "Thông báo mới nhất"
+  - "Có thông báo nào mới không?"
+
+## TÌM KIẾM THÔNG TIN KHÁC
+
+- **Thông tin về phòng**
+
+  - "Cho tôi biết thêm về phòng ở Bến Thủy"
+  - "Chi tiết phòng trọ ở Quang Trung"
+  - "Thông tin về căn hộ gần đại học"
+
+- **Câu hỏi chung**
+  - "Có phòng nào phù hợp với sinh viên không?"
+  - "Gợi ý phòng trọ cho gia đình nhỏ"
+  - "Phòng trọ cho cặp đôi"
+
+## LƯU Ý KHI TÌM KIẾM
+
+1. Có thể kết hợp nhiều tiêu chí để tìm kiếm chính xác hơn
+2. Sử dụng từ khóa rõ ràng để chatbot hiểu chính xác nhu cầu
+3. Nếu không tìm thấy kết quả, hãy thử mở rộng tiêu chí tìm kiếm
+4. Chatbot luôn ưu tiên hiển thị kết quả mới nhất và phù hợp nhất

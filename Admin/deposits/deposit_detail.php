@@ -350,7 +350,7 @@ include_once '../../components/admin_header.php';
                         $first_image = trim($images[0]);
                     ?>
                         <div class="mb-3">
-                            <img src="/uploads/rooms/<?php echo $first_image; ?>" alt="Phòng trọ" class="img-fluid rounded" style="max-height: 200px;">
+                            <img src="/<?php echo $first_image; ?>" alt="Phòng trọ" class="img-fluid rounded" style="max-height: 200px;">
                         </div>
                     <?php endif; ?>
                 </div>

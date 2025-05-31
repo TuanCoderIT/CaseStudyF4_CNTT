@@ -18,6 +18,7 @@ if (!isset($conn)) {
         <div class="chatbot-header">
             <h5><i class="fas fa-robot me-2"></i> Trợ lý ảo PhòngTrọ</h5>
             <div class="chatbot-controls">
+                <button class="new-chat-btn" id="newChat" title="Bắt đầu cuộc trò chuyện mới"><i class="fas fa-plus"></i></button>
                 <button class="minimize-btn" id="minimizeChat"><i class="fas fa-minus"></i></button>
                 <button class="close-btn" id="closeChat"><i class="fas fa-times"></i></button>
             </div>
@@ -31,6 +32,13 @@ if (!isset($conn)) {
                         <li class="suggestion-item">"Top 3 phòng trọ được xem nhiều nhất"</li>
                         <li class="suggestion-item">"Phòng trọ có giá dưới 2 triệu"</li>
                         <li class="suggestion-item">"Phòng trọ gần Đại học Vinh"</li>
+                        <li class="suggestion-item">"Phòng có wifi và điều hòa"</li>
+                        <li class="suggestion-item">"Phòng được yêu thích nhiều nhất"</li>
+                        <li class="suggestion-item">"Phòng đăng trong tuần này"</li>
+                        <?php if (isset($_SESSION['user_id'])): ?>
+                            <li class="suggestion-item">"Lịch sử đặt phòng của tôi"</li>
+                            <li class="suggestion-item">"Thông báo của tôi"</li>
+                        <?php endif; ?>
                     </ul>
                 </div>
             </div>
@@ -130,25 +138,90 @@ if (!isset($conn)) {
         font-size: 20px;
     }
 
+    .chatbot-controls {
+        display: flex;
+        gap: 10px;
+    }
+
     .chatbot-controls button {
-        background: rgba(255, 255, 255, 0.15);
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
         border: none;
         color: white;
-        margin-left: 10px;
         cursor: pointer;
-        width: 30px;
-        height: 30px;
-        border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
-        transition: all 0.2s;
-        font-size: 12px;
+        transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
     }
 
-    .chatbot-controls button:hover {
+    .chatbot-controls button::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(255, 255, 255, 0.1);
+        transform: translateY(100%);
+        transition: transform 0.3s ease;
+    }
+
+    .chatbot-controls button:hover::before {
+        transform: translateY(0);
+    }
+
+    .chatbot-controls button:active {
+        transform: scale(0.95);
+    }
+
+    .chatbot-controls button i {
+        position: relative;
+        z-index: 2;
+        font-size: 14px;
+        transition: all 0.3s ease;
+    }
+
+    .new-chat-btn {
+        background: rgba(255, 255, 255, 0.25);
+    }
+
+    .new-chat-btn:hover {
+        background: rgba(255, 255, 255, 0.35);
+        transform: translateY(-3px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    }
+
+    .new-chat-btn:hover i {
+        transform: rotate(90deg);
+    }
+
+    .minimize-btn {
+        background: rgba(255, 255, 255, 0.2);
+    }
+
+    .minimize-btn:hover {
         background: rgba(255, 255, 255, 0.3);
-        transform: scale(1.1);
+        transform: translateY(-3px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    }
+
+    .close-btn {
+        background: rgba(231, 74, 59, 0.8);
+    }
+
+    .close-btn:hover {
+        background: rgba(231, 74, 59, 1);
+        transform: translateY(-3px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    }
+
+    .close-btn:hover i {
+        transform: rotate(90deg);
     }
 
     .chatbot-messages {
@@ -642,6 +715,7 @@ if (!isset($conn)) {
         const chatBox = document.getElementById('chatBox');
         const minimizeChat = document.getElementById('minimizeChat');
         const closeChat = document.getElementById('closeChat');
+        const newChat = document.getElementById('newChat');
         const chatInput = document.getElementById('chatInput');
         const sendMessage = document.getElementById('sendMessage');
         const chatMessages = document.getElementById('chatMessages');
@@ -697,22 +771,29 @@ if (!isset($conn)) {
             }, 400);
         });
 
-        // Minimize chat with animation
+        // Minimize chat with animation (just hide, don't clear chat)
         minimizeChat.addEventListener('click', function() {
+            // Add a nice animation when minimizing
             chatBox.style.opacity = '0';
             chatBox.style.transform = 'translateY(20px)';
 
             setTimeout(() => {
                 chatBox.style.display = 'none';
                 chatToggle.style.display = 'flex';
+                // Add a subtle pulse to indicate there's an ongoing conversation
+                chatToggle.classList.add('active');
+                setTimeout(() => {
+                    chatToggle.classList.remove('active');
+                }, 1500);
                 // Reset chatBox styles for next opening
                 chatBox.style.opacity = '';
                 chatBox.style.transform = '';
             }, 300);
         });
 
-        // Close chat with animation
+        // Close chat with animation and clear chat history
         closeChat.addEventListener('click', function() {
+            // Add a nice animation when closing
             chatBox.style.opacity = '0';
             chatBox.style.transform = 'translateY(20px)';
 
@@ -720,10 +801,64 @@ if (!isset($conn)) {
                 chatBox.style.display = 'none';
                 chatToggle.style.display = 'flex';
                 chatToggle.classList.remove('active');
+
                 // Reset chatBox styles for next opening
                 chatBox.style.opacity = '';
                 chatBox.style.transform = '';
+
+                // Clear chat messages except the first welcome message
+                while (chatMessages.children.length > 1) {
+                    chatMessages.removeChild(chatMessages.lastChild);
+                }
+
+                // Reset chat session on the server
+                fetch('/components/chatbot_api.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        message: '!reset_session'
+                    })
+                }).catch(error => {
+                    console.error('Error resetting chat session:', error);
+                });
             }, 300);
+        });
+
+        // New Chat button functionality
+        newChat.addEventListener('click', function() {
+            // Clear chat messages except the first welcome message
+            while (chatMessages.children.length > 1) {
+                chatMessages.removeChild(chatMessages.lastChild);
+            }
+
+            // Reset chat session on the server
+            fetch('/components/chatbot_api.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    message: '!reset_session'
+                })
+            }).catch(error => {
+                console.error('Error resetting chat session:', error);
+            });
+
+            // Show a confirmation message
+            const resetMessage = document.createElement('div');
+            resetMessage.className = 'message bot';
+
+            const resetContent = document.createElement('div');
+            resetContent.className = 'message-content';
+            resetContent.innerHTML = '<p>Cuộc trò chuyện đã được làm mới. Bạn có thể tiếp tục đặt câu hỏi.</p>';
+
+            resetMessage.appendChild(resetContent);
+            chatMessages.appendChild(resetMessage);
+
+            // Focus on the input
+            chatInput.focus();
         });
 
         // Send message when button is clicked
@@ -839,8 +974,11 @@ if (!isset($conn)) {
             }
         }
 
-        // Show typing indicator with enhanced animation
+        // Show typing indicator with enhanced animation and status updates
         function showTypingIndicator() {
+            // First make sure any existing typing indicator is removed
+            removeTypingIndicator();
+
             const typingDiv = document.createElement('div');
             typingDiv.className = 'message bot';
             typingDiv.id = 'typingIndicator';
@@ -852,25 +990,99 @@ if (!isset($conn)) {
                 <span></span>
                 <span></span>
                 <span></span>
+                <div class="typing-status">Đang tìm kiếm...</div>
             </div>
-        `;
+            `;
 
             // Animate in the typing indicator
             setTimeout(() => {
-                typingDiv.style.opacity = '1';
-                typingDiv.style.transform = 'translateY(0)';
-                typingDiv.style.transition = 'all 0.3s ease-out';
+                if (document.body.contains(typingDiv)) {
+                    typingDiv.style.opacity = '1';
+                    typingDiv.style.transform = 'translateY(0)';
+                    typingDiv.style.transition = 'all 0.3s ease-out';
+                }
             }, 50);
 
             chatMessages.appendChild(typingDiv);
             scrollToBottom();
+
+            // Cập nhật trạng thái theo thời gian với phương thức cải tiến
+            const statusElement = typingDiv.querySelector('.typing-status');
+            let statusIndex = 0;
+            const statusMessages = [
+                'Đang tìm kiếm...',
+                'Đang truy vấn dữ liệu...',
+                'Đang xử lý thông tin...',
+                'Sắp có kết quả...',
+                'Đang tổng hợp thông tin...'
+            ];
+
+            // Create interval for updating status messages
+            const statusInterval = window.setInterval(() => {
+                // Check if element still exists in DOM before updating
+                if (document.body.contains(typingDiv) && statusElement) {
+                    statusIndex = (statusIndex + 1) % statusMessages.length;
+                    statusElement.style.opacity = 0;
+
+                    setTimeout(() => {
+                        if (document.body.contains(typingDiv) && statusElement) {
+                            statusElement.textContent = statusMessages[statusIndex];
+                            statusElement.style.opacity = 1;
+                        }
+                    }, 150);
+                } else {
+                    // Clean up if element is gone
+                    window.clearInterval(statusInterval);
+                }
+            }, 2000);
+
+            // Store interval ID directly on the element for cleanup
+            typingDiv.dataset.intervalId = statusInterval;
+
+            // Style cho status
+            const style = document.createElement('style');
+            style.textContent = `
+                .typing-status {
+                    font-size: 12px;
+                    color: #6c757d;
+                    margin-top: 5px;
+                    transition: opacity 0.3s;
+                }
+            `;
+            document.head.appendChild(style);
         }
 
-        // Remove typing indicator
+        // Function to remove typing indicator with proper cleanup
         function removeTypingIndicator() {
             const typingIndicator = document.getElementById('typingIndicator');
             if (typingIndicator) {
-                typingIndicator.remove();
+                // Clear any animation interval
+                if (typingIndicator.dataset.intervalId) {
+                    window.clearInterval(parseInt(typingIndicator.dataset.intervalId));
+                }
+
+                // Apply fade-out animation
+                typingIndicator.style.opacity = '0';
+                typingIndicator.style.transform = 'translateY(10px)';
+                typingIndicator.style.transition = 'all 0.2s ease-out';
+
+                // Remove the element after animation completes
+                setTimeout(() => {
+                    if (document.body.contains(typingIndicator)) {
+                        typingIndicator.remove();
+                    }
+                }, 200);
+            }
+
+            // Also check for any orphaned typing indicators (fallback cleanup)
+            const allTypingIndicators = document.querySelectorAll('.typing-indicator');
+            if (allTypingIndicators.length > 0) {
+                console.warn(`Found ${allTypingIndicators.length} orphaned typing indicators, cleaning up`);
+                allTypingIndicators.forEach(indicator => {
+                    if (indicator !== typingIndicator) {
+                        indicator.remove();
+                    }
+                });
             }
         }
 
@@ -923,6 +1135,8 @@ if (!isset($conn)) {
                     return response.json();
                 })
                 .then(data => {
+                    console.log("Received data from chatbot API:", data);
+
                     // Clear the timeout
                     clearTimeout(timeoutId);
 
@@ -933,10 +1147,88 @@ if (!isset($conn)) {
                     // Remove typing indicator
                     removeTypingIndicator();
 
+                    // Log the data to check what we're receiving
+                    console.log("Chatbot API response:", data);
+
                     // Add slight delay before showing response for natural feeling
                     setTimeout(() => {
-                        // Add bot response
-                        addMessage(data.response, 'bot', true);
+                        // Log what we're working with
+                        console.log("Processing chatbot response. Has text:", Boolean(data.response && data.response.trim() !== ''));
+                        console.log("Processing chatbot response. Has HTML:", Boolean(data.html && data.html.trim() !== ''));
+
+                        // Check if we have any meaningful response at all
+                        if ((!data.response || data.response.trim() === '') &&
+                            (!data.html || data.html.trim() === '')) {
+                            console.warn("Both text and HTML responses are empty!");
+                            addMessage("Xin lỗi, hệ thống không thể xử lý yêu cầu của bạn lúc này. Vui lòng thử lại sau.", 'bot', false);
+                            return;
+                        }
+
+                        // Add bot response first if there's text content
+                        if (data.response && data.response.trim() !== '') {
+                            addMessage(data.response, 'bot', true);
+                        }
+
+                        // If we have HTML content from database queries, display it
+                        if (data.html && data.html.trim() !== '') {
+                            console.log("HTML content found, length:", data.html.length);
+
+                            const htmlDiv = document.createElement('div');
+                            htmlDiv.className = 'message bot';
+
+                            // Create container for content
+                            const contentDiv = document.createElement('div');
+                            contentDiv.className = 'message-content';
+
+                            try {
+                                // Add HTML to container
+                                contentDiv.innerHTML = data.html;
+
+                                // Process any style elements in the HTML
+                                const styleElements = contentDiv.querySelectorAll('style');
+                                console.log("Found", styleElements.length, "style elements to process");
+
+                                styleElements.forEach(styleElement => {
+                                    // Clone and append styles to head to prevent them from being removed when moved
+                                    const newStyle = document.createElement('style');
+                                    newStyle.textContent = styleElement.textContent;
+                                    document.head.appendChild(newStyle);
+                                });
+
+                                // Append the HTML content
+                                htmlDiv.appendChild(contentDiv);
+                                chatMessages.appendChild(htmlDiv);
+
+                                // Scroll to show the new message
+                                scrollToBottom();
+
+                                // Animate the room cards appearance with a slight stagger
+                                setTimeout(() => {
+                                    // Target both types of room card classes that might exist
+                                    const cards = contentDiv.querySelectorAll('.chatbot-room-card, .room-card');
+                                    if (cards.length > 0) {
+                                        console.log(`Found ${cards.length} room cards to animate`);
+                                        cards.forEach((card, index) => {
+                                            card.style.opacity = 0;
+                                            card.style.transform = 'translateY(20px)';
+                                            card.style.transition = 'all 0.3s ease';
+
+                                            setTimeout(() => {
+                                                card.style.opacity = 1;
+                                                card.style.transform = 'translateY(0)';
+                                            }, index * 100);
+                                        });
+                                    } else {
+                                        console.log("No room cards found to animate");
+                                    }
+                                }, 100);
+                            } catch (error) {
+                                console.error("Error rendering HTML content:", error);
+                                addMessage("Xin lỗi, có lỗi khi hiển thị kết quả tìm kiếm. Vui lòng thử lại.", "bot", false);
+                            }
+                        } else if (data.debug) {
+                            console.log("No HTML content to display");
+                        }
 
                         // Add subtle glow to chatbot toggle if minimized
                         if (chatBox.style.display === 'none') {
@@ -948,16 +1240,47 @@ if (!isset($conn)) {
                     }, Math.min(400, responseTime / 5)); // Proportional delay, but max 400ms
                 })
                 .catch(error => {
-                    console.error('Error:', error);
+                    console.error('Chatbot error:', error);
                     clearTimeout(timeoutId);
+
+                    // Ensure typing indicator is removed
                     removeTypingIndicator();
 
-                    // Show a more friendly error message
-                    const errorMsg = `
-                    <p><i class="fas fa-exclamation-triangle" style="color: #e74a3b;"></i> Xin lỗi, có lỗi xảy ra khi xử lý yêu cầu của bạn.</p>
-                    <p style="font-size: 12px; opacity: 0.8;">Vui lòng thử lại sau hoặc làm mới trang.</p>
-                    `;
-                    addMessage(errorMsg, 'bot', true);
+                    // Check if we have error info from the server
+                    let errorMessage = 'Xin lỗi, có lỗi xảy ra khi xử lý yêu cầu của bạn.';
+                    let detailMessage = 'Vui lòng thử lại sau hoặc làm mới trang.';
+
+                    // Handle different types of errors
+                    if (error.name === 'SyntaxError') {
+                        // JSON parsing error - likely invalid response from server
+                        errorMessage = 'Không thể xử lý phản hồi từ máy chủ';
+                        detailMessage = 'Máy chủ có thể đang gặp vấn đề. Vui lòng thử lại sau ít phút.';
+                        console.error('JSON parse error:', error);
+                    } else if (error.message && error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+                        // Network error
+                        errorMessage = 'Không thể kết nối đến máy chủ';
+                        detailMessage = 'Vui lòng kiểm tra kết nối internet của bạn và thử lại.';
+                    } else if (error.response && error.response.status === 429) {
+                        // Rate limiting
+                        errorMessage = 'Quá nhiều yêu cầu';
+                        detailMessage = 'Hệ thống đang nhận quá nhiều yêu cầu. Vui lòng thử lại sau.';
+                    }
+
+                    // Try to get more detailed error info from response if available
+                    if (error.response && error.response.json) {
+                        return error.response.json().then(data => {
+                            if (data && data.error && data.message) {
+                                errorMessage = data.message;
+                                detailMessage = data.details || detailMessage;
+                            }
+                            displayErrorMessage(errorMessage, detailMessage);
+                        }).catch(e => {
+                            console.error('Error parsing error response:', e);
+                            displayErrorMessage(errorMessage, detailMessage);
+                        });
+                    } else {
+                        displayErrorMessage(errorMessage, detailMessage);
+                    }
                 })
                 .finally(() => {
                     // Re-enable input and button
@@ -965,7 +1288,131 @@ if (!isset($conn)) {
                     sendMessage.disabled = false;
                     sendMessage.innerHTML = '<i class="fas fa-paper-plane"></i>';
                     chatInput.focus();
+
+                    // Final check to ensure typing indicator is gone
+                    setTimeout(() => {
+                        removeTypingIndicator();
+                    }, 500);
                 });
+        }
+
+        // Hiển thị thông báo lỗi trong giao diện chat với tùy chọn thử lại
+        function displayErrorMessage(message, details) {
+            // Generate a unique ID for this error instance
+            const errorId = 'error-' + Date.now();
+
+            const errorHTML = `
+            <div class="chatbot-error" id="${errorId}">
+                <div class="chatbot-error-icon">
+                    <i class="fas fa-exclamation-circle"></i>
+                </div>
+                <div class="chatbot-error-content">
+                    <h4>${message}</h4>
+                    <p>${details}</p>
+                    <div class="chatbot-error-actions">
+                        <button class="chatbot-error-retry" onclick="document.getElementById('${errorId}').querySelector('.retry-spinner').classList.remove('hidden'); setTimeout(() => { document.getElementById('sendMessage').click(); document.getElementById('${errorId}').remove(); }, 500);">
+                            <i class="fas fa-redo-alt"></i> Gửi lại
+                            <span class="retry-spinner hidden"><i class="fas fa-spinner fa-spin"></i></span>
+                        </button>
+                        <button class="chatbot-error-reload" onclick="location.reload();">
+                            <i class="fas fa-sync"></i> Làm mới trang
+                        </button>
+                    </div>
+                </div>
+            </div>`;
+
+            addMessage(errorHTML, 'bot', true);
+
+            // Thêm CSS cho thông báo lỗi với các nâng cao
+            const style = document.createElement('style');
+            style.textContent = `
+                .chatbot-error {
+                    background-color: #FFF5F5;
+                    border-radius: 8px;
+                    padding: 15px;
+                    display: flex;
+                    align-items: flex-start;
+                    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+                    border-left: 3px solid #E53E3E;
+                    animation: errorPulse 2s ease-in-out 1;
+                }
+                
+                @keyframes errorPulse {
+                    0% { box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+                    50% { box-shadow: 0 2px 15px rgba(229, 62, 62, 0.3); }
+                    100% { box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+                }
+                
+                .chatbot-error-icon {
+                    font-size: 24px;
+                    color: #E53E3E;
+                    margin-right: 15px;
+                    flex-shrink: 0;
+                }
+                
+                .chatbot-error-content h4 {
+                    margin: 0 0 10px;
+                    color: #E53E3E;
+                    font-size: 16px;
+                }
+                
+                .chatbot-error-content p {
+                    margin: 0 0 15px;
+                    color: #4A5568;
+                    font-size: 14px;
+                    line-height: 1.4;
+                }
+                
+                .chatbot-error-actions {
+                    display: flex;
+                    gap: 10px;
+                }
+                
+                .chatbot-error-retry, .chatbot-error-reload {
+                    border: none;
+                    border-radius: 4px;
+                    padding: 8px 15px;
+                    font-size: 13px;
+                    cursor: pointer;
+                    transition: all 0.2s;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 6px;
+                }
+                
+                .chatbot-error-retry {
+                    background-color: #4e73df;
+                    color: white;
+                }
+                
+                .chatbot-error-retry:hover {
+                    background-color: #375fd1;
+                    transform: translateY(-1px);
+                }
+                
+                .chatbot-error-reload {
+                    background-color: #f1f3f9;
+                    color: #4e73df;
+                }
+                
+                .chatbot-error-reload:hover {
+                    background-color: #e3e7f2;
+                }
+                
+                .retry-spinner {
+                    display: inline-block;
+                    margin-left: 5px;
+                }
+                
+                .hidden {
+                    display: none;
+                }
+            `;
+            document.head.appendChild(style);
+
+            // Scroll to the error message
+            scrollToBottom();
         }
     });
 </script>

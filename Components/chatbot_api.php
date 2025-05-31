@@ -5,7 +5,7 @@ if (session_status() == PHP_SESSION_NONE) {
 }
 
 // Kết nối đến CSDL
-require_once __DIR__ . '/../config/db.php';
+require_once '../config/db.php';
 
 // Khởi tạo mảng lịch sử hội thoại nếu chưa có
 if (!isset($_SESSION['chat_history'])) {
@@ -76,7 +76,9 @@ function callGeminiAPI($message, $context = '', $chat_history = [])
                         - Người dùng có thể tìm kiếm phòng trọ theo khu vực, giá cả, diện tích, v.v.
                         - Chủ trọ có thể đăng tin cho thuê phòng trọ
                         - nếu tìm không có thì báo là ko có chứ không được báo là đang xử lý.
-                        Nếu người dùng hỏi về dữ liệu thực tế như phòng trọ cụ thể, hãy trả lời rằng bạn đang xử lý yêu cầu của họ.
+                        - Nếu người dùng hỏi về dữ liệu thực tế như phòng trọ cụ thể thì phải lấy ra từ cơ sở dữ liệu.
+                        - Ưu tiên lấy dữ liệu từ cơ sở dữ liệu và không tạo mô tả tưởng tượng.
+                        - Nếu không có dữ liệu trong cơ sở dữ liệu, hãy thông báo rằng không có phòng trọ nào phù hợp với yêu cầu.
                         - Bạn chỉ thông báo là phòng trọ phục vụ cho kiếm trọ tại thành phố Vinh thôi nhé.
                         - QUAN TRỌNG: KHÔNG ĐƯỢC TRẢ VỀ DANH SÁCH PHÒNG TRỌ CỤ THỂ DƯỚI DẠNG TEXT. Hệ thống sẽ hiển thị các phòng trọ bằng hình ảnh riêng.
                         - Nếu người dùng yêu cầu xem danh sách phòng trọ, hãy nói rằng bạn đang tìm kiếm và sẽ hiển thị kết quả bên dưới.
@@ -119,13 +121,87 @@ function callGeminiAPI($message, $context = '', $chat_history = [])
     ];
 
     $context = stream_context_create($options);
-    $response = file_get_contents($url, false, $context);
 
-    if ($response === FALSE) {
-        return "Xin lỗi, tôi không thể kết nối đến dịch vụ AI lúc này. Vui lòng thử lại sau.";
+    // Bắt lỗi khi gọi API
+    $maxRetries = 2; // Số lần thử lại tối đa
+    $retryCount = 0;
+    $backoffTime = 500; // Thời gian chờ giữa các lần thử lại (ms)
+
+    while ($retryCount <= $maxRetries) {
+        try {
+            if ($retryCount > 0) {
+                // Log và chờ trước khi thử lại
+                error_log("Chatbot Gemini API: Retry attempt $retryCount");
+                usleep($backoffTime * 1000); // Chuyển đổi milliseconds thành microseconds
+                $backoffTime *= 2; // Tăng thời gian chờ theo cấp số nhân
+            }
+
+            $response = file_get_contents($url, false, $context);
+
+            if ($response === FALSE) {
+                error_log("Chatbot Gemini API Error: Unable to connect to API (Attempt " . ($retryCount + 1) . ")");
+                if ($retryCount >= $maxRetries) {
+                    return "Xin lỗi, tôi không thể kết nối đến dịch vụ AI lúc này. Vui lòng thử lại sau.";
+                }
+                $retryCount++;
+                continue;
+            }
+
+            $responseData = json_decode($response, true);
+
+            // Ghi log lỗi nếu phản hồi không như mong đợi
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                error_log("Chatbot Gemini API Error: Invalid JSON response: " . json_last_error_msg());
+                if ($retryCount >= $maxRetries) {
+                    return "Xin lỗi, có lỗi khi xử lý phản hồi từ dịch vụ AI. Vui lòng thử lại sau.";
+                }
+                $retryCount++;
+                continue;
+            }
+
+            // Kiểm tra lỗi từ API Gemini
+            if (isset($responseData['error'])) {
+                $errorCode = $responseData['error']['code'] ?? 0;
+                $errorMessage = $responseData['error']['message'] ?? "Lỗi không xác định";
+
+                error_log("Chatbot Gemini API Error: " . json_encode($responseData['error']));
+
+                // Xử lý theo mã lỗi cụ thể
+                if ($errorCode == 429) {
+                    // Lỗi Rate Limit
+                    if ($retryCount < $maxRetries) {
+                        $retryCount++;
+                        // Tăng thời gian chờ lên khi gặp rate limit
+                        $backoffTime *= 2;
+                        continue;
+                    }
+                    return "Xin lỗi, hệ thống đang nhận quá nhiều yêu cầu. Vui lòng thử lại sau ít phút.";
+                } else if ($errorCode == 503) {
+                    // Lỗi Service Unavailable
+                    if ($retryCount < $maxRetries) {
+                        $retryCount++;
+                        continue;
+                    }
+                    return "Xin lỗi, dịch vụ AI tạm thời không khả dụng. Vui lòng thử lại sau.";
+                } else if (strpos(strtolower($errorMessage), 'quota') !== false) {
+                    // Lỗi hạn ngạch API
+                    error_log("Chatbot API Quota Error: " . $errorMessage);
+                    return "Xin lỗi, hệ thống đã vượt quá hạn ngạch sử dụng API. Vui lòng liên hệ quản trị viên.";
+                } else {
+                    return "Xin lỗi, có lỗi xảy ra với dịch vụ AI: " . $errorMessage;
+                }
+            }
+
+            // Nếu không có lỗi, thoát khỏi vòng lặp
+            break;
+        } catch (Exception $e) {
+            error_log("Chatbot Gemini API Exception: " . $e->getMessage() . " (Attempt " . ($retryCount + 1) . ")");
+            if ($retryCount >= $maxRetries) {
+                return "Xin lỗi, đã xảy ra lỗi khi gọi dịch vụ AI. Vui lòng thử lại sau.";
+            }
+            $retryCount++;
+        }
     }
-
-    $responseData = json_decode($response, true);
 
     if (isset($responseData['candidates'][0]['content']['parts'][0]['text'])) {
         $aiResponse = $responseData['candidates'][0]['content']['parts'][0]['text'];
@@ -153,23 +229,44 @@ function formatCurrency($amount)
 // Hàm tạo HTML cho kết quả phòng trọ
 function generateRoomHTML($rooms)
 {
+    if (!is_array($rooms) || empty($rooms)) {
+        error_log("generateRoomHTML: Invalid or empty rooms data");
+        return '<div class="error-message">Không tìm thấy phòng trọ phù hợp.</div>';
+    }
+
+    error_log("generateRoomHTML: Starting to generate HTML for " . count($rooms) . " rooms");
     $html = '<div class="chatbot-room-cards-container">';
+
     foreach ($rooms as $room) {
-        // Xử lý hình ảnh
-        $image = !empty($room['images']) ? '/' . $room['images'] : 'https://huythanhhome.com/upload/filemanager/Tin%20t%E1%BB%A9c/th%C3%A1ng%2011/thi%E1%BA%BFt%20k%E1%BA%BF%20nh%C3%A0%20tr%E1%BB%8D%20cao%20t%E1%BA%A7ng/Frame%20219.jpg';
+        // Safety checks for required fields
+        if (!isset($room['title']) || !isset($room['id'])) {
+            error_log("generateRoomHTML: Room missing required fields");
+            continue;
+        }
+
+        // Xử lý hình ảnh - ensure we have a default image
+        $defaultImage = 'https://huythanhhome.com/upload/filemanager/Tin%20t%E1%BB%A9c/th%C3%A1ng%2011/thi%E1%BA%BFt%20k%E1%BA%BF%20nh%C3%A0%20tr%E1%BB%8D%20cao%20t%E1%BA%A7ng/Frame%20219.jpg';
+        $image = (!empty($room['images'])) ? '/' . $room['images'] : $defaultImage;
+
+        // Safe access to fields with defaults
+        $title = isset($room['title']) ? htmlspecialchars($room['title']) : 'Phòng trọ';
+        $address = isset($room['address']) ? htmlspecialchars($room['address']) : 'Địa chỉ không xác định';
+        $price = isset($room['price']) ? formatCurrency($room['price']) : 'Liên hệ';
+        $count_view = isset($room['count_view']) ? $room['count_view'] : 0;
+        $area = isset($room['area']) ? $room['area'] : 'N/A';
 
         $html .= '
         <div class="chatbot-room-card">
             <div class="chatbot-room-card-image-container">
-                <img src="' . $image . '" class="chatbot-room-card-image" alt="' . htmlspecialchars($room['title']) . '">
-                <div class="chatbot-room-card-price-tag">' . formatCurrency($room['price']) . '</div>
+                <img src="' . $image . '" class="chatbot-room-card-image" alt="' . $title . '">
+                <div class="chatbot-room-card-price-tag">' . $price . '</div>
             </div>
             <div class="chatbot-room-card-body">
-                <h3 class="chatbot-room-card-title">' . htmlspecialchars($room['title']) . '</h3>
-                <div class="chatbot-room-card-location"><i class="fas fa-map-marker-alt"></i> ' . htmlspecialchars($room['address']) . '</div>
+                <h3 class="chatbot-room-card-title">' . $title . '</h3>
+                <div class="chatbot-room-card-location"><i class="fas fa-map-marker-alt"></i> ' . $address . '</div>
                 <div class="chatbot-room-card-stats">
-                    <span><i class="fas fa-eye"></i> ' . $room['count_view'] . ' lượt xem</span>
-                    <span><i class="fas fa-expand"></i> ' . $room['area'] . ' m²</span>
+                    <span><i class="fas fa-eye"></i> ' . $count_view . ' lượt xem</span>
+                    <span><i class="fas fa-expand"></i> ' . $area . ' m²</span>
                 </div>
                 <a href="/room/room_detail.php?id=' . $room['id'] . '" class="chatbot-room-card-link" target="_blank">Xem chi tiết</a>
             </div>
@@ -359,6 +456,37 @@ if ($contextualSearch && count($_SESSION['chat_history']) >= 3) {
             'khu vực' => 'get_rooms_by_district',
             'quận' => 'get_rooms_by_district',
             'huyện' => 'get_rooms_by_district',
+
+            // Phòng theo tiện ích
+            'có tiện ích' => 'get_rooms_by_utilities',
+            'có wifi' => 'get_rooms_by_utilities',
+            'có máy lạnh' => 'get_rooms_by_utilities',
+            'có điều hòa' => 'get_rooms_by_utilities',
+            'có tủ lạnh' => 'get_rooms_by_utilities',
+            'có gác lửng' => 'get_rooms_by_utilities',
+            'có ban công' => 'get_rooms_by_utilities',
+            'có máy giặt' => 'get_rooms_by_utilities',
+            'có nóng lạnh' => 'get_rooms_by_utilities',
+            'có bảo vệ' => 'get_rooms_by_utilities',
+            'tiện nghi' => 'get_rooms_by_utilities',
+
+            // Phòng được yêu thích nhiều
+            'yêu thích nhiều' => 'get_most_favorited_rooms',
+            'được yêu thích' => 'get_most_favorited_rooms',
+            'nhiều người thích' => 'get_most_favorited_rooms',
+            'lượt thích cao' => 'get_most_favorited_rooms',
+            'phòng hot' => 'get_most_favorited_rooms',
+
+            // Phòng theo danh mục
+            'nhà trọ' => 'get_rooms_by_category',
+            'chung cư mini' => 'get_rooms_by_category',
+            'phòng cho sinh viên' => 'get_rooms_by_category',
+            'ký túc xá' => 'get_rooms_by_category',
+            'nhà nguyên căn' => 'get_rooms_by_category',
+            'phòng đơn' => 'get_rooms_by_category',
+            'phòng đôi' => 'get_rooms_by_category',
+            'loại phòng' => 'get_rooms_by_category',
+            'danh mục' => 'get_rooms_by_category',
         ];
 
         // Xác định ý định dựa trên từ khóa trong tin nhắn trước
@@ -397,6 +525,7 @@ if (empty($intent)) {
         // Phòng gần trường đại học
         'phòng gần' => 'get_nearby_rooms',
         'gần đại học' => 'get_nearby_university',
+        'Đại học Vinh' => 'get_nearby_university',
         'gần trường' => 'get_nearby_university',
         'đại học vinh' => 'get_nearby_university',
         'trường đại học' => 'get_nearby_university',
@@ -417,6 +546,65 @@ if (empty($intent)) {
         'khu vực' => 'get_rooms_by_district',
         'quận' => 'get_rooms_by_district',
         'huyện' => 'get_rooms_by_district',
+
+        // Phòng theo tiện ích
+        'có tiện ích' => 'get_rooms_by_utilities',
+        'có wifi' => 'get_rooms_by_utilities',
+        'có máy lạnh' => 'get_rooms_by_utilities',
+        'có điều hòa' => 'get_rooms_by_utilities',
+        'có tủ lạnh' => 'get_rooms_by_utilities',
+        'có gác lửng' => 'get_rooms_by_utilities',
+        'có ban công' => 'get_rooms_by_utilities',
+        'có máy giặt' => 'get_rooms_by_utilities',
+        'có nóng lạnh' => 'get_rooms_by_utilities',
+        'có bảo vệ' => 'get_rooms_by_utilities',
+        'tiện nghi' => 'get_rooms_by_utilities',
+
+        // Phòng được yêu thích nhiều
+        'yêu thích nhiều' => 'get_most_favorited_rooms',
+        'được yêu thích' => 'get_most_favorited_rooms',
+        'nhiều người thích' => 'get_most_favorited_rooms',
+        'lượt thích cao' => 'get_most_favorited_rooms',
+        'phòng hot' => 'get_most_favorited_rooms',
+
+        // Phòng theo danh mục
+        'nhà trọ' => 'get_rooms_by_category',
+        'chung cư mini' => 'get_rooms_by_category',
+        'phòng cho sinh viên' => 'get_rooms_by_category',
+        'ký túc xá' => 'get_rooms_by_category',
+        'nhà nguyên căn' => 'get_rooms_by_category',
+        'phòng đơn' => 'get_rooms_by_category',
+        'phòng đôi' => 'get_rooms_by_category',
+        'loại phòng' => 'get_rooms_by_category',
+        'danh mục' => 'get_rooms_by_category',
+
+        // Phòng hiện có sẵn
+        'phòng còn trống' => 'get_available_rooms',
+        'phòng trống' => 'get_available_rooms',
+        'còn phòng' => 'get_available_rooms',
+        'phòng đang trống' => 'get_available_rooms',
+        'phòng hiện có' => 'get_available_rooms',
+        'phòng khả dụng' => 'get_available_rooms',
+
+        // Lịch sử đặt phòng
+        'đặt phòng của tôi' => 'get_user_bookings',
+        'lịch sử đặt phòng' => 'get_user_bookings',
+        'phòng đã đặt' => 'get_user_bookings',
+        'phòng tôi đã đặt' => 'get_user_bookings',
+        'booking của tôi' => 'get_user_bookings',
+        'đặt cọc của tôi' => 'get_user_bookings',
+
+        // Phòng theo thời gian đăng
+        'phòng đăng trong tháng' => 'get_rooms_by_date_range',
+        'phòng đăng gần đây' => 'get_rooms_by_date_range',
+        'phòng mới đăng trong' => 'get_rooms_by_date_range',
+        'phòng trong tuần này' => 'get_rooms_by_date_range',
+        'phòng trong tháng này' => 'get_rooms_by_date_range',
+
+        // Thông báo của người dùng
+        'thông báo của tôi' => 'get_user_notifications',
+        'thông báo mới' => 'get_user_notifications',
+        'tin nhắn hệ thống' => 'get_user_notifications',
     ];
 
     // Xác định ý định dựa trên từ khóa
@@ -521,7 +709,7 @@ switch ($intent) {
         // Truy vấn cơ sở dữ liệu để lấy top phòng trọ xem nhiều nhất
         $query = "SELECT m.*, d.name as district_name 
                  FROM motel m 
-                 LEFT JOIN districts d ON m.district_id = d.id 
+                 JOIN districts d ON m.district_id = d.id 
                  WHERE m.approve = 1 AND m.isExist = 1 
                  ORDER BY m.count_view DESC 
                  LIMIT ?";
@@ -575,7 +763,7 @@ switch ($intent) {
                  LEFT JOIN districts d ON m.district_id = d.id 
                  WHERE m.approve = 1 AND m.isExist = 1 AND m.price <= ?
                  ORDER BY m.price ASC 
-                 LIMIT 5";
+                 LIMIT 3";
 
         $stmt = $conn->prepare($query);
         $stmt->bind_param("i", $maxPrice);
@@ -600,33 +788,114 @@ switch ($intent) {
         break;
 
     case 'get_nearby_university':
+        // Debug log
+        error_log("Starting get_nearby_university case");
+
         // Sử dụng hàm haversine để tính khoảng cách từ trọ đến Đại học Vinh
-        require_once __DIR__ . '../utils/haversine.php';
+        try {
+            // Define all possible paths to the haversine.php file
+            $possiblePaths = [
+                '../utils/haversine.php',
+                __DIR__ . '/../utils/haversine.php',
+                dirname(__DIR__) . '/utils/haversine.php',
+                '/Users/huynh04/Dev/phongtro/CaseStudyF4_CNTT/utils/haversine.php', // Absolute path
+                $_SERVER['DOCUMENT_ROOT'] . '/utils/haversine.php'
+            ];
 
-        // Sử dụng tọa độ của Đại học Vinh từ file haversine.php
-        $uniLat = uniLatVinh; // 18.65782
-        $uniLng = unitLngVinh; // 105.69636
+            $fileFound = false;
+            foreach ($possiblePaths as $path) {
+                error_log("Checking for haversine.php at path: " . $path);
+                if (file_exists($path)) {
+                    error_log("Found haversine.php at path: " . $path);
+                    require_once $path;
+                    $fileFound = true;
+                    break;
+                }
+            }
 
-        // Truy vấn tất cả phòng trọ có tọa độ
-        $query = "SELECT m.*, d.name as district_name 
-                 FROM motel m 
-                 LEFT JOIN districts d ON m.district_id = d.id 
-                 WHERE m.approve = 1 AND m.isExist = 1 AND m.latlng IS NOT NULL AND m.latlng != ''
-                 ORDER BY m.created_at DESC";
+            if (!$fileFound) {
+                error_log("ERROR: haversine.php file not found in any of the checked paths");
+                throw new Exception("Haversine.php file not found");
+            }
 
-        $result = $conn->query($query);
-        $allRooms = $result->fetch_all(MYSQLI_ASSOC);
+            // Check if the constants and function are defined
+            if (!defined('uniLatVinh') || !defined('unitLngVinh')) {
+                error_log("ERROR: Haversine constants are not defined correctly");
+                throw new Exception("Haversine constants not defined");
+            }
 
-        // Sử dụng hàm từ haversine.php để tìm phòng trọ gần Đại học Vinh
-        $nearbyRooms = handleGetRoomByIP($allRooms, $uniLat, $uniLng);
+            if (!function_exists('handleGetRoomByIP')) {
+                error_log("ERROR: handleGetRoomByIP function is not defined");
+                throw new Exception("Haversine functions not defined");
+            }
+
+            // Check if the constants and function are defined
+            if (!defined('uniLatVinh') || !defined('unitLngVinh')) {
+                error_log("ERROR: Haversine constants are not defined correctly");
+                throw new Exception("Haversine constants not defined");
+            }
+
+            if (!function_exists('handleGetRoomByIP')) {
+                error_log("ERROR: handleGetRoomByIP function is not defined");
+                throw new Exception("Haversine functions not defined");
+            }
+
+            // Sử dụng tọa độ của Đại học Vinh từ file haversine.php
+            $uniLat = uniLatVinh; // 18.65782
+            $uniLng = unitLngVinh; // 105.69636
+
+            error_log("University coordinates: Lat={$uniLat}, Lng={$uniLng}");
+
+            // Truy vấn tất cả phòng trọ có tọa độ
+            $query = "SELECT m.*, d.name as district_name 
+                     FROM motel m 
+                     LEFT JOIN districts d ON m.district_id = d.id 
+                     WHERE m.approve = 1 AND m.isExist = 1 AND m.latlng IS NOT NULL AND m.latlng != ''
+                     ORDER BY m.created_at DESC";
+
+            error_log("Query for rooms: " . $query);
+            $result = $conn->query($query);
+
+            if (!$result) {
+                error_log("Database query error: " . $conn->error);
+                throw new Exception("Database query failed: " . $conn->error);
+            }
+
+            $allRooms = $result->fetch_all(MYSQLI_ASSOC);
+            error_log("Found " . count($allRooms) . " rooms with coordinates");
+
+            // Log the first room's coordinates for debugging
+            if (count($allRooms) > 0) {
+                error_log("First room latlng: " . $allRooms[0]['latlng']);
+            }
+
+            // Sử dụng hàm an toàn để tìm phòng trọ gần Đại học Vinh
+            $nearbyRooms = safeHandleGetRoomByIP($allRooms, $uniLat, $uniLng);
+            error_log("Found " . count($nearbyRooms) . " rooms near university");
+        } catch (Exception $e) {
+            error_log("Error in get_nearby_university: " . $e->getMessage());
+            $nearbyRooms = [];
+        }
 
         // Giới hạn số lượng phòng hiển thị
-        $nearbyRooms = array_slice($nearbyRooms, 0, 5);
+        $nearbyRooms = array_slice($nearbyRooms, 0, 3);
+        error_log("Limited to " . count($nearbyRooms) . " rooms for display");
 
         if (count($nearbyRooms) > 0) {
+            error_log("Generating HTML for nearby rooms");
             $htmlResponse = addChatbotHeader();
             $htmlResponse .= '<p>Đây là những phòng trọ gần Đại học Vinh (trong bán kính 3km):</p>';
-            $htmlResponse .= generateRoomHTML($nearbyRooms);
+
+            // Debug the generateRoomHTML function
+            error_log("Before calling generateRoomHTML");
+            try {
+                $roomHTML = generateRoomHTML($nearbyRooms);
+                error_log("Generated room HTML length: " . strlen($roomHTML));
+                $htmlResponse .= $roomHTML;
+            } catch (Exception $e) {
+                error_log("Error generating room HTML: " . $e->getMessage());
+                $htmlResponse .= '<p>Error generating room list: ' . $e->getMessage() . '</p>';
+            }
 
             // Tạo ngữ cảnh cho Gemini
             $roomInfo = [];
@@ -634,7 +903,9 @@ switch ($intent) {
                 $roomInfo[] = $room['title'] . ' - ' . formatCurrency($room['price']) . ' - ' . $room['address'] . ' (cách ' . $room['distance'] . ' km)';
             }
             $context = "Phòng trọ gần Đại học Vinh: " . implode("; ", $roomInfo);
+            error_log("Generated context: " . $context);
         } else {
+            error_log("No nearby rooms found, showing fallback options");
             $htmlResponse = addChatbotHeader();
             $htmlResponse .= '<p>Hiện tại không có thông tin về phòng trọ nào trong bán kính 3km quanh Đại học Vinh.</p>';
 
@@ -646,12 +917,45 @@ switch ($intent) {
                      ORDER BY m.created_at DESC 
                      LIMIT 3";
 
-            $result = $conn->query($query);
-            if ($result && $result->num_rows > 0) {
-                $otherRooms = $result->fetch_all(MYSQLI_ASSOC);
-                $htmlResponse .= '<p>Bạn có thể xem các phòng trọ khác:</p>';
-                $htmlResponse .= generateRoomHTML($otherRooms);
+            error_log("Fallback query: " . $query);
+            try {
+                $result = $conn->query($query);
+
+                if ($result && $result->num_rows > 0) {
+                    $otherRooms = $result->fetch_all(MYSQLI_ASSOC);
+                    error_log("Found " . count($otherRooms) . " other rooms to display");
+                    $htmlResponse .= '<p>Bạn có thể xem các phòng trọ khác:</p>';
+                    try {
+                        $roomHTML = generateRoomHTML($otherRooms);
+                        error_log("Generated fallback room HTML length: " . strlen($roomHTML));
+                        $htmlResponse .= $roomHTML;
+                    } catch (Exception $e) {
+                        error_log("Error generating fallback room HTML: " . $e->getMessage());
+                        $htmlResponse .= '<p>Error generating room list: ' . $e->getMessage() . '</p>';
+                    }
+
+                    // Create context for Gemini with fallback rooms
+                    $roomInfo = [];
+                    foreach ($otherRooms as $room) {
+                        $roomInfo[] = $room['title'] . ' - ' . formatCurrency($room['price']) . ' - ' . $room['address'];
+                    }
+                    $context = "Không tìm thấy phòng trọ gần Đại học Vinh. Các phòng trọ khác: " . implode("; ", $roomInfo);
+                } else {
+                    error_log("No other rooms found either");
+                    $context = "Không có phòng trọ nào gần Đại học Vinh và không tìm thấy phòng trọ nào khác.";
+                    $htmlResponse .= '<p><strong>Không có phòng trọ nào hiện đang có sẵn.</strong> Vui lòng quay lại sau.</p>';
+                }
+            } catch (Exception $e) {
+                error_log("Error in fallback query: " . $e->getMessage());
+                $htmlResponse .= '<p>Đã xảy ra lỗi khi tìm kiếm phòng trọ. Vui lòng thử lại sau.</p>';
+                $context = "Đã xảy ra lỗi khi tìm kiếm phòng trọ: " . $e->getMessage();
             }
+        }
+
+        // Debug the final HTML response
+        error_log("Final HTML response length: " . strlen($htmlResponse ?? ''));
+        if (empty($htmlResponse)) {
+            error_log("WARNING: HTML response is empty");
         }
         break;
 
@@ -662,7 +966,7 @@ switch ($intent) {
                  LEFT JOIN districts d ON m.district_id = d.id 
                  WHERE m.approve = 1 AND m.isExist = 1 
                  ORDER BY m.created_at DESC 
-                 LIMIT 5";
+                 LIMIT 3";
 
         $stmt = $conn->prepare($query);
         $stmt->execute();
@@ -694,7 +998,7 @@ switch ($intent) {
                  LEFT JOIN districts d ON m.district_id = d.id 
                  WHERE m.approve = 1 AND m.isExist = 1 AND m.area >= ?
                  ORDER BY m.area DESC 
-                 LIMIT 5";
+                 LIMIT 3";
 
         $stmt = $conn->prepare($query);
         $stmt->bind_param("i", $minArea);
@@ -729,7 +1033,7 @@ switch ($intent) {
                      LEFT JOIN districts d ON m.district_id = d.id 
                      WHERE m.approve = 1 AND m.isExist = 1 AND m.district_id = ?
                      ORDER BY m.created_at DESC 
-                     LIMIT 5";
+                     LIMIT 3";
 
             $stmt = $conn->prepare($query);
             $stmt->bind_param("i", $district_id);
@@ -777,177 +1081,726 @@ switch ($intent) {
         }
         break;
 
-    default:
-        // Kiểm tra xem có nhu cầu phức tạp không
-        if (isset($params['price']) || isset($params['area']) || isset($params['district_id'])) {
-            // Phân tích nhu cầu phức tạp từ tin nhắn để đề xuất phòng phù hợp
-            $conditions = [];
-            $order_by = "m.created_at DESC";
+    case 'get_rooms_by_utilities':
+        // Xác định tiện ích cần tìm
+        $utility = '';
+        $utilityNames = [
+            'wifi' => 'wifi',
+            'máy lạnh' => 'máy lạnh',
+            'điều hòa' => 'điều hòa',
+            'tủ lạnh' => 'tủ lạnh',
+            'gác lửng' => 'gác lửng',
+            'ban công' => 'ban công',
+            'máy giặt' => 'máy giặt',
+            'nóng lạnh' => 'nóng lạnh',
+            'bảo vệ' => 'bảo vệ'
+        ];
 
-            // Xác định điều kiện lọc
-            if (isset($params['price'])) {
-                $conditions[] = "m.price <= " . $params['price'];
+        // Tìm tiện ích từ tin nhắn hiện tại
+        foreach ($utilityNames as $key => $value) {
+            if (strpos($lowercaseMessage, $key) !== false) {
+                $utility = $value;
+                break;
             }
+        }
 
-            if (isset($params['area'])) {
-                $conditions[] = "m.area >= " . $params['area'];
+        // Nếu không tìm thấy tiện ích cụ thể, hiển thị danh sách các tiện ích phổ biến
+        if (empty($utility)) {
+            $htmlResponse = '<p>Bạn có thể tìm phòng trọ với các tiện ích sau:</p>';
+            $htmlResponse .= '<ul>';
+            foreach ($utilityNames as $name) {
+                $htmlResponse .= '<li><a href="#" onclick="document.getElementById(\'chatInput\').value=\'Cho tôi xem phòng có ' . $name . '\'; return false;">Phòng có ' . $name . '</a></li>';
             }
+            $htmlResponse .= '</ul>';
+            $htmlResponse .= '<p>Hãy chọn một tiện ích cụ thể để tìm kiếm phòng phù hợp.</p>';
 
-            if (isset($params['district_id'])) {
-                $conditions[] = "m.district_id = " . $params['district_id'];
-            }
-
-            // Xác định cách sắp xếp
-            if (strpos($lowercaseMessage, 'rẻ nhất') !== false || strpos($lowercaseMessage, 'giá thấp') !== false) {
-                $order_by = "m.price ASC";
-            } elseif (strpos($lowercaseMessage, 'mới nhất') !== false) {
-                $order_by = "m.created_at DESC";
-            } elseif (strpos($lowercaseMessage, 'xem nhiều') !== false || strpos($lowercaseMessage, 'phổ biến') !== false) {
-                $order_by = "m.count_view DESC";
-            }
-
-            // Tạo điều kiện WHERE
-            $where_clause = "m.approve = 1 AND m.isExist = 1";
-            if (!empty($conditions)) {
-                $where_clause .= " AND " . implode(" AND ", $conditions);
-            }
-
-            // Truy vấn cơ sở dữ liệu
+            $context = "Danh sách các tiện ích phổ biến: " . implode(", ", $utilityNames);
+        } else {
+            // Tìm phòng có tiện ích được chọn
             $query = "SELECT m.*, d.name as district_name 
                      FROM motel m 
                      LEFT JOIN districts d ON m.district_id = d.id 
-                     WHERE $where_clause
-                     ORDER BY $order_by 
-                     LIMIT 5";
+                     WHERE m.approve = 1 AND m.isExist = 1 AND m.utilities LIKE ?
+                     ORDER BY m.created_at DESC 
+                     LIMIT 3";
 
-            $result = $conn->query($query);
+            $searchPattern = '%' . $utility . '%';
+            $stmt = $conn->prepare($query);
+            $stmt->bind_param("s", $searchPattern);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            $utilityRooms = $result->fetch_all(MYSQLI_ASSOC);
 
-            if ($result && $result->num_rows > 0) {
-                $recommendedRooms = $result->fetch_all(MYSQLI_ASSOC);
-
-                $criteria = [];
-                if (isset($params['price'])) {
-                    $criteria[] = "giá dưới " . formatCurrency($params['price']);
-                }
-                if (isset($params['area'])) {
-                    $criteria[] = "diện tích từ " . $params['area'] . "m² trở lên";
-                }
-                if (isset($params['district_name'])) {
-                    $criteria[] = "tại khu vực " . $params['district_name'];
-                }
-
-                $criteria_text = !empty($criteria) ? implode(", ", $criteria) : "phù hợp với nhu cầu của bạn";
-
-                $htmlResponse = '<p>Đây là những phòng trọ ' . $criteria_text . ':</p>';
-                $htmlResponse .= generateRoomHTML($recommendedRooms);
+            if (count($utilityRooms) > 0) {
+                $htmlResponse = '<p>Đây là những phòng trọ có tiện ích <strong>' . $utility . '</strong>:</p>';
+                $htmlResponse .= generateRoomHTML($utilityRooms);
 
                 // Tạo ngữ cảnh cho Gemini
                 $roomInfo = [];
-                foreach ($recommendedRooms as $room) {
-                    $roomInfo[] = $room['title'] . ' - ' . formatCurrency($room['price']) . ' - ' . $room['area'] . 'm² - ' . $room['address'];
+                foreach ($utilityRooms as $room) {
+                    $roomInfo[] = $room['title'] . ' - ' . formatCurrency($room['price']) . ' - ' . $room['area'] . 'm²';
                 }
-                $context = "Phòng trọ $criteria_text: " . implode("; ", $roomInfo);
+                $context = "Phòng trọ có tiện ích " . $utility . ": " . implode("; ", $roomInfo);
             } else {
-                $htmlResponse = '<p>Hiện tại không tìm thấy phòng trọ nào phù hợp với yêu cầu của bạn.</p>';
-
-                // Đề xuất thay thế
-                $htmlResponse .= '<p>Bạn có thể thử tìm với các tiêu chí khác:</p>';
+                $htmlResponse = '<p>Hiện tại không có phòng trọ nào có tiện ích <strong>' . $utility . '</strong>.</p>';
+                $htmlResponse .= '<p>Bạn có thể tìm phòng với các tiện ích khác:</p>';
                 $htmlResponse .= '<ul>';
-                $htmlResponse .= '<li><a href="#" onclick="document.getElementById(\'chatInput\').value=\'Cho tôi xem phòng trọ mới nhất\'; return false;">Phòng trọ mới nhất</a></li>';
-                $htmlResponse .= '<li><a href="#" onclick="document.getElementById(\'chatInput\').value=\'Phòng trọ xem nhiều nhất\'; return false;">Phòng trọ xem nhiều nhất</a></li>';
-                $htmlResponse .= '<li><a href="#" onclick="document.getElementById(\'chatInput\').value=\'Phòng trọ rẻ nhất\'; return false;">Phòng trọ rẻ nhất</a></li>';
+                foreach ($utilityNames as $name) {
+                    if ($name != $utility) {
+                        $htmlResponse .= '<li><a href="#" onclick="document.getElementById(\'chatInput\').value=\'Cho tôi xem phòng có ' . $name . '\'; return false;">Phòng có ' . $name . '</a></li>';
+                    }
+                }
                 $htmlResponse .= '</ul>';
             }
-        } else {
-            // Không có ý định cụ thể, sử dụng Gemini API để xử lý
-            $aiResponse = callGeminiAPI($message, '', $_SESSION['chat_history']);
-            $htmlResponse = addChatbotHeader();
-            $htmlResponse .= '<p>' . nl2br(htmlspecialchars($aiResponse)) . '</p>';
+        }
+        break;
 
-            // Thêm gợi ý tìm kiếm
-            $htmlResponse .= '<p>Bạn có thể hỏi tôi về các phòng trọ:</p>';
-            $htmlResponse .= '<div class="chatbot-suggestions">';
-            $htmlResponse .= '<a href="#" class="suggestion-item" onclick="document.getElementById(\'chatInput\').value=\'Top 3 phòng trọ xem nhiều nhất\'; return false;">Top 3 phòng xem nhiều</a>';
-            $htmlResponse .= '<a href="#" class="suggestion-item" onclick="document.getElementById(\'chatInput\').value=\'Phòng trọ dưới 2 triệu\'; return false;">Phòng dưới 2 triệu</a>';
-            $htmlResponse .= '<a href="#" class="suggestion-item" onclick="document.getElementById(\'chatInput\').value=\'Phòng trọ gần Đại học Vinh\'; return false;">Phòng gần ĐH Vinh</a>';
-            $htmlResponse .= '<a href="#" class="suggestion-item" onclick="document.getElementById(\'chatInput\').value=\'Phòng trọ mới nhất\'; return false;">Phòng mới nhất</a>';
+    case 'get_most_favorited_rooms':
+        // Truy vấn cơ sở dữ liệu để lấy phòng trọ có nhiều lượt yêu thích nhất
+        $query = "SELECT m.*, d.name as district_name, COUNT(w.id) as favorite_count
+                 FROM motel m 
+                 LEFT JOIN districts d ON m.district_id = d.id 
+                 LEFT JOIN user_wishlist w ON m.id = w.motel_id
+                 WHERE m.approve = 1 AND m.isExist = 1
+                 GROUP BY m.id
+                 ORDER BY favorite_count DESC, m.wishlist DESC
+                 LIMIT 3";
+
+        $stmt = $conn->prepare($query);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $favoriteRooms = $result->fetch_all(MYSQLI_ASSOC);
+
+        if (count($favoriteRooms) > 0) {
+            $htmlResponse = '<p>Đây là những phòng trọ được yêu thích nhiều nhất:</p>';
+            $htmlResponse .= generateRoomHTML($favoriteRooms);
+
+            // Tạo ngữ cảnh cho Gemini
+            $roomInfo = [];
+            foreach ($favoriteRooms as $room) {
+                $favorite_count = isset($room['favorite_count']) ? $room['favorite_count'] : $room['wishlist'];
+                $roomInfo[] = $room['title'] . ' - ' . formatCurrency($room['price']) . ' - ' . $favorite_count . ' lượt yêu thích';
+            }
+            $context = "Phòng trọ được yêu thích nhiều nhất: " . implode("; ", $roomInfo);
+        } else {
+            $htmlResponse = '<p>Hiện tại chưa có thông tin về phòng trọ được yêu thích.</p>';
+        }
+        break;
+
+    case 'get_rooms_by_category':
+        // Tìm loại phòng từ tin nhắn
+        $category_id = null;
+        $category_name = null;
+
+        // Lấy danh sách các danh mục 
+        $categories_query = "SELECT id, name FROM categories ORDER BY name";
+        $categories_result = $conn->query($categories_query);
+
+        if ($categories_result) {
+            $categories = [];
+            while ($category = $categories_result->fetch_assoc()) {
+                $categories[$category['id']] = $category['name'];
+                // Kiểm tra xem tên danh mục có xuất hiện trong tin nhắn không
+                if (stripos($lowercaseMessage, strtolower($category['name'])) !== false) {
+                    $category_id = $category['id'];
+                    $category_name = $category['name'];
+                    break;
+                }
+            }
+
+            // Nếu không tìm thấy danh mục cụ thể
+            if ($category_id === null) {
+                // Hiển thị danh sách các danh mục có sẵn
+                $htmlResponse = '<p>Bạn có thể tìm phòng trọ theo các loại phòng sau:</p>';
+                $htmlResponse .= '<ul>';
+
+                // Đếm số lượng phòng trong mỗi danh mục
+                $category_count_query = "SELECT c.id, c.name, COUNT(m.id) as room_count 
+                                       FROM categories c 
+                                       LEFT JOIN motel m ON c.id = m.category_id AND m.approve = 1 AND m.isExist = 1
+                                       GROUP BY c.id
+                                       HAVING room_count > 0
+                                       ORDER BY room_count DESC";
+
+                $category_count_result = $conn->query($category_count_query);
+
+                if ($category_count_result && $category_count_result->num_rows > 0) {
+                    while ($cat = $category_count_result->fetch_assoc()) {
+                        $htmlResponse .= '<li><a href="#" onclick="document.getElementById(\'chatInput\').value=\'Cho tôi xem phòng loại ' . $cat['name'] . '\'; return false;">' . $cat['name'] . ' (' . $cat['room_count'] . ' phòng)</a></li>';
+                    }
+                } else {
+                    foreach ($categories as $id => $name) {
+                        $htmlResponse .= '<li><a href="#" onclick="document.getElementById(\'chatInput\').value=\'Cho tôi xem phòng loại ' . $name . '\'; return false;">' . $name . '</a></li>';
+                    }
+                }
+
+                $htmlResponse .= '</ul>';
+                $htmlResponse .= '<p>Hãy chọn một loại phòng để xem danh sách.</p>';
+
+                $context = "Danh sách các loại phòng: " . implode(", ", $categories);
+            } else {
+                // Tìm phòng theo danh mục đã chọn
+                $query = "SELECT m.*, d.name as district_name 
+                         FROM motel m 
+                         LEFT JOIN districts d ON m.district_id = d.id 
+                         WHERE m.approve = 1 AND m.isExist = 1 AND m.category_id = ?
+                         ORDER BY m.created_at DESC 
+                         LIMIT 3";
+
+                $stmt = $conn->prepare($query);
+                $stmt->bind_param("i", $category_id);
+                $stmt->execute();
+                $result = $stmt->get_result();
+                $categoryRooms = $result->fetch_all(MYSQLI_ASSOC);
+
+                if (count($categoryRooms) > 0) {
+                    $htmlResponse = '<p>Đây là những phòng trọ thuộc danh mục <strong>' . $category_name . '</strong>:</p>';
+                    $htmlResponse .= generateRoomHTML($categoryRooms);
+
+                    // Tạo ngữ cảnh cho Gemini
+                    $roomInfo = [];
+                    foreach ($categoryRooms as $room) {
+                        $roomInfo[] = $room['title'] . ' - ' . formatCurrency($room['price']) . ' - ' . $room['area'] . 'm²';
+                    }
+                    $context = "Phòng trọ thuộc danh mục " . $category_name . ": " . implode("; ", $roomInfo);
+                } else {
+                    $htmlResponse = '<p>Hiện tại không có phòng trọ nào thuộc danh mục <strong>' . $category_name . '</strong>.</p>';
+                    $htmlResponse .= '<p>Bạn có thể tìm phòng với các danh mục khác:</p>';
+
+                    // Hiển thị các danh mục khác có phòng
+                    $category_count_query = "SELECT c.id, c.name, COUNT(m.id) as room_count 
+                                           FROM categories c 
+                                           LEFT JOIN motel m ON c.id = m.category_id AND m.approve = 1 AND m.isExist = 1
+                                           WHERE c.id != ?
+                                           GROUP BY c.id
+                                           HAVING room_count > 0
+                                           ORDER BY room_count DESC";
+
+                    $category_count_stmt = $conn->prepare($category_count_query);
+                    $category_count_stmt->bind_param("i", $category_id);
+                    $category_count_stmt->execute();
+                    $category_count_result = $category_count_stmt->get_result();
+
+                    $htmlResponse .= '<ul>';
+                    while ($cat = $category_count_result->fetch_assoc()) {
+                        $htmlResponse .= '<li><a href="#" onclick="document.getElementById(\'chatInput\').value=\'Cho tôi xem phòng loại ' . $cat['name'] . '\'; return false;">' . $cat['name'] . ' (' . $cat['room_count'] . ' phòng)</a></li>';
+                    }
+                    $htmlResponse .= '</ul>';
+                }
+            }
+        } else {
+            $htmlResponse = '<p>Hiện tại không thể truy vấn thông tin về loại phòng.</p>';
+        }
+        break;
+
+    case 'get_available_rooms':
+        // Truy vấn cơ sở dữ liệu để lấy các phòng trọ còn trống
+        $query = "SELECT m.*, d.name as district_name 
+                 FROM motel m 
+                 LEFT JOIN districts d ON m.district_id = d.id 
+                 WHERE m.approve = 1 AND m.isExist = 1 
+                 ORDER BY m.created_at DESC 
+                 LIMIT 3";
+
+        $stmt = $conn->prepare($query);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $availableRooms = $result->fetch_all(MYSQLI_ASSOC);
+
+        if (count($availableRooms) > 0) {
+            $htmlResponse = '<p>Đây là những phòng trọ hiện đang còn trống:</p>';
+            $htmlResponse .= generateRoomHTML($availableRooms);
+
+            // Tạo ngữ cảnh cho Gemini
+            $roomInfo = [];
+            foreach ($availableRooms as $room) {
+                $roomInfo[] = $room['title'] . ' - ' . formatCurrency($room['price']) . ' - ' . $room['area'] . 'm²';
+            }
+            $context = "Phòng trọ hiện đang còn trống: " . implode("; ", $roomInfo);
+        } else {
+            $htmlResponse = '<p>Hiện tại không có phòng trọ nào còn trống.</p>';
+        }
+        break;
+
+    case 'get_user_bookings':
+        // Kiểm tra xem người dùng đã đăng nhập chưa
+        if (!isset($_SESSION['user_id'])) {
+            $htmlResponse = '<p>Bạn cần <a href="/auth/login.php">đăng nhập</a> để xem lịch sử đặt phòng của mình.</p>';
+            $context = "Người dùng cần đăng nhập để xem lịch sử đặt phòng.";
+            break;
+        }
+
+        $user_id = $_SESSION['user_id'];
+
+        // Truy vấn cơ sở dữ liệu để lấy lịch sử đặt phòng của người dùng
+        $query = "SELECT b.*, m.title, m.price, m.area, m.images, m.address, d.name as district_name
+                 FROM bookings b
+                 JOIN motel m ON b.motel_id = m.id
+                 LEFT JOIN districts d ON m.district_id = d.id
+                 WHERE b.user_id = ?
+                 ORDER BY b.created_at DESC
+                 LIMIT 3";
+
+        $stmt = $conn->prepare($query);
+        $stmt->bind_param("i", $user_id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $bookings = $result->fetch_all(MYSQLI_ASSOC);
+
+        if (count($bookings) > 0) {
+            $htmlResponse = '<p>Đây là lịch sử đặt phòng của bạn:</p>';
+
+            // Tạo HTML cho lịch sử đặt phòng
+            $htmlResponse .= '<div class="chatbot-booking-history">';
+            foreach ($bookings as $booking) {
+                $status_class = '';
+                $status_text = '';
+
+                switch ($booking['status']) {
+                    case 'PENDING':
+                        $status_class = 'pending';
+                        $status_text = 'Đang chờ';
+                        break;
+                    case 'SUCCESS':
+                        $status_class = 'success';
+                        $status_text = 'Thành công';
+                        break;
+                    case 'FAILED':
+                        $status_class = 'failed';
+                        $status_text = 'Thất bại';
+                        break;
+                    case 'REFUND_REQUESTED':
+                        $status_class = 'refund';
+                        $status_text = 'Yêu cầu hoàn tiền';
+                        break;
+                    case 'RELEASED':
+                        $status_class = 'released';
+                        $status_text = 'Đã giải ngân';
+                        break;
+                    case 'REFUNDED':
+                        $status_class = 'refunded';
+                        $status_text = 'Đã hoàn tiền';
+                        break;
+                }
+
+                // Lấy hình ảnh phòng
+                $image = !empty($booking['images']) ? '/' . $booking['images'] : 'https://huythanhhome.com/upload/filemanager/Tin%20t%E1%BB%A9c/th%C3%A1ng%2011/thi%E1%BA%BFt%20k%E1%BA%BF%20nh%C3%A0%20tr%E1%BB%8D%20cao%20t%E1%BA%A7ng/Frame%20219.jpg';
+
+                $htmlResponse .= '
+                <div class="chatbot-booking-item">
+                    <div class="chatbot-booking-image">
+                        <img src="' . $image . '" alt="' . htmlspecialchars($booking['title']) . '">
+                    </div>
+                    <div class="chatbot-booking-info">
+                        <h4>' . htmlspecialchars($booking['title']) . '</h4>
+                        <p>Tiền cọc: ' . formatCurrency($booking['deposit_amount']) . '</p>
+                        <p>Ngày đặt: ' . date('d/m/Y', strtotime($booking['created_at'])) . '</p>
+                        <span class="chatbot-booking-status ' . $status_class . '">' . $status_text . '</span>
+                        <a href="/room/booking_detail.php?id=' . $booking['id'] . '" class="chatbot-booking-link" target="_blank">Chi tiết</a>
+                    </div>
+                </div>';
+            }
             $htmlResponse .= '</div>';
 
-            // Thêm CSS cho các gợi ý
-            $htmlResponse .= '<style>
-                .chatbot-suggestions {
-                    display: flex;
-                    flex-wrap: wrap;
-                    gap: 8px;
-                    margin-top: 10px;
-                }
-                .suggestion-item {
-                    background-color: #e9f0ff;
-                    color: #4e73df;
-                    padding: 6px 12px;
-                    border-radius: 16px;
-                    font-size: 12px;
-                    text-decoration: none;
-                    transition: all 0.2s;
-                }
-                .suggestion-item:hover {
-                    background-color: #4e73df;
-                    color: white;
-                }
+            // Thêm CSS cho lịch sử đặt phòng
+            $htmlResponse .= '
+            <style>
+            .chatbot-booking-history {
+                display: flex;
+                flex-direction: column;
+                gap: 15px;
+                margin-top: 15px;
+            }
+            .chatbot-booking-item {
+                display: flex;
+                border-radius: 8px;
+                overflow: hidden;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+                background: white;
+            }
+            .chatbot-booking-image {
+                width: 100px;
+                height: 100px;
+                flex-shrink: 0;
+            }
+            .chatbot-booking-image img {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+            }
+            .chatbot-booking-info {
+                padding: 10px 15px;
+                flex-grow: 1;
+                position: relative;
+            }
+            .chatbot-booking-info h4 {
+                margin: 0 0 8px;
+                font-size: 14px;
+                font-weight: bold;
+            }
+            .chatbot-booking-info p {
+                margin: 4px 0;
+                font-size: 13px;
+                color: #666;
+            }
+            .chatbot-booking-status {
+                position: absolute;
+                top: 10px;
+                right: 15px;
+                font-size: 12px;
+                padding: 3px 8px;
+                border-radius: 10px;
+                font-weight: 500;
+            }
+            .chatbot-booking-status.pending { background: #FFF8E1; color: #F57F17; }
+            .chatbot-booking-status.success { background: #E8F5E9; color: #2E7D32; }
+            .chatbot-booking-status.failed { background: #FFEBEE; color: #C62828; }
+            .chatbot-booking-status.refund { background: #F3E5F5; color: #7B1FA2; }
+            .chatbot-booking-status.released { background: #E1F5FE; color: #0277BD; }
+            .chatbot-booking-status.refunded { background: #E0F2F1; color: #00796B; }
+            .chatbot-booking-link {
+                display: inline-block;
+                margin-top: 8px;
+                padding: 4px 12px;
+                background: #4e73df;
+                color: white;
+                border-radius: 4px;
+                text-decoration: none;
+                font-size: 12px;
+            }
             </style>';
+
+            // Tạo ngữ cảnh cho Gemini
+            $bookingInfo = [];
+            foreach ($bookings as $booking) {
+                $bookingInfo[] = $booking['title'] . ' - ' . formatCurrency($booking['deposit_amount']) . ' - ' . $booking['status'];
+            }
+            $context = "Lịch sử đặt phòng của người dùng: " . implode("; ", $bookingInfo);
+        } else {
+            $htmlResponse = '<p>Bạn chưa có lịch sử đặt phòng trọ nào.</p>';
+            $htmlResponse .= '<p>Bạn có thể tìm và đặt phòng trọ từ <a href="/Home/index.php">trang chủ</a>.</p>';
+
+            $context = "Người dùng chưa có lịch sử đặt phòng nào.";
+        }
+        break;
+
+    case 'get_rooms_by_date_range':
+        // Xác định khoảng thời gian (mặc định là 1 tháng gần đây)
+        $days = 30; // Mặc định 30 ngày
+
+        if (strpos($lowercaseMessage, 'tuần') !== false) {
+            $days = 7;
+        } else if (strpos($lowercaseMessage, 'tháng') !== false) {
+            $days = 30;
+        } else if (preg_match('/(\d+)\s*(?:ngày|ngay)/', $lowercaseMessage, $matches)) {
+            $days = intval($matches[1]);
+        }
+
+        // Tính ngày bắt đầu và kết thúc
+        $end_date = date('Y-m-d H:i:s');
+        $start_date = date('Y-m-d H:i:s', strtotime("-$days days"));
+
+        // Truy vấn cơ sở dữ liệu để lấy các phòng trọ đăng trong khoảng thời gian
+        $query = "SELECT m.*, d.name as district_name 
+                 FROM motel m 
+                 LEFT JOIN districts d ON m.district_id = d.id 
+                 WHERE m.approve = 1 AND m.isExist = 1 AND m.created_at BETWEEN ? AND ?
+                 ORDER BY m.created_at DESC 
+                 LIMIT 3";
+
+        $stmt = $conn->prepare($query);
+        $stmt->bind_param("ss", $start_date, $end_date);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $dateRangeRooms = $result->fetch_all(MYSQLI_ASSOC);
+
+        if (count($dateRangeRooms) > 0) {
+            $period = $days == 7 ? 'tuần' : ($days == 30 ? 'tháng' : $days . ' ngày');
+            $htmlResponse = '<div class="result-status success"><i class="fas fa-check-circle"></i> Đã tìm thấy ' . count($dateRangeRooms) . ' phòng trọ</div>';
+            $htmlResponse .= '<p>Đây là những phòng trọ được đăng trong ' . $period . ' qua:</p>';
+            $htmlResponse .= generateRoomHTML($dateRangeRooms);
+
+            // Thêm CSS cho trạng thái kết quả
+            $htmlResponse .= '
+            <style>
+            .result-status {
+                padding: 8px 12px;
+                border-radius: 4px;
+                margin-bottom: 10px;
+                font-size: 14px;
+                display: flex;
+                align-items: center;
+            }
+            .result-status.success {
+                background-color: #e7f7ee;
+                color: #1d976c;
+            }
+            .result-status i {
+                margin-right: 8px;
+                font-size: 16px;
+            }
+            </style>';
+
+            // Tạo ngữ cảnh cho Gemini
+            $roomInfo = [];
+            foreach ($dateRangeRooms as $room) {
+                $roomInfo[] = $room['title'] . ' - ' . formatCurrency($room['price']) . ' - ' . formatDate($room['created_at']);
+            }
+            $context = "Phòng trọ đăng trong $period qua: " . implode("; ", $roomInfo);
+        } else {
+            $period = $days == 7 ? 'tuần' : ($days == 30 ? 'tháng' : $days . ' ngày');
+            $htmlResponse = '<div class="result-status empty"><i class="fas fa-info-circle"></i> Không tìm thấy kết quả</div>';
+            $htmlResponse .= '<p>Không có phòng trọ nào được đăng trong ' . $period . ' qua.</p>';
+            $htmlResponse .= '<p>Bạn có thể xem <a href="#" onclick="document.getElementById(\'chatInput\').value=\'Cho tôi xem phòng mới đăng\'; return false;">phòng mới đăng gần đây</a> hoặc tìm kiếm với các tiêu chí khác.</p>';
+
+            // Thêm CSS cho trạng thái kết quả
+            $htmlResponse .= '
+            <style>
+            .result-status {
+                padding: 8px 12px;
+                border-radius: 4px;
+                margin-bottom: 10px;
+                font-size: 14px;
+                display: flex;
+                align-items: center;
+            }
+            .result-status.empty {
+                background-color: #f8f9fc;
+                color: #5a6268;
+            }
+            .result-status i {
+                margin-right: 8px;
+                font-size: 16px;
+            }
+            </style>';
+        }
+        break;
+
+    case 'get_user_notifications':
+        // Kiểm tra xem người dùng đã đăng nhập chưa
+        if (!isset($_SESSION['user_id'])) {
+            $htmlResponse = '<p>Bạn cần <a href="/auth/login.php">đăng nhập</a> để xem thông báo của mình.</p>';
+            $context = "Người dùng cần đăng nhập để xem thông báo.";
+            break;
+        }
+
+        $user_id = $_SESSION['user_id'];
+
+        // Truy vấn cơ sở dữ liệu để lấy thông báo của người dùng
+        $query = "SELECT * FROM notifications 
+                 WHERE user_id = ?
+                 ORDER BY created_at DESC 
+                 LIMIT 10";
+
+        $stmt = $conn->prepare($query);
+        $stmt->bind_param("i", $user_id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $notifications = $result->fetch_all(MYSQLI_ASSOC);
+
+        if (count($notifications) > 0) {
+            $htmlResponse = '<p>Đây là thông báo của bạn:</p>';
+
+            // Tạo HTML cho thông báo
+            $htmlResponse .= '<div class="chatbot-notification-list">';
+            foreach ($notifications as $notification) {
+                $read_class = $notification['is_read'] ? 'read' : 'unread';
+                $date = date('d/m/Y', strtotime($notification['created_at']));
+
+                $htmlResponse .= '
+                <div class="chatbot-notification-item ' . $read_class . '">
+                    <div class="chatbot-notification-content">
+                        <h4>' . htmlspecialchars($notification['title']) . '</h4>
+                        <p>' . htmlspecialchars($notification['message']) . '</p>
+                        <span class="chatbot-notification-time">' . $date . '</span>
+                    </div>
+                </div>';
+            }
+            $htmlResponse .= '</div>';
+            $htmlResponse .= '<p><a href="/room/notifications.php" target="_blank">Xem tất cả thông báo</a></p>';
+
+            // Thêm CSS cho thông báo
+            $htmlResponse .= '
+            <style>
+            .chatbot-notification-list {
+                display: flex;
+                flex-direction: column;
+                gap: 10px;
+                margin-top: 15px;
+                margin-bottom: 15px;
+            }
+            .chatbot-notification-item {
+                padding: 12px 15px;
+                border-radius: 8px;
+                border-left: 3px solid #4e73df;
+                background: white;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            }
+            .chatbot-notification-item.unread {
+                background: #F8F9FC;
+                border-left-color: #4e73df;
+            }
+            .chatbot-notification-item.read {
+                border-left-color: #858796;
+                opacity: 0.8;
+            }
+            .chatbot-notification-content h4 {
+                margin: 0 0 5px;
+                font-size: 14px;
+                color: #4e73df;
+            }
+            .chatbot-notification-item.read .chatbot-notification-content h4 {
+                color: #3a3b45;
+            }
+            .chatbot-notification-content p {
+                margin: 0 0 8px;
+                font-size: 13px;
+                color: #5a5c69;
+                line-height: 1.4;
+            }
+            .chatbot-notification-time {
+                font-size: 11px;
+                color: #858796;
+                display: block;
+                text-align: right;
+            }
+            </style>';
+
+            // Tạo ngữ cảnh cho Gemini
+            $notificationInfo = [];
+            foreach ($notifications as $notification) {
+                $notificationInfo[] = $notification['title'] . ': ' . substr($notification['message'], 0, 50) . '...';
+            }
+            $context = "Thông báo của người dùng: " . implode("; ", $notificationInfo);
+        } else {
+            $htmlResponse = '<p>Bạn chưa có thông báo nào.</p>';
+            $context = "Người dùng chưa có thông báo nào.";
         }
         break;
 }
 
-// Nếu có ngữ cảnh và ý định cụ thể, gọi Gemini API với ngữ cảnh
-if (!empty($context) && $intent !== '') {
-    $aiResponse = callGeminiAPI($message, $context, $_SESSION['chat_history']);
-    $htmlResponse .= '<p class="mt-3"><strong>Thông tin thêm:</strong> ' . nl2br(htmlspecialchars($aiResponse)) . '</p>';
-}
-
-// Trả về kết quả
-header('Content-Type: application/json');
-echo json_encode(['response' => $htmlResponse]);
-
-// Hàm thêm header với logo cho chatbot
+// Hàm để thêm tiêu đề cho phần chatbot
 function addChatbotHeader()
 {
-    $header = '
-    <div class="chatbot-header">
-        <div class="chatbot-logo">
-            <svg width="40" height="40" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
-                <defs>
-                    <linearGradient id="headerGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                        <stop offset="0%" stop-color="#4e73df" />
-                        <stop offset="100%" stop-color="#224abe" />
-                    </linearGradient>
-                </defs>
-                <rect width="200" height="200" rx="25" fill="url(#headerGradient)"/>
-                <text x="48" y="125" font-family="Arial, sans-serif" font-size="80" font-weight="bold" fill="white">F4</text>
-                <text x="35" y="155" font-family="Arial, sans-serif" font-size="28" font-weight="bold" fill="white">CNTT</text>
-            </svg>
-        </div>
-        <div class="chatbot-title">Trợ lý tìm kiếm phòng trọ</div>
-    </div>
-    <style>
-        .chatbot-header {
-            display: flex;
-            align-items: center;
-            margin-bottom: 15px;
-            background: linear-gradient(135deg, #f8f9fc, #eaecf4);
-            padding: 10px;
-            border-radius: 10px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    // Return a minimal valid HTML container that will properly wrap our content
+    return '<div class="chatbot-response-container">';
+}
+
+// Thêm một wrapper function để xử lý lỗi từ handleGetRoomByIP
+function safeHandleGetRoomByIP($roomBases, $uniLat, $uniLng)
+{
+    if (!is_array($roomBases) || empty($roomBases)) {
+        error_log("safeHandleGetRoomByIP: Empty or invalid room data");
+        return [];
+    }
+
+    if (!is_numeric($uniLat) || !is_numeric($uniLng)) {
+        error_log("safeHandleGetRoomByIP: Invalid university coordinates: Lat=$uniLat, Lng=$uniLng");
+        return [];
+    }
+
+    $validRooms = [];
+    $errorCount = 0;
+
+    // Validate the room data before passing to handleGetRoomByIP
+    foreach ($roomBases as $room) {
+        if (empty($room['latlng'])) {
+            error_log("Room ID " . ($room['id'] ?? 'unknown') . " has empty latlng");
+            $errorCount++;
+            continue;
         }
-        .chatbot-logo {
-            margin-right: 10px;
+
+        $latlng = explode(',', $room['latlng']);
+        if (
+            count($latlng) < 2 || !is_numeric($latlng[0]) || !is_numeric($latlng[1]) ||
+            abs((float)$latlng[0]) > 90 || abs((float)$latlng[1]) > 180
+        ) {
+            error_log("Room ID " . ($room['id'] ?? 'unknown') . " has invalid latlng format: " . $room['latlng']);
+            $errorCount++;
+            continue;
         }
-        .chatbot-title {
-            font-weight: bold;
-            font-size: 16px;
-            color: #4e73df;
+
+        // Add to valid rooms
+        $validRooms[] = $room;
+    }
+
+    error_log("Validated rooms: " . count($validRooms) . " valid, " . $errorCount . " errors");
+
+    if (empty($validRooms)) {
+        error_log("safeHandleGetRoomByIP: No valid rooms to process");
+        return [];
+    }
+
+    try {
+        // Pass only valid rooms to the haversine function
+        $nearbyRooms = handleGetRoomByIP($validRooms, $uniLat, $uniLng);
+
+        if (!is_array($nearbyRooms)) {
+            error_log("handleGetRoomByIP returned non-array result");
+            return [];
         }
-    </style>
-    ';
-    return $header;
+
+        error_log("handleGetRoomByIP returned " . count($nearbyRooms) . " nearby rooms");
+        return $nearbyRooms;
+    } catch (Exception $e) {
+        error_log("Error in handleGetRoomByIP: " . $e->getMessage());
+        return [];
+    }
+}
+
+// Ensure htmlResponse is initialized
+if (!isset($htmlResponse)) {
+    error_log("WARNING: htmlResponse was not set before final response");
+    $htmlResponse = ''; // Initialize to prevent undefined variable errors
+}
+
+// Ensure context is initialized
+if (!isset($context)) {
+    error_log("WARNING: context was not set before final response");
+    $context = ''; // Initialize to prevent undefined variable errors
+}
+
+// Debug final values
+error_log("Final values before response - htmlResponse length: " . strlen($htmlResponse ?? ''));
+error_log("Final values before response - context length: " . strlen($context ?? ''));
+
+// Thiết lập xử lý lỗi để bắt mọi ngoại lệ
+try {
+    // Luôn gọi Gemini API nhưng truyền ngữ cảnh nếu có HTML từ cơ sở dữ liệu
+    $aiResponse = '';
+    if (!empty($context)) {
+        // Sử dụng thông tin từ truy vấn cơ sở dữ liệu làm ngữ cảnh cho AI
+        $aiResponse = callGeminiAPI($message, $context, $_SESSION['chat_history']);
+        error_log("Called Gemini API with context");
+    } else {
+        $aiResponse = callGeminiAPI($message, '', $_SESSION['chat_history']);
+        error_log("Called Gemini API without context");
+    }
+
+    // Trả về phản hồi cho client với JSON header
+    header('Content-Type: application/json');
+
+    // Prepare response data
+    $responseData = [
+        'response' => $aiResponse,
+        'html' => $htmlResponse,
+        'timestamp' => time()
+    ];
+
+    // Debug response data
+    error_log("Response data: html length = " . strlen($responseData['html']));
+
+    // Ensure valid JSON output
+    echo json_encode($responseData, JSON_UNESCAPED_UNICODE);
+} catch (Exception $e) {
+    // Ghi log lỗi
+    error_log('Chatbot Error: ' . $e->getMessage());
+
+    // Trả về thông báo lỗi cho người dùng
+    header('Content-Type: application/json');
+    echo json_encode([
+        'error' => true,
+        'response' => 'Xin lỗi, đã có lỗi xảy ra khi xử lý yêu cầu của bạn. Vui lòng thử lại sau.',
+        'timestamp' => time()
+    ]);
 }

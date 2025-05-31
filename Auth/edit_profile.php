@@ -103,7 +103,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Nếu không có lỗi, tiến hành cập nhật thông tin vào CSDL
             if (empty($error_message)) {
                 // Cập nhật thông tin người dùng
-                $stmt = $conn->prepare("UPDATE users SET name = ?, username = ?, email = ?, phone = ?, avatar = ?, bank_name = ?, bank_code = ? WHERE id = ?");
+                $stmt = $conn->prepare("UPDATE users SET name = ?, username = ?, email = ?, phone = ?, avatar = ?, bankName = ?, bankCode = ? WHERE id = ?");
                 $stmt->bind_param("sssssssi", $name, $username, $email, $phone, $avatar_path, $bank_name, $bank_code, $user_id);
 
                 if ($stmt->execute()) {
@@ -131,65 +131,250 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chỉnh sửa thông tin tài khoản</title>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;600;700;800&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="../Assets/client/css/style.css">
     <style>
-        .profile-body {
-            background: linear-gradient(135deg, #4b6cb7, #182848);
+        :root {
+            --primary-color: #4e73df;
+            --secondary-color: #2e59d9;
+            --accent-color: #36b9cc;
+            --success-color: #1cc88a;
+            --warning-color: #f6c23e;
+            --danger-color: #e74a3b;
+            --light-color: #f8f9fc;
+            --dark-color: #5a5c69;
+            --shadow-color: rgba(0, 0, 0, 0.15);
+            --font-family: 'Nunito', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+
+        body {
+            font-family: var(--font-family);
+        }
+
+        body.profile-body {
+            background: linear-gradient(-45deg, #4e73df, #224abe, #36b9cc, #1cc88a);
             background-size: 400% 400%;
+            animation: gradient 15s ease infinite;
+            min-height: 100vh;
+            padding: 40px 0;
+        }
+
+        @keyframes gradient {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+        .form-container {
+            background-color: white;
+            border-radius: 15px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1), 0 5px 15px rgba(0, 0, 0, 0.07);
+            padding: 30px;
+            margin-top: 20px;
+            margin-bottom: 20px;
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        h3 {
+            color: var(--primary-color);
+            font-weight: 700;
+            margin-bottom: 25px;
+            position: relative;
+            padding-bottom: 10px;
+        }
+
+        h3:after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 3px;
+            background: linear-gradient(to right, var(--primary-color), var(--accent-color));
+            border-radius: 3px;
         }
 
         .avatar-container {
             text-align: center;
-            margin-bottom: 30px;
+            margin-bottom: 35px;
+            position: relative;
         }
 
         .avatar-preview {
-            width: 150px;
-            height: 150px;
+            width: 160px;
+            height: 160px;
             border-radius: 50%;
-            border: 5px solid rgba(255, 255, 255, 0.3);
+            border: 5px solid rgba(78, 115, 223, 0.2);
             object-fit: cover;
-            margin: 0 auto 15px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-            transition: all 0.3s ease;
+            margin: 0 auto 20px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
 
         .avatar-preview:hover {
             transform: scale(1.05);
             border-color: var(--primary-color);
+            box-shadow: 0 15px 35px rgba(78, 115, 223, 0.3);
         }
 
         .custom-file-upload {
             cursor: pointer;
             display: inline-block;
-            padding: 8px 15px;
+            padding: 10px 20px;
             background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
             color: white;
-            border-radius: 25px;
+            border-radius: 50px;
             font-size: 14px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
             transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(78, 115, 223, 0.2);
         }
 
         .custom-file-upload:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(78, 115, 223, 0.4);
+        }
+
+        .custom-file-upload i {
+            margin-right: 8px;
         }
 
         .alert {
             border-radius: 10px;
-            margin-bottom: 20px;
+            margin-bottom: 25px;
+            padding: 15px;
+            border: none;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        .alert-success {
+            background-color: rgba(28, 200, 138, 0.15);
+            color: #1cc88a;
+            border-left: 4px solid #1cc88a;
+        }
+
+        .alert-danger {
+            background-color: rgba(231, 74, 59, 0.15);
+            color: #e74a3b;
+            border-left: 4px solid #e74a3b;
+        }
+
+        .form-control,
+        .input-group-text,
+        .form-select {
+            border-radius: 8px;
+            padding: 12px 15px;
+            border: 1px solid #e0e3e9;
+            transition: all 0.3s;
+        }
+
+        .input-group {
+            margin-bottom: 5px;
+        }
+
+        .input-group-text {
+            background-color: #f8f9fc;
+            border-right: none;
+            color: var(--primary-color);
+        }
+
+        .form-control {
+            border-left: none;
+        }
+
+        .form-control:focus,
+        .form-select:focus {
+            box-shadow: 0 0 0 0.25rem rgba(78, 115, 223, 0.25);
+            border-color: #bac8f3;
+        }
+
+        label {
+            font-weight: 600;
+            color: var(--dark-color);
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .form-text {
+            color: #858796;
+            font-size: 12px;
+            margin-top: 5px;
+        }
+
+        .mb-3,
+        .mb-4 {
+            margin-bottom: 20px !important;
+        }
+
+        .btn {
+            padding: 12px 20px;
+            font-weight: 600;
+            border-radius: 8px;
+            letter-spacing: 0.5px;
+            transition: all 0.3s;
         }
 
         .btn-update {
-            background: linear-gradient(45deg, #3a7bd5, #00d2ff);
+            background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
             border: none;
+            box-shadow: 0 4px 15px rgba(78, 115, 223, 0.2);
         }
 
         .btn-update:hover {
-            background: linear-gradient(45deg, #00d2ff, #3a7bd5);
+            background: linear-gradient(45deg, var(--secondary-color), var(--primary-color));
             transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(78, 115, 223, 0.4);
+        }
+
+        .btn-outline-warning {
+            color: var(--warning-color);
+            border-color: var(--warning-color);
+        }
+
+        .btn-outline-warning:hover {
+            background-color: var(--warning-color);
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .btn-outline-secondary {
+            color: var(--dark-color);
+            border-color: #d1d3e2;
+        }
+
+        .btn-outline-secondary:hover {
+            background-color: #f8f9fc;
+            color: var(--dark-color);
+            border-color: #d1d3e2;
+            transform: translateY(-2px);
+        }
+
+        .d-grid .btn {
+            margin-bottom: 10px;
         }
     </style>
 </head>
@@ -272,32 +457,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <div class="input-group">
                             <span class="input-group-text"><i class="fas fa-university"></i></span>
                             <select class="form-select" name="bank_name">
-                                <option value="" <?php echo empty($user['bank_name']) ? 'selected' : ''; ?>>-- Chọn ngân hàng --</option>
-                                <option value="Vietcombank" <?php echo $user['bank_name'] == 'Vietcombank' ? 'selected' : ''; ?>>Vietcombank</option>
-                                <option value="VietinBank" <?php echo $user['bank_name'] == 'VietinBank' ? 'selected' : ''; ?>>VietinBank</option>
-                                <option value="BIDV" <?php echo $user['bank_name'] == 'BIDV' ? 'selected' : ''; ?>>BIDV</option>
-                                <option value="Agribank" <?php echo $user['bank_name'] == 'Agribank' ? 'selected' : ''; ?>>Agribank</option>
-                                <option value="MBBank" <?php echo $user['bank_name'] == 'MBBank' ? 'selected' : ''; ?>>MB Bank</option>
-                                <option value="Techcombank" <?php echo $user['bank_name'] == 'Techcombank' ? 'selected' : ''; ?>>Techcombank</option>
-                                <option value="ACB" <?php echo $user['bank_name'] == 'ACB' ? 'selected' : ''; ?>>ACB</option>
-                                <option value="TPBank" <?php echo $user['bank_name'] == 'TPBank' ? 'selected' : ''; ?>>TPBank</option>
-                                <option value="VPBank" <?php echo $user['bank_name'] == 'VPBank' ? 'selected' : ''; ?>>VPBank</option>
-                                <option value="HDBank" <?php echo $user['bank_name'] == 'HDBank' ? 'selected' : ''; ?>>HDBank</option>
-                                <option value="SacomBank" <?php echo $user['bank_name'] == 'SacomBank' ? 'selected' : ''; ?>>SacomBank</option>
-                                <option value="OCB" <?php echo $user['bank_name'] == 'OCB' ? 'selected' : ''; ?>>OCB</option>
+                                <option value="" <?php echo empty($user['bankName']) ? 'selected' : ''; ?>>-- Chọn ngân hàng --</option>
+                                <option value="Vietcombank" <?php echo $user['bankName'] == 'Vietcombank' ? 'selected' : ''; ?>>Vietcombank</option>
+                                <option value="VietinBank" <?php echo $user['bankName'] == 'VietinBank' ? 'selected' : ''; ?>>VietinBank</option>
+                                <option value="BIDV" <?php echo $user['bankName'] == 'BIDV' ? 'selected' : ''; ?>>BIDV</option>
+                                <option value="Agribank" <?php echo $user['bankName'] == 'Agribank' ? 'selected' : ''; ?>>Agribank</option>
+                                <option value="MBBank" <?php echo $user['bankName'] == 'MBBank' ? 'selected' : ''; ?>>MB Bank</option>
+                                <option value="Techcombank" <?php echo $user['bankName'] == 'Techcombank' ? 'selected' : ''; ?>>Techcombank</option>
+                                <option value="ACB" <?php echo $user['bankName'] == 'ACB' ? 'selected' : ''; ?>>ACB</option>
+                                <option value="TPBank" <?php echo $user['bankName'] == 'TPBank' ? 'selected' : ''; ?>>TPBank</option>
+                                <option value="VPBank" <?php echo $user['bankName'] == 'VPBank' ? 'selected' : ''; ?>>VPBank</option>
+                                <option value="HDBank" <?php echo $user['bankName'] == 'HDBank' ? 'selected' : ''; ?>>HDBank</option>
+                                <option value="SacomBank" <?php echo $user['bankName'] == 'SacomBank' ? 'selected' : ''; ?>>SacomBank</option>
+                                <option value="OCB" <?php echo $user['bankName'] == 'OCB' ? 'selected' : ''; ?>>OCB</option>
                             </select>
                         </div>
                     </div>
 
                     <div class="mb-4">
-                        <label><i class="fas fa-credit-card me-2"></i>Mã ngân hàng (Bank code)</label>
+                        <label><i class="fas fa-credit-card me-2"></i>Số tài khoản (STK)</label>
                         <div class="input-group">
                             <span class="input-group-text"><i class="fas fa-credit-card"></i></span>
                             <input type="text" class="form-control" name="bank_code"
-                                placeholder="Mã ngân hàng"
-                                value="<?php echo htmlspecialchars($user['bank_code'] ?? ''); ?>">
-                            <div class="form-text">Mã ngân hàng sẽ được sử dụng cho các giao dịch thanh toán.</div>
+                                placeholder="Nhập số tài khoản ngân hàng"
+                                value="<?php echo htmlspecialchars($user['bankCode'] ?? ''); ?>">
                         </div>
+                        <div class="form-text">Số tài khoản ngân hàng sẽ được sử dụng cho các giao dịch thanh toán.</div>
                     </div>
 
                     <div class="d-grid gap-2">
@@ -323,35 +508,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 reader.readAsDataURL(input.files[0]);
             }
         }
-
-        // Automatically update bank code when bank is selected
-        document.addEventListener('DOMContentLoaded', function() {
-            const bankSelect = document.querySelector('select[name="bank_name"]');
-            const bankCodeInput = document.querySelector('input[name="bank_code"]');
-
-            // Bank code mapping
-            const bankCodes = {
-                'Vietcombank': 'VCB',
-                'VietinBank': 'CTG',
-                'BIDV': 'BIDV',
-                'Agribank': 'AGR',
-                'MBBank': 'MB',
-                'Techcombank': 'TCB',
-                'ACB': 'ACB',
-                'TPBank': 'TPB',
-                'VPBank': 'VPB',
-                'HDBank': 'HDB',
-                'SacomBank': 'STB',
-                'OCB': 'OCB'
-            };
-
-            bankSelect.addEventListener('change', function() {
-                const selectedBank = this.value;
-                if (selectedBank && bankCodes[selectedBank]) {
-                    bankCodeInput.value = bankCodes[selectedBank];
-                }
-            });
-        });
     </script>
     <script src="../assets/main.js"></script>
     <script src="../assets/admin/js/main.js"></script>
